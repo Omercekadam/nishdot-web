@@ -1,0 +1,82 @@
+{
+  "project_name": "Nishdot Web Platform",
+  "organization": "İstanbul Nişantaşı Üniversitesi Dijital Oyun Tasarımı Kulübü",
+  "description": "Kulüp yönetim üyeleri için topluluk yönetimi, Game Jam organizasyonları için kayıt formları, takım eşleştirme (Matchmaker) ve belge yönetimi sağlayan dinamik web platformu.",
+  "tech_stack": {
+    "backend": "Python / Django",
+    "frontend": "Django Templates + Tailwind CSS",
+    "database": "PostgreSQL (Production) / SQLite (Development)",
+    "deployment": "SadeHost VDS (Ubuntu Server)(2GB Ram, 40GB SSD VDS Sunucu), Nginx, Gunicorn",
+  },
+  "development_preferences": {
+    "version_control": "GitHub Desktop (Terminal tabanlı karmaşık Git komutları yerine arayüz odaklı kullanım)",
+    "styling": "Tailwind CSS (Mobil uyumlu, strict 8-point spacing)",
+    "architecture": "Monolitik yapı (Ayrı bir JS framework'ü kullanılmayacak, her şey Django üzerinden render edilecek)",
+    "security": "Çevresel değişkenler (.env) zorunlu, dosya yüklemelerinde strict validasyon"
+  },
+  "milestones": {
+    "alpha": [
+      {
+        "task": "Github ve proje kurulumu",
+        "status": "Yapıldı",
+      },
+      {
+        "task": "Kullanıcı modelleri ve yetki grupları",
+        "details": "Django ORM üzerinden Custom User (Kulüp Üyesi, Admin, Yönetim Kurulu)."
+      },
+      {
+        "task": "Frontend kurallarının belirlenmesi",
+        "details": "Tailwind CSS entegrasyonu, tasarım manifestosu, eldeki tasarımın yapılmaya başlanması."
+      },
+      {
+        "task": "Statik Sayfalar (Home, About, Contact)",
+        "details": "Veritabanına yük bindirmeyen temiz tasarımlar, mobil uyumluluk testleri."
+      }
+    ],
+    "beta": [
+      {
+        "task": "Login/Logout mekanizması",
+        "details": "Güvenli oturum açma/kapatma (Session mimarisi)."
+      },
+      {
+        "task": "Etkinlik sayfası, etkinlik detayları",
+        "details": "Geçmiş/Gelecek etkinlik detayları, tarih, yer, varsa ödül ve sponsorlar."
+      },
+      {
+        "task": "Game Jam başvuru formu & Tonishbot",
+        "details": "Katılımcılardan rol, ekip durumu ve portfolyo alan dinamik form ve cevapları database'e işlenmesi."
+      },
+      {
+        "task": "Yönetici paneli",
+        "details": "Başvuruları listeleme, onaylama, Excel/CSV formatında veri indirme."
+      },
+      {
+        "task": "Jam Matchmaker",
+        "details": "Solo katılan Artist/Dev üyelerin ekip oluşturabilmesi için basit ilan panosu."
+      },
+      {
+        "task": "Deployment & SEO",
+        "details": "VDS üzerine Nginx/Gunicorn kurulumu, ilk yükleme testi, Meta Tag/OpenGraph entegrasyonu."
+      },
+      {
+        "task": "Okul bilgi işlem domain",
+        "details": "nishdot.nisantasi.edu.tr DNS A kaydı yönlendirmesi."
+      }
+    ],
+    "release": [
+      {
+        "task": "Toplantı kayıtları",
+        "details": "Yönetim kurulu yoklama sistemi, üye profilinde katılım yüzdesi gösterimi."
+      },
+      {
+        "task": "Belge ve kaynak aktarım havuzu",
+        "details": "Sadece kayıtlı üyelere açık, güvenli PDF/materyal deposu."
+      },
+      {
+        "task": "Oyun vitrini",
+        "details": "Jam sonrası üretilen projelerin itch.io linkleri ve ekran görüntüleriyle sergilendiği galeri."
+      }
+    ]
+  },
+  "current_status": "Alpha aşamasının başlangıcında. Github repo kuruldu, Tasarım için Figma üzerinden görseller hazırlandı ve manifesto belirlendi."
+}
