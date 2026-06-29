@@ -40,8 +40,9 @@
                 <!-- Sign In Button -->
                 {% if user.is_authenticated %}
                 <div class="flex items-center gap-4">
-                    <span class="text-zinc-300">{{ user.first_name }}</span>
-                    <!-- You might want to add a proper logout or profile view here -->
+                    <span class="text-zinc-300 font-medium hover:text-brand-pink cursor-pointer transition-colors">
+                        {{ user.first_name|default:user.username }}
+                    </span>
                 </div>
                 {% else %}
                 <button onclick="document.getElementById('signin-modal').classList.remove('hidden')" class="btn-primary">

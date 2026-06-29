@@ -1,16 +1,26 @@
 # Nishdot Web Platform
 
-![Nishdot Logo](docs/design/desktop-homepage.png) *(Tasarım referansı - Figma)*
+![Nishdot Logo](docs/design/desktop-homepage.png) *(Dijital Oyun Tasarımı Kulübü)*
 
-İstanbul Nişantaşı Üniversitesi Dijital Oyun Tasarımı Kulübü (Nishdot) için geliştirilen resmi web platformu. Bu proje, kulüp üyelerini bir araya getirmeyi, etkinlikleri duyurmayı ve özellikle Game Jam süreçlerini otomatize etmeyi amaçlayan dinamik bir sistemdir.
+İstanbul Nişantaşı Üniversitesi Dijital Oyun Tasarımı Kulübü (Nishdot) için geliştirilen resmi web platformu. Bu proje, kulüp üyelerini bir araya getirmeyi, etkinlikleri duyurmayı ve özellikle Game Jam süreçlerini modern bir arayüzle otomatize etmeyi amaçlayan dinamik bir sistemdir.
 
-## 🌟 Temel Özellikler (Planlanan ve Geliştirilen)
+## 🌟 Güncel Durum ve Geliştirilen Özellikler (Faz 4 Tamamlandı)
 
-- **Rol Tabanlı Yetkilendirme:** Ziyaretçi, Kulüp Üyesi, Yönetim Kurulu ve Yönetici (Admin) rolleri.
-- **Game Jam Yönetimi:** Her etkinliğe özel dinamik başvuru formları (özel sorular, dinamik roller).
-- **Matchmaker (Takım Eşleştirici):** "Ekip arıyorum" diyen geliştirici ve tasarımcıları, eksik rolleri tamamlayacak şekilde otomatik eşleştiren akıllı algoritma.
-- **Topluluk Panosu:** Üyelerin portfolyolarını sergileyebileceği, etkinlik geçmişlerini görebileceği yapı.
-- **Güvenli Yönetim Paneli:** Özelleştirilmiş ve brute-force saldırılarına karşı `yonetim/` yoluyla gizlenmiş admin paneli.
+Projenin temel mimarisi, veritabanı altyapısı ve frontend UI/UX entegrasyonları büyük ölçüde tamamlanmıştır:
+
+- **Siberpunk & Karanlık Tema (Dark Mode):** Tamamen Tailwind CSS JIT derleyicisi ile geliştirilen, yüksek kaliteli UI/UX detaylarına sahip "premium" tasarım.
+- **Dinamik Etkinlik Sistemi:** Admin panelinden yönetilebilen, ana sayfada listelenen etkinlik ve Game Jam altyapısı.
+- **Akıllı Başvuru Sihirbazı (Apply Wizard):** 
+  - 3 adımlı, JavaScript destekli akıcı form deneyimi.
+  - T.C. Kimlik ve E-Posta bazlı "Mükerrer Başvuru (Unique Constraint)" koruma mekanizmaları.
+  - Özel form doğrulama (HTML5 & JS) ve güvenlik önlemleri.
+- **Güvenli Yönetim Paneli:** Brute-force saldırılarına karşı standart yoldan gizlenmiş, `/yonetim/` adresi üzerinden erişilen yetkili paneli.
+
+## 🚧 Sıradaki Hedefler (Yol Haritası)
+
+- **Faz 5 - Kullanıcı Sistemi (Auth & Dashboard):** Öğrencilerin .edu.tr uzantılı mail adresleriyle kayıt olabileceği, kendi başvurularını takip edebileceği Profil Ekranı.
+- **Faz 6 - Matchmaker (Takım Eşleştirici):** "Ekip arıyorum" diyen geliştirici ve tasarımcıları, eksik rolleri tamamlayacak şekilde otomatik eşleştiren akıllı algoritma.
+- **Faz 7 - Kurumsal Sayfalar:** Ana sayfadaki eksik bilgi alanlarının (About Us, Contact Us) tamamlanması.
 
 ## 🛠 Teknoloji Yığını
 
@@ -25,7 +35,7 @@ Bu proje, **"No Vibe Coding"** manifestosu ile geliştirilmektedir.
 - Katı bir mimari disiplin izlenir (PEP 8, İngilizce isimlendirme).
 - **Split Settings:** `base.py`, `development.py`, `production.py` olarak ayrılmış ortam ayarları.
 - **N+1 Sorgu Yasağı:** View'larda her zaman `select_related` ve `prefetch_related` kullanımı zorunludur.
-- Tasarımda katı 8-point spacing scale ve özenli (intentional) UI kararları esastır.
+- Tasarımda katı spacing kuralları, neon detaylar ve özenli UI/UX kararları esastır.
 
 ## 🚀 Kurulum (Geliştiriciler İçin)
 
@@ -52,26 +62,22 @@ pip install -r requirements/development.txt
 ```
 
 ### 4. Ortam Değişkenlerini Ayarlayın
-Proje dizininde (manage.py ile aynı yerde) bir `.env` dosyası oluşturun. Repodaki `.env.example` dosyasını referans alabilirsiniz. (Veya proje yöneticisinden doğrudan `.env` dosyasını talep edin).
+Proje dizininde (manage.py ile aynı yerde) bir `.env` dosyası oluşturun. Repodaki `.env.example` dosyasını referans alabilirsiniz.
 
-### 5. Veritabanını Hazırlayın
+### 5. Frontend (Tailwind CSS) Derleme
+```bash
+npx tailwindcss -i ./static/css/input.css -o ./static/css/output.css --watch
+```
+
+### 6. Veritabanını Hazırlayın
 ```bash
 python manage.py migrate
 ```
 
-### 6. Yönetici (Superuser) Hesabı Oluşturun
+### 7. Yönetici Hesabı Oluşturun ve Sunucuyu Çalıştırın
 ```bash
 python manage.py createsuperuser
-```
-*(Oluşturulan ilk superuser otomatik olarak `admin` rolüne sahip olacaktır).*
-
-### 7. Sunucuyu Çalıştırın
-```bash
 python manage.py runserver
 ```
 
 Tarayıcınızda `http://127.0.0.1:8000/yonetim/` adresine giderek admin paneline giriş yapabilirsiniz.
-
----
-
-> **Not:** Projenin frontend (Tailwind) entegrasyonu Figma tasarımları tamamlandıktan sonra eklenecektir. Şu anki odak sağlam, performanslı ve güvenli bir backend altyapısıdır.
