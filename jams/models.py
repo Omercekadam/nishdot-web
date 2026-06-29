@@ -115,6 +115,7 @@ class JamApplication(TimeStampedModel):
         ordering = ["-created_at"]
         constraints = [
             models.UniqueConstraint(fields=["jam", "email"], name="unique_application_per_jam"),
+            models.UniqueConstraint(fields=["jam", "national_id"], name="unique_national_id_per_jam"),
         ]
 
     def __str__(self):

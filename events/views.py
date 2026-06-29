@@ -1,5 +1,6 @@
 from django.views.generic import DetailView, TemplateView
 from django.shortcuts import get_object_or_404
+from django.db import IntegrityError
 from .models import Event
 
 class EventDetailView(DetailView):
@@ -28,12 +29,24 @@ class EventApplyWizardView(TemplateView):
         # Formdan gelen verileri al
         from jams.models import JamApplication
         
+        email = request.POST.get('email')
+        national_id = request.POST.get('national_id')
+        
+        # Mükerrer başvuru kontrolleri (E-posta ve T.C. Kimlik)
+        if JamApplication.objects.filter(jam=jam, email=email).exists():
+            error_msg = "Bu e-posta adresiyle daha önce bir başvuru yapılmış. Başvurunuzda bir değişiklik yapmak istiyorsanız veya bir sorun olduğunu düşünüyorsanız lütfen bizimle iletişime geçin."
+            return self.render_to_response(self.get_context_data(error=error_msg))
+            
+        if JamApplication.objects.filter(jam=jam, national_id=national_id).exists():
+            error_msg = "Bu T.C. Kimlik numarasıyla daha önce bir başvuru yapılmış. Bir hata olduğunu düşünüyorsanız lütfen bizimle iletişime geçin."
+            return self.render_to_response(self.get_context_data(error=error_msg))
+        
         try:
             JamApplication.objects.create(
                 jam=jam,
                 full_name=request.POST.get('full_name'),
-                national_id=request.POST.get('national_id'),
-                email=request.POST.get('email'),
+                national_id=national_id,
+                email=email,
                 phone_number=request.POST.get('phone_number'),
                 birth_date=request.POST.get('birth_date'),
                 university=request.POST.get('university'),
@@ -54,6 +67,10 @@ class EventApplyWizardView(TemplateView):
                 kvkk_accepted=request.POST.get('kvkk_accepted') == 'on'
             )
             return self.render_to_response(self.get_context_data(success=True))
+        except IntegrityError:
+            error_msg = "Sisteme kaydınız sırasında veritabanı kısıtlamasına takıldınız (Zaten kayıtlısınız). Bir sorun olduğunu düşünüyorsanız lütfen bizimle iletişime geçin."
+            return self.render_to_response(self.get_context_data(error=error_msg))
         except Exception as e:
-            # Hata durumunda formu tekrar göster
-            return self.render_to_response(self.get_context_data(error=str(e)))
+            # Diğer beklenmeyen hatalar için
+            error_msg = "Başvurunuz alınırken beklenmeyen bir hata oluştu. Lütfen daha sonra tekrar deneyiniz."
+            return self.render_to_response(self.get_context_data(error=error_msg))

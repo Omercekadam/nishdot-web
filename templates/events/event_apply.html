@@ -82,11 +82,11 @@
                             <input type="text" name="full_name" required class="form-input" placeholder="Ad Soyad">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-300 mb-2">T.C. Kimlik Numarası *</label>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">T.C. Kimlik Numarası <span class="text-xs text-zinc-500 font-normal">(Kampüse giriş çıkışlar için)</span> *</label>
                             <input type="text" name="national_id" required pattern="\d{11}" maxlength="11" class="form-input" placeholder="11 haneli T.C. Kimlik No">
                         </div>
                         <div>
-                            <label for="email" class="block text-sm font-medium text-gray-300 mb-2">E-Posta Adresi</label>
+                            <label for="email" class="block text-sm font-medium text-gray-300 mb-2">E-Posta Adresi *</label>
                             <input type="email" name="email" id="email" required class="form-input" placeholder="ornek@std.nisantasi.edu.tr">
                         </div>
                         <div>
@@ -271,7 +271,9 @@
 
     function validateStep(stepNum) {
         const stepDiv = document.getElementById(`step-${stepNum}`);
-        const inputs = stepDiv.querySelectorAll('input[required], select[required], textarea[required]');
+        // Tüm inputları seçiyoruz (sadece zorunlu olanları değil), çünkü type="url" gibi 
+        // zorunlu olmayan ama validasyon gerektiren alanlar form gönderimini gizlice bozabilir.
+        const inputs = stepDiv.querySelectorAll('input, select, textarea');
         
         let isValid = true;
         inputs.forEach(input => {
