@@ -11,6 +11,12 @@ from django.contrib import admin
 from django.urls import include, path
 
 urlpatterns = [
+    # Ana sayfa ve statik sayfalar
+    path("", include("pages.urls")),
+    
+    # Etkinlik Sayfaları
+    path("events/", include("events.urls")),
+    
     # Admin paneli özel URL'de — varsayılan /admin/ brute-force hedefidir.
     # Bu basit değişiklik, otomatik bot saldırılarının %99'unu engeller.
     path("yonetim/", admin.site.urls),

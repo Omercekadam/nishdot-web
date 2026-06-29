@@ -74,17 +74,24 @@ class JamApplication(TimeStampedModel):
 
     # ── Sabit Alanlar ──
     full_name        = models.CharField(max_length=200, verbose_name="Ad Soyad")
+    birth_date       = models.DateField(null=True, blank=True, verbose_name="Doğum Tarihi")
     email            = models.EmailField(verbose_name="E-posta")
+    phone_number     = models.CharField(max_length=20, blank=True, verbose_name="Telefon Numarası")
+    national_id      = models.CharField(max_length=11, blank=True, verbose_name="T.C. Kimlik Numarası")
     university       = models.CharField(max_length=200, blank=True, verbose_name="Üniversite")
     department       = models.CharField(max_length=200, blank=True, verbose_name="Bölüm")
+    grade            = models.CharField(max_length=50, blank=True, verbose_name="Sınıf")
+    emergency_contact = models.CharField(max_length=200, blank=True, verbose_name="Acil Durumda Ulaşılacak Kişi ve No")
+    health_notes     = models.TextField(blank=True, verbose_name="Kronik Hastalık / Alerji")
     jam_role         = models.CharField(max_length=100, verbose_name="Rol")
-    experience_level = models.CharField(max_length=50, verbose_name="Deneyim Seviyesi")
+    experience_level = models.CharField(max_length=50, blank=True, verbose_name="Deneyim Seviyesi")
     team_status      = models.CharField(max_length=20, choices=TeamStatus.choices, verbose_name="Takım Durumu")
     team_name        = models.CharField(max_length=100, blank=True, verbose_name="Takım Adı")
     portfolio_url    = models.URLField(blank=True, verbose_name="Portfolyo Linki")
     previous_jams    = models.TextField(blank=True, verbose_name="Önceki Jam'ler")
     motivation       = models.TextField(blank=True, verbose_name="Motivasyon")
     additional_notes = models.TextField(blank=True, verbose_name="Ek Notlar")
+    kvkk_accepted    = models.BooleanField(default=False, verbose_name="KVKK Onayı")
 
     # ── Dinamik Alanlar ──
     custom_answers = models.JSONField(default=dict, blank=True, verbose_name="Özel Cevaplar")

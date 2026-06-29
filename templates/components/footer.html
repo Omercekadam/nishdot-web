@@ -1,0 +1,19 @@
+{% load static %}
+<footer class="bg-black border-t border-zinc-800 py-12 mt-auto">
+    <div class="container-main flex flex-col items-center justify-center gap-4 text-center">
+        <!-- Logo -->
+        <a href="{% url 'pages:home' %}" class="inline-block hover:scale-105 transition-transform duration-300">
+            <img src="{% static 'images/nishdotlogolightpng.png' %}" alt="Nishdot Logo" class="h-32 object-contain">
+        </a>
+        
+        <!-- Slogan / Subtitle -->
+        <p class="text-zinc-500 text-sm mt-4">
+            made by cek
+        </p>
+
+        <!-- Copyright -->
+        <p class="text-zinc-600 text-xs">
+            © {% now "Y" %} Nishdot
+        </p>
+    </div>
+</footer>

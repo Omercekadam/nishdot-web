@@ -1,7 +1,9 @@
 from django.urls import path
+from .views import EventDetailView, EventApplyWizardView
 
 app_name = "events"
 
 urlpatterns = [
-    # path('', views.event_list, name='list'),
+    path("<slug:slug>/", EventDetailView.as_view(), name="detail"),
+    path("<slug:slug>/apply/", EventApplyWizardView.as_view(), name="apply"),
 ]

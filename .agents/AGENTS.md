@@ -213,16 +213,23 @@ Frontend işlerinde sen bir **Senior Product Designer ve Frontend Engineer**'sı
 
 ### 📐 Spacing (Boşluk Ritmi)
 
-- **8-point scale** kullanılır, istisnasız: `8px`, `16px`, `24px`, `32px`, `40px`, `48px`, `56px`, `64px`...
-- Tailwind karşılıkları: `p-2` (8px), `p-4` (16px), `p-6` (24px), `p-8` (32px)...
+- **8-point scale** kullanılır, istisnasız: `8px`, `16px`, `24px`, `32px`, `40px`, `48px`, `56px`, `64px`, `80px`...
+- Tailwind karşılıkları: `p-2` (8px), `p-4` (16px), `p-6` (24px), `p-8` (32px), `p-20` (80px)...
 - **Rastgele spacing değerleri YASAK**: `p-[13px]`, `mt-[7px]`, `gap-[22px]` gibi değerler kullanılmaz.
 - Margin, padding, gap — her yerde aynı ritim. Ritim kırılması = vibe coding sinyali.
+
+**Kesinleşmiş Layout Değerleri:**
+- **Container max-width:** `1440px` (`max-w-[1440px] mx-auto`)
+- **Section arası dikey boşluk:** `80px` (`py-20`)
+- **Grid/card arası boşluk:** `24px` (`gap-6`)
+- **Card border-radius:** `12px` veya `16px` (`rounded-xl` veya `rounded-2xl`)
+- **Buton border-radius:** `12px` veya `16px` (`rounded-xl` veya `rounded-2xl`)
 
 ---
 
 ### ✏️ Tipografi
 
-- **Tek heading fontu** ve **tek body fontu** seçilir. İkiden fazla font ailesi kullanılmaz.
+- **Font ailesi:** Inter (Google Fonts) — hem heading hem body için tek font.
 - Bir **type ramp** (boyut skalası) tanımlanır — tutarlı `font-size` ve `line-height` değerleriyle.
 - Bu skala **doğaçlama olmadan** uygulanır. Rastgele `text-[19px]` gibi değerler yasak.
 - Heading'ler mantıksal bir hiyerarşi izler (`h1` > `h2` > `h3`...).
@@ -238,7 +245,19 @@ Frontend işlerinde sen bir **Senior Product Designer ve Frontend Engineer**'sı
 - Marka kimliği gerektirmedikçe mor gradyanlar **yasak**.
 - Yenilik veya gösteriş amaçlı renk kullanımı **yasak** — her renk hiyerarşiyi desteklemeli.
 - **Yüksek kontrast ve okunabilirlik zorunlu** (WCAG AA minimum).
-- Nishdot marka renkleri: koyu tema (dark background) + pembe/kırmızı aksanlar (Figma tasarımına sadık).
+
+**Kesinleşmiş Renk Paleti:**
+
+| Token | HEX | Tailwind Karşılığı | Kullanım |
+|---|---|---|---|
+| Arka plan (birincil) | `#18181B` | `zinc-900` | Ana sayfa arka plan, navbar, footer |
+| Arka plan (ikincil) | `#27272A` | `zinc-800` | Kart arka planları, form alanları |
+| Nishdot Pembesi | `#EB596D` | `brand-pink` (custom) | CTA butonları, aktif linkler, vurgular |
+| Beyaz (zinc-300) | `#D4D4D8` | `zinc-300` | İkincil metin, açıklama |
+| Beyaz açık (zinc-200) | `#E4E4E7` | `zinc-200` | Alt başlıklar |
+| En açık beyaz (zinc-100) | `#F4F4F5` | `zinc-100` | Ana metin, başlıklar |
+
+> Nishdot pembesi (`#EB596D`) hariç tüm renkler Tailwind'in **zinc** kütüphanesinden gelir.
 
 ---
 
@@ -329,8 +348,11 @@ Aşağıdaki unsurlardan herhangi biri tespit edilirse, çıktı sunulmadan **d�
 
 ### 🖌️ Nishdot Marka Kimliği (Figma'dan)
 
-- **Tema**: Koyu (dark) arka plan
-- **Aksan renkleri**: Pembe → kırmızı gradyan tonları
-- **Logo**: "nishdot" — küçük harfle, "o" harfi yerine nokta/joystick ikonu
+- **Tema**: Koyu (dark) arka plan (`#18181B` / zinc-900)
+- **Aksan rengi**: Nishdot pembesi `#EB596D`
+- **Logo dosyaları**: `docs/design/nishdotlogolightheme.png`, `docs/design/nishdotlogolightpng.png`
+- **Maskot**: Tonish — `docs/design/tonish_mascot.png`
+- **Font**: Inter (Google Fonts)
 - **Genel his**: Gaming topluluğu, profesyonel ama enerjik
-- **Tasarım referansı**: `docs/design/desktop-homepage.png`
+- **Tasarım referansları**: `docs/design/` dizini altındaki tüm PNG dosyaları
+- **Sign In/Sign Up**: Ayrı sayfa değil, JavaScript ile açılan blur overlay modal

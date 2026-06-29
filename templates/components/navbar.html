@@ -1,0 +1,54 @@
+{% load static %}
+<nav class="sticky top-0 z-50 bg-zinc-900 border-b border-zinc-800">
+    <!-- Gradient border overlay -->
+    <div class="h-[1px] w-full bg-gradient-to-r from-brand-pink to-transparent"></div>
+    
+    <div class="container-main">
+        <div class="flex items-center justify-between h-20">
+            <!-- Logo -->
+            <a href="{% url 'pages:home' %}" class="flex items-center gap-2">
+                <img src="{% static 'images/nishdotlogolightpng.png' %}" alt="Nishdot Logo" class="h-32 object-contain py-2">
+            </a>
+
+            <!-- Navigation Links -->
+            <div class="hidden md:flex items-center gap-8 font-medium">
+                <a href="{% url 'pages:home' %}#home" class="nav-link text-zinc-300 hover:text-white transition-colors relative group py-2">
+                    Home
+                    <span class="absolute left-0 bottom-0 w-full h-[2px] bg-brand-pink transform scale-x-0 transition-transform duration-300 origin-left group-[.active]:scale-x-100 group-hover:scale-x-100"></span>
+                </a>
+                <a href="{% url 'pages:home' %}#events" class="nav-link text-zinc-300 hover:text-white transition-colors relative group py-2">
+                    Events
+                    <span class="absolute left-0 bottom-0 w-full h-[2px] bg-brand-pink transform scale-x-0 transition-transform duration-300 origin-left group-[.active]:scale-x-100 group-hover:scale-x-100"></span>
+                </a>
+                <a href="{% url 'pages:home' %}#about" class="nav-link text-zinc-300 hover:text-white transition-colors relative group py-2">
+                    About Us
+                    <span class="absolute left-0 bottom-0 w-full h-[2px] bg-brand-pink transform scale-x-0 transition-transform duration-300 origin-left group-[.active]:scale-x-100 group-hover:scale-x-100"></span>
+                </a>
+                <a href="{% url 'pages:home' %}#contact" class="nav-link text-zinc-300 hover:text-white transition-colors relative group py-2">
+                    Contact Us
+                    <span class="absolute left-0 bottom-0 w-full h-[2px] bg-brand-pink transform scale-x-0 transition-transform duration-300 origin-left group-[.active]:scale-x-100 group-hover:scale-x-100"></span>
+                </a>
+            </div>
+
+            <!-- Right Actions -->
+            <div class="flex items-center gap-4">
+                <!-- Language Toggle Placeholder -->
+                <button class="w-10 h-10 rounded-full bg-zinc-100 text-zinc-900 flex items-center justify-center font-bold text-sm">
+                    A
+                </button>
+                
+                <!-- Sign In Button -->
+                {% if user.is_authenticated %}
+                <div class="flex items-center gap-4">
+                    <span class="text-zinc-300">{{ user.first_name }}</span>
+                    <!-- You might want to add a proper logout or profile view here -->
+                </div>
+                {% else %}
+                <button onclick="document.getElementById('signin-modal').classList.remove('hidden')" class="btn-primary">
+                    Sign in
+                </button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</nav>

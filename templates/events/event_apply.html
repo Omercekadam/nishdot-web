@@ -1,0 +1,330 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Apply - {{ event.title }}{% endblock %}
+
+{% block content %}
+<section class="pt-24 pb-24 bg-zinc-900 min-h-[calc(100vh-80px)] relative overflow-hidden">
+    <!-- Dekoratif Işıklar -->
+    <div class="absolute top-0 right-0 w-96 h-96 bg-brand-pink/10 blur-[100px] rounded-full pointer-events-none"></div>
+    <div class="absolute bottom-0 left-0 w-96 h-96 bg-brand-pink/5 blur-[100px] rounded-full pointer-events-none"></div>
+
+    <div class="container-main max-w-4xl relative z-10">
+        <!-- Başlık -->
+        <div class="text-center mb-12">
+            <h1 class="text-3xl md:text-4xl font-bold text-zinc-100 mb-2">Başvuru Formu</h1>
+            <p class="text-zinc-400 text-lg">{{ event.title }} etkinliği için kayıt adımlarını tamamla.</p>
+        </div>
+
+        <!-- İlerleme Çubuğu (Progress Bar) -->
+        <div class="flex justify-between items-center mb-12 max-w-2xl mx-auto w-full">
+            
+            <!-- Adım 1 -->
+            <div class="step-indicator active relative flex flex-col items-center group" data-step="1">
+                <div class="w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg backdrop-blur-sm bg-brand-pink/10 border border-brand-pink text-brand-pink shadow-[0_0_15px_rgba(235,89,109,0.4)] transition-all duration-300">
+                    1
+                </div>
+            </div>
+            
+            <!-- Çizgi 1-2 -->
+            <div class="flex-1 h-[2px] bg-white/10 mx-4"></div>
+            
+            <!-- Adım 2 -->
+            <div class="step-indicator relative flex flex-col items-center group" data-step="2">
+                <div class="w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg backdrop-blur-sm bg-zinc-800/40 border border-white/5 text-zinc-500 opacity-60 transition-all duration-300">
+                    2
+                </div>
+            </div>
+            
+            <!-- Çizgi 2-3 -->
+            <div class="flex-1 h-[2px] bg-white/10 mx-4"></div>
+            
+            <!-- Adım 3 -->
+            <div class="step-indicator relative flex flex-col items-center group" data-step="3">
+                <div class="w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg backdrop-blur-sm bg-zinc-800/40 border border-white/5 text-zinc-500 opacity-60 transition-all duration-300">
+                    3
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Konteynırı -->
+        <div class="w-full max-w-4xl mx-auto p-10 bg-zinc-800 rounded-2xl border border-white/5">
+            {% if success %}
+                <div class="text-center py-16 animate-fade-in">
+                    <div class="w-24 h-24 bg-brand-pink/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-brand-pink" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                    </div>
+                    <h2 class="text-3xl font-bold text-zinc-100 mb-4">Başvurunuz Alındı!</h2>
+                    <p class="text-zinc-400 text-lg mb-8">Teşekkürler. Başvurunuz başarıyla sistemimize kaydedildi. En kısa sürede sizinle iletişime geçeceğiz.</p>
+                    <a href="{% url 'events:detail' event.slug %}" class="btn-primary px-8 py-3">Etkinliğe Dön</a>
+                </div>
+            {% else %}
+                {% if error %}
+                    <div class="mb-8 p-4 bg-red-500/10 border border-red-500/50 rounded-xl text-red-400">
+                        <p class="font-medium">Bir hata oluştu:</p>
+                        <p>{{ error }}</p>
+                    </div>
+                {% endif %}
+                <form id="apply-form" method="POST" action="">
+                    {% csrf_token %}
+                
+                <!-- ADIM 1: Kişisel Bilgiler -->
+                <div id="step-1" class="form-step animate-fade-in block">
+                    <h2 class="text-2xl font-semibold text-zinc-100 mb-6 flex items-center gap-3">
+                        <span class="text-brand-pink">01.</span> Kişisel Bilgileriniz
+                    </h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Ad Soyad *</label>
+                            <input type="text" name="full_name" required class="form-input" placeholder="Ad Soyad">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">T.C. Kimlik Numarası *</label>
+                            <input type="text" name="national_id" required pattern="\d{11}" maxlength="11" class="form-input" placeholder="11 haneli T.C. Kimlik No">
+                        </div>
+                        <div>
+                            <label for="email" class="block text-sm font-medium text-gray-300 mb-2">E-Posta Adresi</label>
+                            <input type="email" name="email" id="email" required class="form-input" placeholder="ornek@std.nisantasi.edu.tr">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Telefon Numarası *</label>
+                            <input type="tel" name="phone_number" required class="form-input" placeholder="05XX XXX XX XX">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Doğum Tarihi *</label>
+                            <input type="date" name="birth_date" required class="form-input text-zinc-300">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Okuduğunuz Üniversite *</label>
+                            <input type="text" name="university" required class="form-input" placeholder="İstanbul Nişantaşı Üniversitesi">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Bölüm *</label>
+                            <input type="text" name="department" required class="form-input" placeholder="Dijital Oyun Tasarımı">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Sınıf *</label>
+                            <select name="grade" required class="form-input">
+                                <option value="" disabled selected>Seçiniz</option>
+                                <option value="Hazırlık">Hazırlık</option>
+                                <option value="1. Sınıf">1. Sınıf</option>
+                                <option value="2. Sınıf">2. Sınıf</option>
+                                <option value="3. Sınıf">3. Sınıf</option>
+                                <option value="4. Sınıf">4. Sınıf</option>
+                                <option value="Mezun">Mezun</option>
+                                <option value="Diğer">Diğer</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Acil Durum Kişisi ve No *</label>
+                            <input type="text" name="emergency_contact" required class="form-input" placeholder="İsim Soyisim - 05XX...">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Kronik Hastalık / Alerji (Varsa)</label>
+                            <input type="text" name="health_notes" class="form-input" placeholder="Belirtiniz veya boş bırakınız">
+                        </div>
+                    </div>
+
+                    <div class="mt-10 flex justify-end">
+                        <button type="button" onclick="nextStep(2)" class="btn-primary w-full md:w-auto px-8 py-3">İleri <span class="ml-2">→</span></button>
+                    </div>
+                </div>
+
+                <!-- ADIM 2: Ekip ve Rol -->
+                <div id="step-2" class="form-step hidden animate-fade-in">
+                    <h2 class="text-2xl font-semibold text-zinc-100 mb-6 flex items-center gap-3">
+                        <span class="text-brand-pink">02.</span> Ekip ve Rol Bilgileri
+                    </h2>
+                    
+                    <div class="space-y-8">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-4">Katılım Durumunuz *</label>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <label class="cursor-pointer">
+                                    <input type="radio" name="team_status" value="solo" class="peer sr-only" required onchange="toggleTeamName(false)">
+                                    <div class="p-4 rounded-xl border border-zinc-700 bg-zinc-800/50 hover:border-brand-pink/50 peer-checked:border-brand-pink peer-checked:bg-brand-pink/10 transition-all text-center">
+                                        <span class="block text-zinc-300 font-medium peer-checked:text-brand-pink">Bireysel Katılacağım</span>
+                                    </div>
+                                </label>
+                                <label class="cursor-pointer">
+                                    <input type="radio" name="team_status" value="has_team" class="peer sr-only" required onchange="toggleTeamName(true)">
+                                    <div class="p-4 rounded-xl border border-zinc-700 bg-zinc-800/50 hover:border-brand-pink/50 peer-checked:border-brand-pink peer-checked:bg-brand-pink/10 transition-all text-center">
+                                        <span class="block text-zinc-300 font-medium peer-checked:text-brand-pink">Ekibim Var</span>
+                                    </div>
+                                </label>
+                                <label class="cursor-pointer">
+                                    <input type="radio" name="team_status" value="looking" class="peer sr-only" required onchange="toggleTeamName(false)">
+                                    <div class="p-4 rounded-xl border border-zinc-700 bg-zinc-800/50 hover:border-brand-pink/50 peer-checked:border-brand-pink peer-checked:bg-brand-pink/10 transition-all text-center">
+                                        <span class="block text-zinc-300 font-medium peer-checked:text-brand-pink">Ekip Arıyorum</span>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div id="team-name-container" class="hidden">
+                            <label class="block text-sm font-medium text-zinc-400 mb-2">Takımınızın Adı *</label>
+                            <input type="text" name="team_name" id="team_name" class="form-input" placeholder="Takımınızın tam adı">
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-medium text-zinc-400 mb-2">Oyun Geliştirme Rolünüz *</label>
+                                <select name="jam_role" required class="form-input">
+                                    <option value="" disabled selected>Rol seçiniz</option>
+                                    <option value="Game Developer">Game Developer</option>
+                                    <option value="2D Artist">2D Artist</option>
+                                    <option value="3D Artist">3D Artist</option>
+                                    <option value="Game Designer">Game Designer</option>
+                                    <option value="Sound Designer">Sound Designer</option>
+                                    <option value="Diğer">Diğer</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-zinc-400 mb-2">Deneyim Seviyeniz *</label>
+                                <select name="experience_level" required class="form-input">
+                                    <option value="" disabled selected>Seçiniz</option>
+                                    <option value="Beginner">Başlangıç (Daha önce hiç oyun yapmadım)</option>
+                                    <option value="Intermediate">Orta (1-2 oyun/jam deneyimim var)</option>
+                                    <option value="Advanced">İleri (Birçok projede yer aldım)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-zinc-400 mb-2">Portfolyo / GitHub / ArtStation Linki</label>
+                            <input type="url" name="portfolio_url" class="form-input" placeholder="https://...">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-zinc-400 mb-2">Daha önce katıldığınız Game Jam'ler (Varsa)</label>
+                            <textarea name="previous_jams" rows="2" class="form-input py-3" placeholder="Global Game Jam 2024, vb..."></textarea>
+                        </div>
+                    </div>
+
+                    <div class="mt-10 flex justify-between gap-4">
+                        <button type="button" onclick="prevStep(1)" class="btn-outline w-full md:w-auto px-8 py-3">Geri</button>
+                        <button type="button" onclick="nextStep(3)" class="btn-primary w-full md:w-auto px-8 py-3">İleri <span class="ml-2">→</span></button>
+                    </div>
+                </div>
+
+                <!-- ADIM 3: Motivasyon ve KVKK -->
+                <div id="step-3" class="form-step hidden animate-fade-in">
+                    <h2 class="text-2xl font-semibold text-zinc-100 mb-6 flex items-center gap-3">
+                        <span class="text-brand-pink">03.</span> Motivasyon ve Onay
+                    </h2>
+                    
+                    <div class="space-y-6">
+                        <div>
+                            <label class="block text-sm font-medium text-zinc-400 mb-2">Neden bu etkinliğe katılmak istiyorsunuz? *</label>
+                            <textarea name="motivation" required rows="4" class="form-input py-3" placeholder="Etkinlikten beklentilerinizi ve motivasyonunuzu kısaca açıklayınız..."></textarea>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-zinc-400 mb-2">Eklemek istediğiniz başka bir not var mı?</label>
+                            <textarea name="additional_notes" rows="2" class="form-input py-3" placeholder="Varsa organizatörlere iletmek istedikleriniz..."></textarea>
+                        </div>
+
+                        <div class="p-6 border border-zinc-700/50 bg-zinc-900/50 rounded-xl mt-8">
+                            <label class="flex items-start gap-4 cursor-pointer">
+                                <div class="mt-1">
+                                    <input type="checkbox" name="kvkk_accepted" required class="w-5 h-5 rounded border-zinc-600 bg-zinc-800 text-brand-pink focus:ring-brand-pink/50 focus:ring-offset-zinc-900">
+                                </div>
+                                <span class="text-sm text-zinc-400 leading-relaxed">
+                                    6698 sayılı Kişisel Verilerin Korunması Kanunu (KVKK) kapsamında, paylaştığım kişisel verilerimin İstanbul Nişantaşı Üniversitesi Dijital Oyun Tasarımı Kulübü tarafından etkinlik organizasyonu ve iletişim amacıyla işlenmesini ve saklanmasını okudum, anladım ve <a href="#" class="text-brand-pink hover:underline">kabul ediyorum</a>. *
+                                </span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="mt-10 flex justify-between gap-4">
+                        <button type="button" onclick="prevStep(2)" class="btn-outline w-full md:w-auto px-8 py-3">Geri</button>
+                        <button type="submit" class="btn-primary w-full md:w-auto px-10 py-3 shadow-[0_0_20px_rgba(235,89,109,0.4)] hover:shadow-[0_0_35px_rgba(235,89,109,0.8)]">
+                            Başvuruyu Tamamla
+                        </button>
+                    </div>
+                </div>
+
+            </form>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    function toggleTeamName(show) {
+        const teamInput = document.getElementById('team_name');
+        const container = document.getElementById('team-name-container');
+        if (show) {
+            container.classList.remove('hidden');
+            teamInput.setAttribute('required', 'required');
+        } else {
+            container.classList.add('hidden');
+            teamInput.removeAttribute('required');
+            teamInput.value = '';
+        }
+    }
+
+    function validateStep(stepNum) {
+        const stepDiv = document.getElementById(`step-${stepNum}`);
+        const inputs = stepDiv.querySelectorAll('input[required], select[required], textarea[required]');
+        
+        let isValid = true;
+        inputs.forEach(input => {
+            if (!input.checkValidity()) {
+                input.reportValidity();
+                isValid = false;
+            }
+        });
+        
+        return isValid;
+    }
+
+    function nextStep(step) {
+        // Validation check before proceeding
+        if (step > 1 && !validateStep(step - 1)) return;
+
+        // Hide all steps
+        document.querySelectorAll('.form-step').forEach(el => el.classList.add('hidden'));
+        document.querySelectorAll('.form-step').forEach(el => el.classList.remove('block'));
+        
+        // Show target step
+        document.getElementById(`step-${step}`).classList.remove('hidden');
+        document.getElementById(`step-${step}`).classList.add('block');
+        
+        // Update indicators
+        updateProgress(step);
+    }
+
+    function prevStep(step) {
+        // Hide all steps
+        document.querySelectorAll('.form-step').forEach(el => el.classList.add('hidden'));
+        document.querySelectorAll('.form-step').forEach(el => el.classList.remove('block'));
+        
+        // Show target step
+        document.getElementById(`step-${step}`).classList.remove('hidden');
+        document.getElementById(`step-${step}`).classList.add('block');
+        
+        // Update indicators
+        updateProgress(step);
+    }
+
+    function updateProgress(step) {
+        // Update circles
+        document.querySelectorAll('.step-indicator').forEach(indicator => {
+            const indStep = parseInt(indicator.dataset.step);
+            const circle = indicator.querySelector('div');
+
+            if (indStep <= step) {
+                circle.className = 'w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg backdrop-blur-sm bg-brand-pink/10 border border-brand-pink text-brand-pink shadow-[0_0_15px_rgba(235,89,109,0.4)] transition-all duration-300';
+            } else {
+                circle.className = 'w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg backdrop-blur-sm bg-zinc-800/40 border border-white/5 text-zinc-500 opacity-60 transition-all duration-300';
+            }
+        });
+    }
+</script>
+{% endblock %}

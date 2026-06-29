@@ -68,6 +68,7 @@ LOCAL_APPS = [
     "users",
     "events",
     "jams",
+    "pages",
 ]
 
 # Sıralama önemli: Django built-in'ler → 3. parti → yerel uygulamalar.

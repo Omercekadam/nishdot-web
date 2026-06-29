@@ -1,0 +1,108 @@
+/*
+  Nishdot Web Platform — Tailwind CSS Input File
+  ================================================
+
+  Bu dosya Tailwind'in build sürecine giriş dosyasıdır.
+  `npx tailwindcss -i ./static/css/input.css -o ./static/css/output.css --watch`
+  komutuyla derlenir.
+
+  Custom utility class'lar ve component stilleri burada tanımlanır.
+  Doğrudan CSS yazmaktan kaçınılır — Tailwind class'ları tercih edilir.
+*/
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ================================================================
+   Base Layer — Global Defaults
+   ================================================================ */
+
+@layer base {
+  body {
+    @apply bg-zinc-900 text-zinc-100 font-sans antialiased;
+  }
+
+  /* Smooth scrolling */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Link default */
+  a {
+    @apply transition-colors duration-200;
+  }
+
+  @keyframes slide-left {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+  @keyframes slide-right {
+    0% { transform: translateX(-50%); }
+    100% { transform: translateX(0); }
+  }
+  
+  .animate-slide-left {
+    animation: slide-left 20s linear infinite;
+  }
+  
+  .animate-slide-right {
+    animation: slide-right 20s linear infinite;
+  }
+}
+
+/* ================================================================
+   Components Layer — Reusable Component Styles
+   ================================================================ */
+
+@layer components {
+  /* Container — 1440px max, centered */
+  .container-main {
+    @apply max-w-[1440px] mx-auto px-6;
+  }
+
+  /* Primary CTA Button */
+  .btn-primary {
+    @apply bg-brand-pink text-white font-semibold
+           px-8 py-3 rounded-xl
+           hover:brightness-110 active:brightness-90
+           transition-all duration-200
+           inline-flex items-center justify-center;
+  }
+
+  /* Outline Button */
+  .btn-outline {
+    @apply border border-brand-pink text-brand-pink font-semibold
+           px-8 py-3 rounded-xl
+           hover:bg-brand-pink hover:text-white
+           transition-all duration-200
+           inline-flex items-center justify-center;
+  }
+
+  /* Event Card */
+  .event-card {
+    @apply bg-zinc-800 rounded-2xl overflow-hidden
+           border border-zinc-700
+           hover:border-brand-pink/50
+           transition-all duration-300;
+  }
+
+  /* Form Input */
+  .form-input {
+    @apply w-full bg-zinc-800/80 border border-zinc-700
+           rounded-xl px-4 py-3
+           text-zinc-100 placeholder-zinc-400 font-medium tracking-wide
+           focus:outline-none focus:border-brand-pink focus:shadow-[0_0_15px_rgba(235,89,109,0.2)] focus:bg-zinc-800
+           transition-all duration-300;
+  }
+
+  /* Section Title */
+  .section-title {
+    @apply text-3xl font-bold text-zinc-100 text-center;
+  }
+
+  /* Section Subtitle */
+  .section-subtitle {
+    @apply text-lg text-zinc-300 text-center mt-2;
+  }
+}

@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="tr">
 <head>
@@ -5,12 +6,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="{% block meta_description %}İstanbul Nişantaşı Üniversitesi Dijital Oyun Tasarımı Kulübü{% endblock %}">
 
-    <title>{% block title %}Nishdot{% endblock %} | Nishdot</title>
+    <title>{% block title %}Home{% endblock %} | Nishdot</title>
+
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS (Derlenmiş Output) -->
+    <link rel="stylesheet" href="{% static 'css/output.css' %}">
 
     {% block extra_head %}{% endblock %}
 </head>
-<body>
-    {% block content %}{% endblock %}
+<body class="bg-zinc-900 text-zinc-100 font-sans antialiased min-h-screen flex flex-col">
+    
+    {% include 'components/navbar.html' %}
+
+    <main class="flex-grow">
+        {% block content %}{% endblock %}
+    </main>
+
+    {% include 'components/footer.html' %}
 
     {% block extra_scripts %}{% endblock %}
 </body>

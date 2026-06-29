@@ -1,0 +1,30 @@
+{
+  "name": "nishdot-web",
+  "version": "1.0.0",
+  "description": "![Nishdot Logo](docs/design/desktop-homepage.png) *(Tasarım referansı - Figma)*",
+  "main": "postcss.config.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Omercekadam/nishdot-web.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Omercekadam/nishdot-web/issues"
+  },
+  "homepage": "https://github.com/Omercekadam/nishdot-web#readme",
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.3.2",
+    "autoprefixer": "^10.5.2",
+    "postcss": "^8.5.16",
+    "tailwindcss": "^3.4.19"
+  }
+}

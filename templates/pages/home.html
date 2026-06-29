@@ -1,0 +1,302 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Ana Sayfa{% endblock %}
+
+{% block content %}
+<!-- HERO SECTION -->
+<section id="home" class="relative min-h-[80vh] flex items-center justify-center overflow-hidden py-20">
+    <!-- Background Image Conveyor Belt -->
+    <div class="absolute inset-0 z-0 opacity-40 overflow-hidden flex flex-col gap-2 py-4 justify-center pointer-events-none">
+        <!-- Row 1 (Left) -->
+        <div class="flex gap-8 w-max animate-slide-left pl-4">
+            <img src="{% static 'images/hero/A7300011.JPG' %}" class="h-[384px] w-[384px] shrink-0 object-cover rounded-lg" alt="">
+            <img src="{% static 'images/hero/A7300050.JPG' %}" class="h-[384px] w-[384px] shrink-0 object-cover rounded-lg" alt="">
+            <img src="{% static 'images/hero/A7300069.JPG' %}" class="h-[384px] w-[384px] shrink-0 object-cover rounded-lg" alt="">
+            <img src="{% static 'images/hero/A7300147.JPG' %}" class="h-[384px] w-[384px] shrink-0 object-cover rounded-lg" alt="">
+            <img src="{% static 'images/hero/A7300219.JPG' %}" class="h-[384px] w-[384px] shrink-0 object-cover rounded-lg" alt="">
+            <!-- Duplicates for smooth scroll -->
+            <img src="{% static 'images/hero/A7300011.JPG' %}" class="h-[384px] w-[384px] shrink-0 object-cover rounded-lg" alt="">
+            <img src="{% static 'images/hero/A7300050.JPG' %}" class="h-[384px] w-[384px] shrink-0 object-cover rounded-lg" alt="">
+            <img src="{% static 'images/hero/A7300069.JPG' %}" class="h-[384px] w-[384px] shrink-0 object-cover rounded-lg" alt="">
+            <img src="{% static 'images/hero/A7300147.JPG' %}" class="h-[384px] w-[384px] shrink-0 object-cover rounded-lg" alt="">
+            <img src="{% static 'images/hero/A7300219.JPG' %}" class="h-[384px] w-[384px] shrink-0 object-cover rounded-lg" alt="">
+        </div>
+        <!-- Row 2 (Right) -->
+        <div class="flex gap-4 w-max animate-slide-right pl-4">
+            <img src="{% static 'images/hero/A7300235.JPG' %}" class="h-[256px] w-[256px] shrink-0 object-cover rounded-lg" alt="">
+            <img src="{% static 'images/hero/DSC01581.JPG' %}" class="h-[256px] w-[256px] shrink-0 object-cover rounded-lg" alt="">
+            <img src="{% static 'images/hero/DSC_6901.JPG' %}" class="h-[256px] w-[256px] shrink-0 object-cover rounded-lg" alt="">
+            <img src="{% static 'images/hero/DSC_8015.JPG' %}" class="h-[256px] w-[256px] shrink-0 object-cover rounded-lg" alt="">
+            <img src="{% static 'images/hero/IMG_5306.JPG' %}" class="h-[256px] w-[256px] shrink-0 object-cover rounded-lg" alt="">
+            <img src="{% static 'images/hero/IMG_5333.JPG' %}" class="h-[256px] w-[256px] shrink-0 object-cover rounded-lg" alt="">
+            <!-- Duplicates -->
+            <img src="{% static 'images/hero/A7300235.JPG' %}" class="h-[256px] w-[256px] shrink-0 object-cover rounded-lg" alt="">
+            <img src="{% static 'images/hero/DSC01581.JPG' %}" class="h-[256px] w-[256px] shrink-0 object-cover rounded-lg" alt="">
+            <img src="{% static 'images/hero/DSC_6901.JPG' %}" class="h-[256px] w-[256px] shrink-0 object-cover rounded-lg" alt="">
+            <img src="{% static 'images/hero/DSC_8015.JPG' %}" class="h-[256px] w-[256px] shrink-0 object-cover rounded-lg" alt="">
+            <img src="{% static 'images/hero/IMG_5306.JPG' %}" class="h-[256px] w-[256px] shrink-0 object-cover rounded-lg" alt="">
+            <img src="{% static 'images/hero/IMG_5333.JPG' %}" class="h-[256px] w-[256px] shrink-0 object-cover rounded-lg" alt="">
+        </div>
+        <!-- Row 3 (Left) -->
+        <div class="flex gap-8 w-max animate-slide-left pl-4">
+            <img src="{% static 'images/hero/IMG_5360.JPG' %}" class="h-[384px] w-[384px] shrink-0 object-cover rounded-lg" alt="">
+            <img src="{% static 'images/hero/IMG_5403.JPG' %}" class="h-[384px] w-[384px] shrink-0 object-cover rounded-lg" alt="">
+            <img src="{% static 'images/hero/IMG_5438.JPG' %}" class="h-[384px] w-[384px] shrink-0 object-cover rounded-lg" alt="">
+            <img src="{% static 'images/hero/YMN00092.JPG' %}" class="h-[384px] w-[384px] shrink-0 object-cover rounded-lg" alt="">
+            <img src="{% static 'images/hero/A7300245.JPG' %}" class="h-[384px] w-[384px] shrink-0 object-cover rounded-lg" alt="">
+            <!-- Duplicates -->
+            <img src="{% static 'images/hero/IMG_5360.JPG' %}" class="h-[384px] w-[384px] shrink-0 object-cover rounded-lg" alt="">
+            <img src="{% static 'images/hero/IMG_5403.JPG' %}" class="h-[384px] w-[384px] shrink-0 object-cover rounded-lg" alt="">
+            <img src="{% static 'images/hero/IMG_5438.JPG' %}" class="h-[384px] w-[384px] shrink-0 object-cover rounded-lg" alt="">
+            <img src="{% static 'images/hero/YMN00092.JPG' %}" class="h-[384px] w-[384px] shrink-0 object-cover rounded-lg" alt="">
+            <img src="{% static 'images/hero/A7300245.JPG' %}" class="h-[384px] w-[384px] shrink-0 object-cover rounded-lg" alt="">
+        </div>
+    </div>
+    
+    <!-- Gradient Overlay for readability -->
+    <div class="absolute inset-0 z-10 bg-gradient-to-b from-zinc-900/90 via-zinc-900/60 to-zinc-900"></div>
+
+    <!-- Hero Content -->
+    <div class="container-main relative z-20 text-center flex flex-col items-center justify-center gap-6">
+        <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold uppercase tracking-tight text-zinc-100 max-w-7xl leading-tight">
+            İSTANBUL NİŞANTAŞI ÜNİVERSİTESİ<br>DİJİTAL OYUN TASARIMI KULÜBÜ
+        </h1>
+        <p class="text-xl text-brand-pink font-medium">The club</p>
+        
+        <button class="btn-primary mt-4 text-2xl w-[240px] h-[80px] rounded-[32px] shadow-[0_0_20px_rgba(235,89,109,0.6)] hover:shadow-[0_0_35px_rgba(235,89,109,1)] transition-shadow duration-300">
+            Join Us!
+        </button>
+
+        <!-- Social Icons -->
+        <div class="flex items-center gap-6 mt-20 opacity-80">
+            <a href="#" class="hover:opacity-100 transition-all hover:scale-110 drop-shadow-none hover:drop-shadow-[0_0_15px_rgba(235,89,109,0.8)]"><span class="sr-only">Discord</span><img src="{% static 'images/social/DiscordLogo.png' %}" alt="Discord" class="h-10 w-auto"></a>
+            <a href="#" class="hover:opacity-100 transition-all hover:scale-110 drop-shadow-none hover:drop-shadow-[0_0_15px_rgba(235,89,109,0.8)]"><span class="sr-only">TikTok</span><img src="{% static 'images/social/TiktokLogo.png' %}" alt="TikTok" class="h-10 w-auto"></a>
+            <a href="#" class="hover:opacity-100 transition-all hover:scale-110 drop-shadow-none hover:drop-shadow-[0_0_15px_rgba(235,89,109,0.8)]"><span class="sr-only">WhatsApp</span><img src="{% static 'images/social/WhatsappLogo.png' %}" alt="WhatsApp" class="h-10 w-auto"></a>
+            <a href="#" class="hover:opacity-100 transition-all hover:scale-110 drop-shadow-none hover:drop-shadow-[0_0_15px_rgba(235,89,109,0.8)]"><span class="sr-only">YouTube</span><img src="{% static 'images/social/YoutubeLogo.png' %}" alt="YouTube" class="h-10 w-auto"></a>
+            <a href="#" class="hover:opacity-100 transition-all hover:scale-110 drop-shadow-none hover:drop-shadow-[0_0_15px_rgba(235,89,109,0.8)]"><span class="sr-only">Instagram</span><img src="{% static 'images/social/InstagramLogo.png' %}" alt="Instagram" class="h-10 w-auto"></a>
+            <a href="#" class="hover:opacity-100 transition-all hover:scale-110 drop-shadow-none hover:drop-shadow-[0_0_15px_rgba(235,89,109,0.8)]"><span class="sr-only">LinkedIn</span><img src="{% static 'images/social/LinkedinLogo.png' %}" alt="LinkedIn" class="h-10 w-auto"></a>
+        </div>
+    </div>
+</section>
+
+<!-- EVENTS SECTION -->
+<section id="events" class="py-20 bg-zinc-900 border-t border-zinc-800/50 scroll-mt-20">
+    <div class="container-main">
+        <div class="text-center mb-16">
+            <h2 class="section-title">Events</h2>
+            <p class="section-subtitle">Events we organized</p>
+        </div>
+
+        <!-- Event Cards Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for event in events %}
+            <!-- Event Card -->
+            <div class="event-card group relative">
+                <!-- Top Gradient Border -->
+                <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-brand-pink to-brand-pink/20"></div>
+                
+                <!-- Image Area -->
+                <div class="h-48 bg-zinc-800 flex items-center justify-center overflow-hidden border-b border-zinc-700/50">
+                    {% if event.cover_image %}
+                        <img src="{{ event.cover_image.url }}" alt="{{ event.title }}" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500">
+                    {% else %}
+                        <img src="{% static 'images/nishdotlogolightpng.png' %}" alt="Event Logo" class="max-h-24 opacity-50 group-hover:opacity-100 transition-opacity">
+                    {% endif %}
+                </div>
+                
+                <div class="p-6">
+                    <h3 class="text-xl font-semibold text-zinc-100 mb-2">{{ event.title }}</h3>
+                    <p class="text-zinc-400 text-sm mb-6 line-clamp-2">
+                        {{ event.description|striptags }}
+                    </p>
+                    
+                    <a href="{% url 'events:detail' event.slug %}" class="w-full btn-outline block text-center">
+                        View Detail
+                    </a>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-span-full text-center py-12 text-zinc-500">
+                <p>Şu an aktif bir etkinlik bulunmuyor. Yakında görüşmek üzere!</p>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="mt-12 text-center">
+            <button class="text-brand-pink hover:text-white border border-brand-pink/30 hover:border-brand-pink hover:bg-brand-pink/10 px-6 py-2 rounded-xl transition-all duration-300 font-medium text-sm">
+                Click to see more >
+            </button>
+        </div>
+    </div>
+</section>
+
+<!-- ABOUT US SECTION -->
+<section id="about" class="py-20 bg-zinc-900 border-t border-zinc-800/50 scroll-mt-20">
+    <div class="container-main">
+        <div class="text-center mb-12">
+            <h2 class="section-title">About Us</h2>
+            <p class="section-subtitle">Who are us?</p>
+        </div>
+        
+        <div class="max-w-3xl mx-auto text-center">
+            <p class="text-zinc-300 text-lg leading-relaxed">
+                Biz, İstanbul Nişantaşı Üniversitesi bünyesinde dijital oyun tasarımına gönül vermiş, 
+                üretmeyi ve birlikte öğrenmeyi seven bir topluluğuz. Oyun geliştirme maratonları (Game Jams), 
+                eğitimler, seminerler ve atölye çalışmaları ile kendimizi sürekli geliştirirken sektörle 
+                iç içe bir ekosistem yaratmayı hedefliyoruz.
+            </p>
+            
+            <!-- Mascot placeholder (optional based on design) -->
+            <div class="mt-12 flex justify-center">
+                <img src="{% static 'images/tonish_mascot.png' %}" alt="Tonish Mascot" class="h-40 hover:scale-105 transition-transform duration-300">
+            </div>
+            
+            <!-- Social Icons Repeat -->
+            <div class="flex items-center justify-center gap-6 mt-12 opacity-80">
+                 <!-- Same icons as hero -->
+                 <div class="w-6 h-6 bg-zinc-700 rounded-full"></div>
+                 <div class="w-6 h-6 bg-zinc-700 rounded-full"></div>
+                 <div class="w-6 h-6 bg-zinc-700 rounded-full"></div>
+                 <div class="w-6 h-6 bg-zinc-700 rounded-full"></div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CONTACT US SECTION -->
+<section id="contact" class="py-20 bg-zinc-900 border-t border-zinc-800/50 scroll-mt-20">
+    <div class="container-main">
+        <div class="text-center mb-16">
+            <h2 class="section-title">Contact Us!</h2>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start max-w-5xl mx-auto">
+            <!-- Map Placeholder -->
+            <div class="rounded-2xl overflow-hidden bg-zinc-800 h-80 border border-zinc-700 flex items-center justify-center">
+                <p class="text-zinc-500">Google Maps Embed Placeholder</p>
+            </div>
+
+            <!-- Contact Info -->
+            <div class="flex flex-col justify-center h-full gap-8">
+                <div>
+                    <h3 class="text-xl font-bold text-zinc-100 mb-3 flex items-center gap-2">
+                        <span class="text-brand-pink"></span> Our Address
+                    </h3>
+                    <p class="text-zinc-300 leading-relaxed pl-7">
+                        Maslak Mahallesi, Taşyoncası Sokak, No: 1V ve No:1Y Bina Kodu: 34481742,<br>
+                        34398 Sarıyer/İstanbul
+                    </p>
+                </div>
+
+                <div>
+                    <h3 class="text-xl font-bold text-zinc-100 mb-3 flex items-center gap-2">
+                        <span class="text-brand-pink"></span> Email
+                    </h3>
+                    <a href="mailto:dijitaloyuntasarimkulubu@nisantasi.edu.tr" class="text-zinc-300 hover:text-brand-pink transition-colors pl-7 break-all">
+                        dijitaloyuntasarimkulubu@nisantasi.edu.tr
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- SIGN IN MODAL (Hidden by default) -->
+<div id="signin-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center">
+    <!-- Backdrop Blur -->
+    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="document.getElementById('signin-modal').classList.add('hidden')"></div>
+    
+    <!-- Modal Content -->
+    <div class="relative bg-zinc-900 border border-zinc-800 p-8 rounded-2xl w-full max-w-md mx-4 shadow-2xl">
+        <button onclick="document.getElementById('signin-modal').classList.add('hidden')" class="absolute top-4 right-4 text-zinc-500 hover:text-zinc-300">
+            ✕
+        </button>
+        
+        <div class="text-center mb-8">
+            <h2 class="text-2xl font-bold text-zinc-100 mb-2">Sign In</h2>
+            <p class="text-zinc-400 text-sm">Welcome back!</p>
+        </div>
+
+        <form class="flex flex-col gap-4">
+            <div>
+                <label class="block text-sm font-medium text-zinc-300 mb-1">Email</label>
+                <input type="email" class="form-input" placeholder="Enter your email">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-zinc-300 mb-1">Password</label>
+                <input type="password" class="form-input" placeholder="Enter your password">
+            </div>
+            
+            <button type="submit" class="btn-primary w-full mt-4">
+                Sign in
+            </button>
+            
+            <p class="text-center text-sm text-zinc-400 mt-4">
+                Don't have an account? 
+                <a href="#" class="text-brand-pink hover:underline">Sign up</a>
+            </p>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const sections = document.querySelectorAll('section');
+    const navLinks = document.querySelectorAll('.nav-link');
+
+    // Smooth scroll for nav links
+    navLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            const targetId = this.getAttribute('href');
+            if (targetId.startsWith('#')) {
+                e.preventDefault();
+                if (targetId === '#home') {
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                } else {
+                    const targetElement = document.querySelector(targetId);
+                    if (targetElement) {
+                        targetElement.scrollIntoView({ behavior: 'smooth' });
+                    }
+                }
+            }
+        });
+    });
+
+    // Scrollspy to update active class using a middle screen trigger line
+    window.addEventListener('scroll', () => {
+        let current = '';
+        // Ekranda tam ortadan geçen hayali bir çizgi oluşturuyoruz
+        const scrollTriggerLine = window.scrollY + (window.innerHeight / 2);
+
+        sections.forEach(section => {
+            const sectionTop = section.offsetTop;
+            const sectionBottom = sectionTop + section.offsetHeight;
+            
+            // Eğer hayali çizgi, bu section'ın üst ve alt sınırları arasındaysa
+            if (scrollTriggerLine >= sectionTop && scrollTriggerLine < sectionBottom) {
+                current = section.getAttribute('id');
+            }
+        });
+
+        // Eğer en alttaysak ve sayfa sonuna geldiysek, otomatik olarak en son section'ı seç
+        if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 10) {
+            current = sections[sections.length - 1].getAttribute('id');
+        }
+
+        navLinks.forEach(link => {
+            link.classList.remove('active');
+            if (link.getAttribute('href') === '#' + current) {
+                link.classList.add('active');
+            }
+        });
+    });
+    
+    // Trigger once on load
+    window.dispatchEvent(new Event('scroll'));
+});
+</script>
+{% endblock %}
