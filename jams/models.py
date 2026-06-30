@@ -85,7 +85,7 @@ class JamApplication(TimeStampedModel):
     health_notes     = models.TextField(blank=True, verbose_name="Kronik Hastalık / Alerji")
     jam_role         = models.CharField(max_length=100, verbose_name="Rol")
     experience_level = models.CharField(max_length=50, blank=True, verbose_name="Deneyim Seviyesi")
-    team_status      = models.CharField(max_length=20, choices=TeamStatus.choices, verbose_name="Takım Durumu")
+    team_status      = models.CharField(max_length=20, choices=TeamStatus.choices, verbose_name="Takım Durumu", db_index=True)
     team_name        = models.CharField(max_length=100, blank=True, verbose_name="Takım Adı")
     portfolio_url    = models.TextField(blank=True, verbose_name="Portfolyo Linkleri")
     previous_jams    = models.TextField(blank=True, verbose_name="Önceki Jam'ler")
@@ -97,7 +97,7 @@ class JamApplication(TimeStampedModel):
     custom_answers = models.JSONField(default=dict, blank=True, verbose_name="Özel Cevaplar")
 
     # ── Durum ve İnceleme ──
-    status         = models.CharField(max_length=20, choices=ApplicationStatus.choices, default=ApplicationStatus.PENDING, verbose_name="Durum")
+    status         = models.CharField(max_length=20, choices=ApplicationStatus.choices, default=ApplicationStatus.PENDING, verbose_name="Durum", db_index=True)
     reviewer_notes = models.TextField(blank=True, verbose_name="İnceleyen Notları")
 
     # ── Matchmaker ──

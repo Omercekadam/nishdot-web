@@ -35,6 +35,7 @@ DEBUG = False
 DATABASES = {
     "default": env.db("DATABASE_URL"),
 }
+DATABASES["default"]["CONN_MAX_AGE"] = 600  # 10 dakika connection pooling
 
 # ==============================================================================
 # Security
@@ -56,6 +57,24 @@ SECURE_HSTS_PRELOAD = True
 # XSS koruması (modern tarayıcılarda varsayılan, ama ek güvenlik katmanı).
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
+
+# ==============================================================================
+# Caching (Redis)
+# ==============================================================================
+
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": env("REDIS_URL", default="redis://127.0.0.1:6379/1"),
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    }
+}
+
+# Session engine olarak Redis kullanalım (daha hızlı oturum yönetimi)
+SESSION_ENGINE = "django.contrib.sessions.backends.cache"
+SESSION_CACHE_ALIAS = "default"
 
 # ==============================================================================
 # Static Files

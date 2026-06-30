@@ -19,6 +19,7 @@ from .base import INSTALLED_APPS, MIDDLEWARE, env
 # ==============================================================================
 
 DEBUG = True
+ALLOWED_HOSTS = ["*"]  # Mobil cihazlardan (local IP ile) teste izin vermek için eklendi.
 
 # ==============================================================================
 # Database
