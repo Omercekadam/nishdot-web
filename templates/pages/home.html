@@ -64,18 +64,24 @@
         </h1>
         <p class="text-xl text-brand-pink font-medium">Dünyanın en havalı öğrenci kulübü</p>
         
-        <button class="btn-primary mt-4 text-2xl w-[240px] h-[80px] rounded-[32px] shadow-[0_0_20px_rgba(235,89,109,0.6)] hover:shadow-[0_0_35px_rgba(235,89,109,1)] transition-shadow duration-300">
+        {% if user.is_authenticated %}
+        <a href="{% url 'users:dashboard' %}" class="btn-primary mt-4 text-2xl w-[240px] h-[80px] rounded-[32px] shadow-[0_0_20px_rgba(235,89,109,0.6)] hover:shadow-[0_0_35px_rgba(235,89,109,1)] transition-shadow duration-300 flex items-center justify-center">
             Aramıza Katıl!
-        </button>
+        </a>
+        {% else %}
+        <a href="{% url 'users:login' %}" class="btn-primary mt-4 text-2xl w-[240px] h-[80px] rounded-[32px] shadow-[0_0_20px_rgba(235,89,109,0.6)] hover:shadow-[0_0_35px_rgba(235,89,109,1)] transition-shadow duration-300 flex items-center justify-center">
+            Aramıza Katıl!
+        </a>
+        {% endif %}
 
         <!-- Social Icons -->
         <div class="flex items-center gap-6 mt-20 opacity-80">
-            <a href="#" class="hover:opacity-100 transition-all hover:scale-110 drop-shadow-none hover:drop-shadow-[0_0_15px_rgba(235,89,109,0.8)]"><span class="sr-only">Discord</span><img src="{% static 'images/social/DiscordLogo.png' %}" alt="Discord" class="h-10 w-auto"></a>
-            <a href="#" class="hover:opacity-100 transition-all hover:scale-110 drop-shadow-none hover:drop-shadow-[0_0_15px_rgba(235,89,109,0.8)]"><span class="sr-only">TikTok</span><img src="{% static 'images/social/TiktokLogo.png' %}" alt="TikTok" class="h-10 w-auto"></a>
-            <a href="#" class="hover:opacity-100 transition-all hover:scale-110 drop-shadow-none hover:drop-shadow-[0_0_15px_rgba(235,89,109,0.8)]"><span class="sr-only">WhatsApp</span><img src="{% static 'images/social/WhatsappLogo.png' %}" alt="WhatsApp" class="h-10 w-auto"></a>
-            <a href="#" class="hover:opacity-100 transition-all hover:scale-110 drop-shadow-none hover:drop-shadow-[0_0_15px_rgba(235,89,109,0.8)]"><span class="sr-only">YouTube</span><img src="{% static 'images/social/YoutubeLogo.png' %}" alt="YouTube" class="h-10 w-auto"></a>
-            <a href="#" class="hover:opacity-100 transition-all hover:scale-110 drop-shadow-none hover:drop-shadow-[0_0_15px_rgba(235,89,109,0.8)]"><span class="sr-only">Instagram</span><img src="{% static 'images/social/InstagramLogo.png' %}" alt="Instagram" class="h-10 w-auto"></a>
-            <a href="#" class="hover:opacity-100 transition-all hover:scale-110 drop-shadow-none hover:drop-shadow-[0_0_15px_rgba(235,89,109,0.8)]"><span class="sr-only">LinkedIn</span><img src="{% static 'images/social/LinkedinLogo.png' %}" alt="LinkedIn" class="h-10 w-auto"></a>
+            <a href="https://discord.com/invite/fch8HnsKwE" target="_blank" rel="noopener noreferrer" class="hover:opacity-100 transition-all hover:scale-110 drop-shadow-none hover:drop-shadow-[0_0_15px_rgba(235,89,109,0.8)]"><span class="sr-only">Discord</span><img src="{% static 'images/social/DiscordLogo.png' %}" alt="Discord" class="h-10 w-auto"></a>
+            <a href="https://www.tiktok.com/@nishdott" target="_blank" rel="noopener noreferrer" class="hover:opacity-100 transition-all hover:scale-110 drop-shadow-none hover:drop-shadow-[0_0_15px_rgba(235,89,109,0.8)]"><span class="sr-only">TikTok</span><img src="{% static 'images/social/TiktokLogo.png' %}" alt="TikTok" class="h-10 w-auto"></a>
+            <a href="https://chat.whatsapp.com/DiufgZg3t1C2a4Y5L4iOLi" target="_blank" rel="noopener noreferrer" class="hover:opacity-100 transition-all hover:scale-110 drop-shadow-none hover:drop-shadow-[0_0_15px_rgba(235,89,109,0.8)]"><span class="sr-only">WhatsApp</span><img src="{% static 'images/social/WhatsappLogo.png' %}" alt="WhatsApp" class="h-10 w-auto"></a>
+            <a href="https://www.youtube.com/@nishdot" target="_blank" rel="noopener noreferrer" class="hover:opacity-100 transition-all hover:scale-110 drop-shadow-none hover:drop-shadow-[0_0_15px_rgba(235,89,109,0.8)]"><span class="sr-only">YouTube</span><img src="{% static 'images/social/YoutubeLogo.png' %}" alt="YouTube" class="h-10 w-auto"></a>
+            <a href="https://www.instagram.com/nishdott/" target="_blank" rel="noopener noreferrer" class="hover:opacity-100 transition-all hover:scale-110 drop-shadow-none hover:drop-shadow-[0_0_15px_rgba(235,89,109,0.8)]"><span class="sr-only">Instagram</span><img src="{% static 'images/social/InstagramLogo.png' %}" alt="Instagram" class="h-10 w-auto"></a>
+            <a href="https://www.linkedin.com/company/nishdot/" target="_blank" rel="noopener noreferrer" class="hover:opacity-100 transition-all hover:scale-110 drop-shadow-none hover:drop-shadow-[0_0_15px_rgba(235,89,109,0.8)]"><span class="sr-only">LinkedIn</span><img src="{% static 'images/social/LinkedinLogo.png' %}" alt="LinkedIn" class="h-10 w-auto"></a>
         </div>
     </div>
 </section>
@@ -141,35 +147,27 @@
             <p class="section-subtitle">Biz kimiz?</p>
         </div>
         
-        <div class="max-w-3xl mx-auto text-center">
+        <div class="max-w-3xl mx-auto text-center space-y-6">
             <p class="text-zinc-300 text-lg leading-relaxed">
-                Biz, İstanbul Nişantaşı Üniversitesi bünyesinde dijital oyun tasarımına gönül vermiş, 
-                üretmeyi ve birlikte öğrenmeyi seven bir topluluğuz. Oyun geliştirme maratonları (Game Jams), 
-                eğitimler, seminerler ve atölye çalışmaları ile kendimizi sürekli geliştirirken sektörle 
-                iç içe bir ekosistem yaratmayı hedefliyoruz.
+                İstanbul Nişantaşı Üniversitesi Dijital Oyun Tasarımı Kulübü, kısaca nishdot. 2023 yılında kurulmuş, oyun dünyasının mutfağını merak edenlerle; halihazırda kod yazan, çizen ve tasarlayan kreatif beyinleri aynı çatı altında buluşturmayı hedefleyen bir öğrenci topluluğu.
+            </p>
+            <p class="text-zinc-300 text-lg leading-relaxed">
+                Temel misyonumuz, kampüsteki potansiyeli sadece bir heves olarak bırakmayıp, sektöre yön verecek profesyonel portfolyolara dönüştürmek ve yerel oyun sektörünün dinamikleriyle doğrudan konuşan, projeleriyle endüstride adından söz ettiren kalıcı bir ekosistem inşa etmek.
+            </p>
+            <p class="text-zinc-300 text-lg leading-relaxed">
+                Bu hedef doğrultusunda game jam'ler, stüdyo ziyaretleri, teknik atölyeler ve endüstri liderleriyle interaktif buluşmalar organize ederek topluluğumuzun üretimin her aşamasında aktif rol almasına yardımcı oluyoruz.
             </p>
             
             <!-- Mascot placeholder (optional based on design) -->
             <div class="mt-12 flex justify-center">
                 <img src="{% static 'images/tonish_mascot.png' %}" alt="Tonish Mascot" class="h-40 hover:scale-105 transition-transform duration-300">
             </div>
-            
-            <!-- Social Icons Repeat -->
-            <div class="flex items-center justify-center gap-6 mt-12 opacity-80">
-                 <!-- Same icons as hero -->
-                 <div class="w-6 h-6 bg-zinc-700 rounded-full"></div>
-                 <div class="w-6 h-6 bg-zinc-700 rounded-full"></div>
-                 <div class="w-6 h-6 bg-zinc-700 rounded-full"></div>
-                 <div class="w-6 h-6 bg-zinc-700 rounded-full"></div>
-            </div>
         </div>
     </div>
 </section>
 
 <!-- CONTACT US SECTION -->
-<section id="contact" class="py-20 bg-zinc-900 border-t border-zinc-800/50 scroll-mt-20 relative overflow-hidden">
-    <!-- Neon Glow Background -->
-    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-brand-pink/5 rounded-full blur-[120px] pointer-events-none"></div>
+<section id="contact" class="py-20 bg-zinc-900 border-t border-zinc-800/50 scroll-mt-20">
 
     <div class="container-main relative z-10">
         <div class="text-center mb-16">
