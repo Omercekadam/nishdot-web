@@ -70,9 +70,16 @@ class CustomUser(AbstractUser, TimeStampedModel):
     )
 
     # ── Profil Alanları ──
+    is_verified = models.BooleanField(default=False, verbose_name="Doğrulandı mı?")
+    verification_code = models.CharField(max_length=6, blank=True, null=True, verbose_name="Doğrulama Kodu")
+    code_expires_at = models.DateTimeField(blank=True, null=True, verbose_name="Kod Geçerlilik Süresi")
+
+    phone_number = models.CharField(max_length=20, blank=True, verbose_name="Telefon Numarası")
+    national_id = models.CharField(max_length=11, blank=True, verbose_name="T.C. Kimlik Numarası")
+    birth_date = models.DateField(null=True, blank=True, verbose_name="Doğum Tarihi")
     university = models.CharField(max_length=200, blank=True, verbose_name="Üniversite")
     department = models.CharField(max_length=200, blank=True, verbose_name="Bölüm")
-    portfolio_url = models.URLField(blank=True, verbose_name="Portfolyo Linki")
+    portfolio_url = models.TextField(blank=True, verbose_name="Portfolyo Linkleri")
 
     # Custom manager'ı kullan
     objects = CustomUserManager()

@@ -22,6 +22,14 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 # ==============================================================================
+# MISCELLANEOUS
+# ==============================================================================
+# Add minor configuration settings here if needed
+
+# ==============================================================================
+
+
+# ==============================================================================
 # Environment
 # ==============================================================================
 
@@ -133,6 +141,21 @@ AUTH_PASSWORD_VALIDATORS = [
         "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
+
+LOGIN_REDIRECT_URL = "users:dashboard"
+LOGOUT_REDIRECT_URL = "pages:home"
+LOGIN_URL = "users:login"
+
+# ==============================================================================
+# E-MAIL (SMTP) SETTINGS
+# ==============================================================================
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = env("SMTP_SERVER", default="smtp.gmail.com")
+EMAIL_PORT = env("SMTP_PORT", default=587, cast=int)
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = env("SMTP_USERNAME", default="")
+EMAIL_HOST_PASSWORD = env("SMTP_PASSWORD", default="")
+DEFAULT_FROM_EMAIL = f"Nishdot <{EMAIL_HOST_USER}>"
 
 # ==============================================================================
 # Internationalization & Localization

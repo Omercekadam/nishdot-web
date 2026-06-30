@@ -34,9 +34,7 @@ DATABASES = {
 # Email
 # ==============================================================================
 
-# Gerçek mail göndermez, terminale yazar.
-# Kayıt onayı, şifre sıfırlama gibi akışları test etmek için ideal.
-EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+# EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
 # ==============================================================================
 # Django Debug Toolbar

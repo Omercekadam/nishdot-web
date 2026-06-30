@@ -79,31 +79,31 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <label class="block text-sm font-medium text-gray-300 mb-2">Ad Soyad *</label>
-                            <input type="text" name="full_name" required class="form-input" placeholder="Ad Soyad">
+                            <input type="text" name="full_name" required class="form-input" placeholder="Ad Soyad" value="{% if user.is_authenticated %}{{ user.first_name }} {{ user.last_name }}{% endif %}">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-300 mb-2">T.C. Kimlik Numarası <span class="text-xs text-zinc-500 font-normal">(Kampüse giriş çıkışlar için)</span> *</label>
-                            <input type="text" name="national_id" required pattern="\d{11}" maxlength="11" class="form-input" placeholder="11 haneli T.C. Kimlik No">
+                            <input type="text" name="national_id" required pattern="\d{11}" maxlength="11" class="form-input" placeholder="11 haneli T.C. Kimlik No" value="{% if user.is_authenticated %}{{ user.national_id|default:'' }}{% endif %}">
                         </div>
                         <div>
                             <label for="email" class="block text-sm font-medium text-gray-300 mb-2">E-Posta Adresi *</label>
-                            <input type="email" name="email" id="email" required class="form-input" placeholder="ornek@std.nisantasi.edu.tr">
+                            <input type="email" name="email" id="email" required class="form-input" placeholder="ornek@std.nisantasi.edu.tr" value="{% if user.is_authenticated %}{{ user.email }}{% endif %}">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-300 mb-2">Telefon Numarası *</label>
-                            <input type="tel" name="phone_number" required class="form-input" placeholder="05XX XXX XX XX">
+                            <input type="tel" name="phone_number" required class="form-input" placeholder="05XX XXX XX XX" value="{% if user.is_authenticated %}{{ user.phone_number|default:'' }}{% endif %}">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-300 mb-2">Doğum Tarihi *</label>
-                            <input type="date" name="birth_date" required class="form-input text-zinc-300">
+                            <input type="date" name="birth_date" required class="form-input text-zinc-300" value="{% if user.is_authenticated and user.birth_date %}{{ user.birth_date|date:'Y-m-d' }}{% endif %}">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-300 mb-2">Okuduğunuz Üniversite *</label>
-                            <input type="text" name="university" required class="form-input" placeholder="İstanbul Nişantaşı Üniversitesi">
+                            <input type="text" name="university" required class="form-input" placeholder="İstanbul Nişantaşı Üniversitesi" value="{% if user.is_authenticated %}{{ user.university|default:'' }}{% endif %}">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-300 mb-2">Bölüm *</label>
-                            <input type="text" name="department" required class="form-input" placeholder="Dijital Oyun Tasarımı">
+                            <input type="text" name="department" required class="form-input" placeholder="Dijital Oyun Tasarımı" value="{% if user.is_authenticated %}{{ user.department|default:'' }}{% endif %}">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-300 mb-2">Sınıf *</label>
@@ -194,8 +194,8 @@
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-zinc-400 mb-2">Portfolyo / GitHub / ArtStation Linki</label>
-                            <input type="url" name="portfolio_url" class="form-input" placeholder="https://...">
+                            <label class="block text-sm font-medium text-zinc-400 mb-2">Portfolyo / GitHub / ArtStation Linkleri</label>
+                            <textarea name="portfolio_url" rows="2" class="form-input py-3" placeholder="Birden fazla ekleyecekseniz alt satıra geçebilirsiniz (Shift+Enter veya Enter)...">{% if user.is_authenticated %}{{ user.portfolio_url|default:'' }}{% endif %}</textarea>
                         </div>
                         
                         <div>

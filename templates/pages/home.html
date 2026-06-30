@@ -62,10 +62,10 @@
         <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold uppercase tracking-tight text-zinc-100 max-w-7xl leading-tight">
             İSTANBUL NİŞANTAŞI ÜNİVERSİTESİ<br>DİJİTAL OYUN TASARIMI KULÜBÜ
         </h1>
-        <p class="text-xl text-brand-pink font-medium">The club</p>
+        <p class="text-xl text-brand-pink font-medium">Dünyanın en havalı öğrenci kulübü</p>
         
         <button class="btn-primary mt-4 text-2xl w-[240px] h-[80px] rounded-[32px] shadow-[0_0_20px_rgba(235,89,109,0.6)] hover:shadow-[0_0_35px_rgba(235,89,109,1)] transition-shadow duration-300">
-            Join Us!
+            Aramıza Katıl!
         </button>
 
         <!-- Social Icons -->
@@ -84,15 +84,15 @@
 <section id="events" class="py-20 bg-zinc-900 border-t border-zinc-800/50 scroll-mt-20">
     <div class="container-main">
         <div class="text-center mb-16">
-            <h2 class="section-title">Events</h2>
-            <p class="section-subtitle">Events we organized</p>
+            <h2 class="section-title">Etkinlikler</h2>
+            <p class="section-subtitle">Düzenlediğimiz etkinlikler</p>
         </div>
 
         <!-- Event Cards Grid -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {% for event in events %}
             <!-- Event Card -->
-            <div class="event-card group relative">
+            <div class="event-card group relative {% if forloop.counter > 3 %}hidden extra-event{% endif %}">
                 <!-- Top Gradient Border -->
                 <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-brand-pink to-brand-pink/20"></div>
                 
@@ -112,7 +112,7 @@
                     </p>
                     
                     <a href="{% url 'events:detail' event.slug %}" class="w-full btn-outline block text-center">
-                        View Detail
+                        Detayı Gör
                     </a>
                 </div>
             </div>
@@ -123,11 +123,13 @@
             {% endfor %}
         </div>
 
-        <div class="mt-12 text-center">
-            <button class="text-brand-pink hover:text-white border border-brand-pink/30 hover:border-brand-pink hover:bg-brand-pink/10 px-6 py-2 rounded-xl transition-all duration-300 font-medium text-sm">
-                Click to see more >
+        {% if events|length > 3 %}
+        <div class="mt-12 text-center" id="load-more-container">
+            <button id="load-more-btn" class="text-brand-pink hover:text-white border border-brand-pink/30 hover:border-brand-pink hover:bg-brand-pink/10 px-6 py-2 rounded-xl transition-all duration-300 font-medium text-sm">
+                Daha fazlası için tıklayın >
             </button>
         </div>
+        {% endif %}
     </div>
 </section>
 
@@ -135,8 +137,8 @@
 <section id="about" class="py-20 bg-zinc-900 border-t border-zinc-800/50 scroll-mt-20">
     <div class="container-main">
         <div class="text-center mb-12">
-            <h2 class="section-title">About Us</h2>
-            <p class="section-subtitle">Who are us?</p>
+            <h2 class="section-title">Hakkımızda</h2>
+            <p class="section-subtitle">Biz kimiz?</p>
         </div>
         
         <div class="max-w-3xl mx-auto text-center">
@@ -165,35 +167,76 @@
 </section>
 
 <!-- CONTACT US SECTION -->
-<section id="contact" class="py-20 bg-zinc-900 border-t border-zinc-800/50 scroll-mt-20">
-    <div class="container-main">
+<section id="contact" class="py-20 bg-zinc-900 border-t border-zinc-800/50 scroll-mt-20 relative overflow-hidden">
+    <!-- Neon Glow Background -->
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-brand-pink/5 rounded-full blur-[120px] pointer-events-none"></div>
+
+    <div class="container-main relative z-10">
         <div class="text-center mb-16">
-            <h2 class="section-title">Contact Us!</h2>
+            <h2 class="section-title">Bize Ulaşın!</h2>
+            <p class="text-zinc-400 mt-4 max-w-2xl mx-auto">Herhangi bir sorunuz, öneriniz veya iş birliği talebiniz varsa aşağıdaki formu doldurarak bize doğrudan ulaşabilirsiniz.</p>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start max-w-5xl mx-auto">
-            <!-- Map Placeholder -->
-            <div class="rounded-2xl overflow-hidden bg-zinc-800 h-80 border border-zinc-700 flex items-center justify-center">
-                <p class="text-zinc-500">Google Maps Embed Placeholder</p>
+            <!-- Contact Form -->
+            <div class="bg-zinc-800/30 p-8 rounded-2xl border border-white/5 shadow-[0_8px_30px_rgb(0,0,0,0.8)] backdrop-blur-md">
+                <form id="contact-form" class="space-y-4">
+                    {% csrf_token %}
+                    <div>
+                        <label for="contact_name" class="block text-sm font-medium text-zinc-300 mb-2">Ad Soyad</label>
+                        <input type="text" id="contact_name" name="full_name" class="form-input" placeholder="Adınız Soyadınız" required>
+                    </div>
+                    
+                    <div>
+                        <label for="contact_email" class="block text-sm font-medium text-zinc-300 mb-2">E-Posta Adresi</label>
+                        <input type="email" id="contact_email" name="email" class="form-input" placeholder="ornek@email.com" required>
+                    </div>
+                    
+                    <div>
+                        <label for="contact_subject" class="block text-sm font-medium text-zinc-300 mb-2">Konu</label>
+                        <input type="text" id="contact_subject" name="subject" class="form-input" placeholder="Hangi konuda ulaşıyorsunuz?" required>
+                    </div>
+                    
+                    <div>
+                        <label for="contact_message" class="block text-sm font-medium text-zinc-300 mb-2">Mesajınız</label>
+                        <textarea id="contact_message" name="message" rows="4" class="form-input resize-none" placeholder="Mesajınızı buraya yazın..." required></textarea>
+                    </div>
+
+                    <div id="contact-error" class="hidden text-red-400 text-sm p-3 bg-red-500/10 rounded-lg border border-red-500/30 text-center"></div>
+                    <div id="contact-success" class="hidden text-green-400 text-sm p-3 bg-green-500/10 rounded-lg border border-green-500/30 text-center font-medium"></div>
+
+                    <div class="pt-2">
+                        <button type="submit" id="btn-contact-submit" class="w-full btn-primary py-3 flex justify-center shadow-[0_0_20px_rgba(235,89,109,0.3)] hover:shadow-[0_0_35px_rgba(235,89,109,0.6)]">
+                            Mesaj Gönder
+                        </button>
+                    </div>
+                </form>
             </div>
 
             <!-- Contact Info -->
             <div class="flex flex-col justify-center h-full gap-8">
                 <div>
                     <h3 class="text-xl font-bold text-zinc-100 mb-3 flex items-center gap-2">
-                        <span class="text-brand-pink"></span> Our Address
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-brand-pink" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        Adresimiz
                     </h3>
-                    <p class="text-zinc-300 leading-relaxed pl-7">
+                    <a href="https://maps.app.goo.gl/adYesmfzaEVGCFEk6" target="_blank" rel="noopener noreferrer" class="text-zinc-300 hover:text-brand-pink transition-colors leading-relaxed pl-8 block">
                         Maslak Mahallesi, Taşyoncası Sokak, No: 1V ve No:1Y Bina Kodu: 34481742,<br>
                         34398 Sarıyer/İstanbul
-                    </p>
+                    </a>
                 </div>
 
                 <div>
                     <h3 class="text-xl font-bold text-zinc-100 mb-3 flex items-center gap-2">
-                        <span class="text-brand-pink"></span> Email
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-brand-pink" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                        E-Posta
                     </h3>
-                    <a href="mailto:dijitaloyuntasarimkulubu@nisantasi.edu.tr" class="text-zinc-300 hover:text-brand-pink transition-colors pl-7 break-all">
+                    <a href="mailto:dijitaloyuntasarimkulubu@nisantasi.edu.tr" class="text-zinc-300 hover:text-brand-pink transition-colors pl-8 break-all block">
                         dijitaloyuntasarimkulubu@nisantasi.edu.tr
                     </a>
                 </div>
@@ -202,49 +245,63 @@
     </div>
 </section>
 
-<!-- SIGN IN MODAL (Hidden by default) -->
-<div id="signin-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center">
-    <!-- Backdrop Blur -->
-    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="document.getElementById('signin-modal').classList.add('hidden')"></div>
-    
-    <!-- Modal Content -->
-    <div class="relative bg-zinc-900 border border-zinc-800 p-8 rounded-2xl w-full max-w-md mx-4 shadow-2xl">
-        <button onclick="document.getElementById('signin-modal').classList.add('hidden')" class="absolute top-4 right-4 text-zinc-500 hover:text-zinc-300">
-            ✕
-        </button>
-        
-        <div class="text-center mb-8">
-            <h2 class="text-2xl font-bold text-zinc-100 mb-2">Sign In</h2>
-            <p class="text-zinc-400 text-sm">Welcome back!</p>
-        </div>
 
-        <form class="flex flex-col gap-4">
-            <div>
-                <label class="block text-sm font-medium text-zinc-300 mb-1">Email</label>
-                <input type="email" class="form-input" placeholder="Enter your email">
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-zinc-300 mb-1">Password</label>
-                <input type="password" class="form-input" placeholder="Enter your password">
-            </div>
-            
-            <button type="submit" class="btn-primary w-full mt-4">
-                Sign in
-            </button>
-            
-            <p class="text-center text-sm text-zinc-400 mt-4">
-                Don't have an account? 
-                <a href="#" class="text-brand-pink hover:underline">Sign up</a>
-            </p>
-        </form>
-    </div>
-</div>
 
 {% endblock %}
 
 {% block extra_scripts %}
 <script>
 document.addEventListener('DOMContentLoaded', () => {
+    // Contact Form Logic
+    const contactForm = document.getElementById('contact-form');
+    if (contactForm) {
+        contactForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const btnSubmit = document.getElementById('btn-contact-submit');
+            const errorBox = document.getElementById('contact-error');
+            const successBox = document.getElementById('contact-success');
+            
+            errorBox.classList.add('hidden');
+            successBox.classList.add('hidden');
+            
+            const formData = new FormData(contactForm);
+            const data = Object.fromEntries(formData.entries());
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+            btnSubmit.disabled = true;
+            btnSubmit.innerHTML = 'Gönderiliyor...';
+
+            try {
+                const response = await fetch('{% url "pages:api_contact" %}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    successBox.textContent = result.message || "Mesajınız başarıyla iletildi!";
+                    successBox.classList.remove('hidden');
+                    contactForm.reset();
+                } else {
+                    errorBox.textContent = result.error || "Gönderim sırasında bir hata oluştu.";
+                    errorBox.classList.remove('hidden');
+                }
+            } catch (error) {
+                errorBox.textContent = "Bağlantı hatası: " + error.message;
+                errorBox.classList.remove('hidden');
+            } finally {
+                btnSubmit.disabled = false;
+                btnSubmit.innerHTML = 'Mesaj Gönder';
+            }
+        });
+    }
+
     const sections = document.querySelectorAll('section');
     const navLinks = document.querySelectorAll('.nav-link');
 
@@ -297,6 +354,17 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Trigger once on load
     window.dispatchEvent(new Event('scroll'));
+
+    // Load More Button
+    const loadMoreBtn = document.getElementById('load-more-btn');
+    if (loadMoreBtn) {
+        loadMoreBtn.addEventListener('click', function() {
+            document.querySelectorAll('.extra-event').forEach(el => {
+                el.classList.remove('hidden');
+            });
+            document.getElementById('load-more-container').style.display = 'none';
+        });
+    }
 });
 </script>
 {% endblock %}

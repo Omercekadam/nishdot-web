@@ -87,7 +87,7 @@ class JamApplication(TimeStampedModel):
     experience_level = models.CharField(max_length=50, blank=True, verbose_name="Deneyim Seviyesi")
     team_status      = models.CharField(max_length=20, choices=TeamStatus.choices, verbose_name="Takım Durumu")
     team_name        = models.CharField(max_length=100, blank=True, verbose_name="Takım Adı")
-    portfolio_url    = models.URLField(blank=True, verbose_name="Portfolyo Linki")
+    portfolio_url    = models.TextField(blank=True, verbose_name="Portfolyo Linkleri")
     previous_jams    = models.TextField(blank=True, verbose_name="Önceki Jam'ler")
     motivation       = models.TextField(blank=True, verbose_name="Motivasyon")
     additional_notes = models.TextField(blank=True, verbose_name="Ek Notlar")

@@ -6,5 +6,5 @@ class HomePageView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['events'] = Event.objects.filter(status='published').order_by('-start_date')[:3]
+        context['events'] = Event.objects.filter(status__in=['published', 'completed']).order_by('-start_date')
         return context

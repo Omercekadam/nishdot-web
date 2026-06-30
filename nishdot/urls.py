@@ -17,6 +17,9 @@ urlpatterns = [
     # Etkinlik Sayfaları
     path("events/", include("events.urls")),
     
+    # Kullanıcı Kayıt & Giriş (Auth)
+    path("auth/", include("users.urls")),
+    
     # Admin paneli özel URL'de — varsayılan /admin/ brute-force hedefidir.
     # Bu basit değişiklik, otomatik bot saldırılarının %99'unu engeller.
     path("yonetim/", admin.site.urls),

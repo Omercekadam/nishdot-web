@@ -19,7 +19,7 @@
                         <img src="{{ event.cover_image.url }}" alt="{{ event.title }} Afiş" class="relative z-10 w-full h-auto rounded-2xl shadow-2xl border border-white/10">
                     {% else %}
                         <div class="relative z-10 w-full aspect-[3/4] bg-zinc-800 rounded-2xl flex items-center justify-center text-zinc-500 shadow-2xl border border-white/10">
-                            No Poster
+                            Afiş Yok
                         </div>
                     {% endif %}
                 </div>
@@ -41,6 +41,10 @@
                             <span class="w-2 h-2 rounded-full bg-green-400 mr-2 animate-pulse"></span>
                             YAYINDA
                         </span>
+                        {% elif event.status == 'completed' %}
+                        <span class="px-3 py-1 bg-zinc-500/10 text-zinc-400 text-xs font-bold rounded-full border border-zinc-500/20 uppercase inline-flex items-center">
+                            TAMAMLANDI
+                        </span>
                         {% endif %}
                     </div>
                     
@@ -49,7 +53,7 @@
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                           <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                         </svg>
-                        Back to Events
+                        Etkinliklere Dön
                     </a>
                 </div>
 
@@ -102,9 +106,15 @@
 
                 <!-- Aksiyon Alanı -->
                 <div class="mt-4 flex gap-4 items-center">
+                    {% if event.status == 'published' %}
                     <a href="{% url 'events:apply' event.slug %}" class="btn-primary inline-flex items-center justify-center px-10 py-3 text-lg font-bold">
-                        Apply Now
+                        Hemen Başvur
                     </a>
+                    {% elif event.status == 'completed' %}
+                    <button disabled class="bg-zinc-800 text-zinc-500 cursor-not-allowed inline-flex items-center justify-center px-10 py-3 text-lg font-bold rounded-xl border border-zinc-700">
+                        Etkinlik Tamamlandı
+                    </button>
+                    {% endif %}
                     <button onclick="navigator.clipboard.writeText(window.location.href); alert('Link kopyalandı!')" class="flex items-center justify-center w-14 h-14 rounded-xl border border-white/10 text-white hover:bg-white/5 transition-colors shrink-0" title="Paylaş">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
