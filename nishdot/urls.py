@@ -20,6 +20,9 @@ urlpatterns = [
     # Kullanıcı Kayıt & Giriş (Auth)
     path("auth/", include("users.urls")),
     
+    # Custom Dashboard Panel
+    path("management/", include("dashboard.urls")),
+    
     # Admin paneli özel URL'de — varsayılan /admin/ brute-force hedefidir.
     # Bu basit değişiklik, otomatik bot saldırılarının %99'unu engeller.
     path("yonetim/", admin.site.urls),

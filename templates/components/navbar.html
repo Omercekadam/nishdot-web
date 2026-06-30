@@ -44,7 +44,11 @@
                     
                     <!-- Dropdown -->
                     <div class="absolute top-full right-0 mt-2 w-48 bg-zinc-800 border border-zinc-700 rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 overflow-hidden z-50">
-                        <a href="{% url 'users:dashboard' %}" class="block px-4 py-3 text-sm text-zinc-300 hover:bg-zinc-700 hover:text-white transition-colors border-b border-zinc-700/50">Profilim (Dashboard)</a>
+                        <a href="{% url 'users:dashboard' %}" class="block px-4 py-3 text-sm text-zinc-300 hover:bg-zinc-700 hover:text-white transition-colors border-b border-zinc-700/50">Profilim</a>
+                        
+                        {% if user.is_staff %}
+                        <a href="{% url 'dashboard:index' %}" class="block px-4 py-3 text-sm text-brand-pink hover:bg-zinc-700 hover:text-white transition-colors border-b border-zinc-700/50 font-medium">Yönetici Paneli</a>
+                        {% endif %}
                         
                         <form action="{% url 'users:logout' %}" method="post" class="block">
                             {% csrf_token %}

@@ -1,0 +1,454 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block title %}Yönetim Paneli | Nishdot{% endblock %}
+
+{% block dashboard_content %}
+<div class="py-8 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-7xl mx-auto">
+        <!-- Header -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+            <div class="flex items-center gap-4">
+                <div>
+                    <h1 class="text-3xl font-bold text-white tracking-tight">Etkinlik Yönetim Paneli</h1>
+                    <p class="text-zinc-400 mt-1">{% if jam %}{{ jam.event.title }} Başvuruları{% else %}Aktif Etkinlik Bulunamadı{% endif %}</p>
+                </div>
+                
+                {% if all_jams %}
+                <form method="get" class="ml-4 border-l border-zinc-700 pl-4">
+                    <label for="jam-select" class="sr-only">Etkinlik Seç</label>
+                    <select name="jam" id="jam-select" onchange="this.form.submit()" class="bg-zinc-800 border border-zinc-700 text-zinc-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-brand-pink cursor-pointer shadow-lg">
+                        {% for j in all_jams %}
+                            <option value="{{ j.id }}" {% if j.id == jam.id %}selected{% endif %}>{{ j.event.title }}</option>
+                        {% endfor %}
+                    </select>
+                </form>
+                {% endif %}
+            </div>
+            
+            {% if jam %}
+            <div class="flex gap-3">
+                <button id="btn-export-csv" data-jam-id="{{ jam.id }}" class="btn-outline flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                    CSV İndir
+                </button>
+                <button id="btn-bulk-email" class="bg-brand-pink text-white px-5 py-2 rounded-xl font-medium hover:bg-opacity-90 transition-colors flex items-center gap-2 shadow-[0_0_15px_rgba(235,89,109,0.3)]">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                    Toplu Onay Mailleri
+                </button>
+            </div>
+            {% endif %}
+        </div>
+
+        {% if jam %}
+        <!-- Real-time Stats Bar -->
+        <div id="stickyStatsBar" class="sticky top-0 z-40 bg-zinc-900/95 border-b border-brand-pink/50 backdrop-blur-md py-3 px-4 mb-8 -mx-4 sm:-mx-6 lg:-mx-8 shadow-[0_4px_20px_rgba(235,89,109,0.15)] flex flex-col md:flex-row items-center justify-between transition-all">
+            <div class="max-w-7xl mx-auto w-full flex flex-col md:flex-row items-center justify-between px-4 sm:px-6 lg:px-8">
+                <div class="text-sm font-bold text-white flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
+                    Onaylanan Aday Dağılımı (<span id="approvedTotalCount">0</span> Kişi):
+                </div>
+                <div id="stickyStatsContent" class="flex flex-wrap gap-x-6 gap-y-2 text-sm font-medium mt-2 md:mt-0 text-zinc-300">
+                    <!-- Calculated by JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-zinc-800/50 border border-zinc-700/50 rounded-2xl p-6 backdrop-blur-sm">
+                <p class="text-zinc-400 text-sm font-medium">Toplam Başvuru</p>
+                <p class="text-3xl font-bold text-white mt-2">{{ stats.total }}</p>
+            </div>
+            <div class="bg-zinc-800/50 border border-zinc-700/50 rounded-2xl p-6 backdrop-blur-sm">
+                <p class="text-zinc-400 text-sm font-medium">Solo Katılımcı</p>
+                <p class="text-3xl font-bold text-white mt-2">{{ stats.solo }}</p>
+            </div>
+            <div class="bg-zinc-800/50 border border-zinc-700/50 rounded-2xl p-6 backdrop-blur-sm">
+                <p class="text-zinc-400 text-sm font-medium">Ekip Arayan</p>
+                <p class="text-3xl font-bold text-white mt-2">{{ stats.looking }}</p>
+            </div>
+            <div class="bg-zinc-800/50 border border-zinc-700/50 rounded-2xl p-6 backdrop-blur-sm">
+                <p class="text-zinc-400 text-sm font-medium">Ekibi Olan</p>
+                <p class="text-3xl font-bold text-white mt-2">{{ stats.has_team }}</p>
+            </div>
+        </div>
+
+        <!-- Table Tools (Search & Filter) -->
+        <div class="bg-zinc-800/50 border border-zinc-700/50 rounded-t-2xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 backdrop-blur-sm">
+            <div class="relative w-full md:w-96">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg class="h-5 w-5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                </div>
+                <input type="text" id="searchInput" class="block w-full pl-10 pr-3 py-2 border border-zinc-700 rounded-xl leading-5 bg-zinc-900/50 text-zinc-300 placeholder-zinc-500 focus:outline-none focus:border-brand-pink focus:ring-1 focus:ring-brand-pink transition-colors sm:text-sm" placeholder="İsim veya takım adı ara...">
+            </div>
+            
+            <div class="flex gap-2">
+                <select id="filterStatus" class="bg-zinc-900/50 border border-zinc-700 text-zinc-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-brand-pink">
+                    <option value="all">Tüm Durumlar</option>
+                    <option value="pending">Beklemede</option>
+                    <option value="approved">Onaylandı</option>
+                    <option value="rejected">Reddedildi</option>
+                </select>
+                <select id="filterRole" class="bg-zinc-900/50 border border-zinc-700 text-zinc-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-brand-pink">
+                    <option value="all">Tüm Roller</option>
+                    {% for role in jam.available_roles %}
+                        <option value="{{ role }}">{{ role }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <!-- Table -->
+        <div class="bg-zinc-800/30 border-x border-b border-zinc-700/50 rounded-b-2xl overflow-hidden backdrop-blur-sm">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-zinc-700">
+                    <thead class="bg-zinc-800/80">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">Katılımcı</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">Okul / Bölüm / Sınıf</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">Rol</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">Deneyim / Portfolyo</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">Takım Durumu</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">Durum</th>
+                            <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-zinc-400 uppercase tracking-wider">İşlem</th>
+                        </tr>
+                    </thead>
+                    <tbody id="applicationTableBody" class="divide-y divide-zinc-700/50 bg-zinc-900/20">
+                        {% for app in applications %}
+                        <tr class="hover:bg-zinc-800/50 transition-colors app-row" 
+                            data-name="{{ app.full_name|lower }}" 
+                            data-team="{{ app.team_name|default:''|lower }}"
+                            data-status="{{ app.status }}"
+                            data-role="{{ app.jam_role }}">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <div>
+                                        <div class="text-sm font-medium text-white">{{ app.full_name }}</div>
+                                        <div class="text-sm text-zinc-500">{{ app.email }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-zinc-100 font-medium">{{ app.department|default:"Bölüm Belirtilmemiş" }} - {{ app.grade|default:"-" }}</div>
+                                <div class="text-xs text-zinc-500 mt-0.5">{{ app.university|default:"Üniversite Belirtilmemiş" }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="role-badge px-2 inline-flex text-xs leading-5 font-semibold rounded-full border" data-role-name="{{ app.jam_role }}">
+                                    {{ app.jam_role }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-zinc-300 font-medium">{{ app.experience_level|default:"Belirtilmemiş" }}</div>
+                                {% if app.portfolio_url %}
+                                <div class="portfolio-container text-xs mt-1 flex flex-col gap-1 max-w-[200px]" data-urls="{{ app.portfolio_url }}">
+                                    <!-- Populated by JS -->
+                                </div>
+                                {% else %}
+                                <div class="text-xs text-zinc-500 mt-1">Portfolyo Yok</div>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-zinc-300">
+                                    {% if app.team_status == 'solo' %}Solo
+                                    {% elif app.team_status == 'looking' %}Ekip Arıyor
+                                    {% else %}Ekibi Var ({{ app.team_name|default:'Belirtilmemiş' }}){% endif %}
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <select class="status-select bg-transparent border-0 text-sm font-medium focus:ring-0 cursor-pointer
+                                    {% if app.status == 'approved' %}text-green-400{% elif app.status == 'rejected' %}text-red-400{% else %}text-yellow-400{% endif %}"
+                                    data-id="{{ app.id }}">
+                                    <option class="bg-zinc-800 text-yellow-400" value="pending" {% if app.status == 'pending' %}selected{% endif %}>Beklemede</option>
+                                    <option class="bg-zinc-800 text-green-400" value="approved" {% if app.status == 'approved' %}selected{% endif %}>Onaylandı</option>
+                                    <option class="bg-zinc-800 text-red-400" value="rejected" {% if app.status == 'rejected' %}selected{% endif %}>Reddedildi</option>
+                                </select>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                <button type="button" class="text-brand-pink hover:text-white transition-colors" onclick="openDetailModal({{ app.id }})">
+                                    Detay
+                                </button>
+                                <!-- Modal Content Data (Hidden) -->
+                                <div id="modal-data-{{ app.id }}" class="hidden">
+                                    <div class="data-motivation">{{ app.motivation }}</div>
+                                    <div class="data-previous">{{ app.previous_jams }}</div>
+                                    <div class="data-health">{{ app.health_notes }}</div>
+                                    <div class="data-notes">{{ app.additional_notes }}</div>
+                                    <div class="data-custom">{{ app.custom_answers|default:"{}" }}</div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="px-6 py-12 text-center text-zinc-500">
+                                Henüz başvuru bulunmuyor.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Detail Modal -->
+<div id="detailModal" class="fixed inset-0 z-[100] hidden">
+    <!-- Backdrop -->
+    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeDetailModal()"></div>
+    
+    <!-- Modal Box -->
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl max-h-[90vh] bg-zinc-900 border border-zinc-700 rounded-2xl shadow-2xl flex flex-col overflow-hidden">
+        <div class="flex justify-between items-center p-6 border-b border-zinc-800">
+            <h3 class="text-xl font-bold text-white">Başvuru Detayları</h3>
+            <button onclick="closeDetailModal()" class="text-zinc-500 hover:text-white transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+        
+        <div class="p-6 overflow-y-auto space-y-6">
+            <div>
+                <h4 class="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2">Önceki Jam'ler</h4>
+                <div class="bg-zinc-800/50 rounded-xl p-4 border border-zinc-700/50">
+                    <p id="modalPrevious" class="text-sm text-zinc-300"></p>
+                </div>
+            </div>
+
+            <div>
+                <h4 class="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2">Motivasyon</h4>
+                <div class="bg-zinc-800/50 rounded-xl p-4 border border-zinc-700/50">
+                    <p id="modalMotivation" class="text-sm text-zinc-300 leading-relaxed"></p>
+                </div>
+            </div>
+            
+            <div>
+                <h4 class="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2">Önemli Notlar (Sağlık / Ekstra)</h4>
+                <div class="bg-zinc-800/50 rounded-xl p-4 border border-zinc-700/50 space-y-3">
+                    <p class="text-sm text-zinc-300"><strong class="text-white">Sağlık/Alerji:</strong> <span id="modalHealth"></span></p>
+                    <p class="text-sm text-zinc-300"><strong class="text-white">Ek Notlar:</strong> <span id="modalNotes"></span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Search and Filter Logic
+    const searchInput = document.getElementById('searchInput');
+    const filterStatus = document.getElementById('filterStatus');
+    const filterRole = document.getElementById('filterRole');
+    const rows = document.querySelectorAll('.app-row');
+
+    function filterTable() {
+        const query = searchInput.value.toLowerCase();
+        const status = filterStatus.value;
+        const role = filterRole.value;
+
+        rows.forEach(row => {
+            const name = row.getAttribute('data-name');
+            const team = row.getAttribute('data-team');
+            const rowStatus = row.getAttribute('data-status');
+            const rowRole = row.getAttribute('data-role');
+
+            const matchesSearch = name.includes(query) || team.includes(query);
+            const matchesStatus = status === 'all' || rowStatus === status;
+            const matchesRole = role === 'all' || rowRole.toLowerCase().includes(role.toLowerCase());
+
+            if (matchesSearch && matchesStatus && matchesRole) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+
+    searchInput.addEventListener('input', filterTable);
+    filterStatus.addEventListener('change', filterTable);
+    filterRole.addEventListener('change', filterTable);
+
+    // Modal Logic
+    function openDetailModal(id) {
+        const modal = document.getElementById('detailModal');
+        
+        // Fetch hidden data
+        const dataDiv = document.getElementById(`modal-data-${id}`);
+        const motivation = dataDiv.querySelector('.data-motivation').innerText;
+        const prev = dataDiv.querySelector('.data-previous').innerText;
+        const health = dataDiv.querySelector('.data-health').innerText;
+        const notes = dataDiv.querySelector('.data-notes').innerText;
+        
+        // Populate modal
+        document.getElementById('modalMotivation').innerText = motivation || 'Belirtilmemiş';
+        document.getElementById('modalPrevious').innerText = prev || 'Belirtilmemiş';
+        document.getElementById('modalHealth').innerText = health || 'Yok';
+        document.getElementById('modalNotes').innerText = notes || 'Yok';
+        
+        modal.classList.remove('hidden');
+    }
+
+    function closeDetailModal() {
+        document.getElementById('detailModal').classList.add('hidden');
+    }
+
+    // Export CSV
+    const btnExport = document.getElementById('btn-export-csv');
+    if (btnExport) {
+        btnExport.addEventListener('click', function() {
+            window.location.href = "{% url 'dashboard:api_export_csv' %}?jam=" + this.getAttribute('data-jam-id');
+        });
+    }
+
+    // Parse Multiple Portfolios
+    function parsePortfolios() {
+        const containers = document.querySelectorAll('.portfolio-container');
+        containers.forEach(container => {
+            const urlsRaw = container.getAttribute('data-urls');
+            if (!urlsRaw) return;
+            
+            // Split by comma or space
+            const urls = urlsRaw.split(/[\s,]+/).filter(u => u.trim() !== '');
+            
+            urls.forEach((url, idx) => {
+                let finalUrl = url;
+                if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                    finalUrl = 'https://' + url;
+                }
+                const a = document.createElement('a');
+                a.href = finalUrl;
+                a.target = "_blank";
+                a.className = "text-brand-pink hover:underline truncate";
+                a.innerText = `Link ${idx + 1}`;
+                container.appendChild(a);
+            });
+        });
+    }
+
+    // Role Colors Configuration (Using inline styles to avoid Tailwind compilation dependency)
+    const roleColors = {
+        "Developer": { bg: "rgba(59, 130, 246, 0.1)", text: "#60a5fa", border: "rgba(59, 130, 246, 0.2)", dot: "#60a5fa" },
+        "3D Artist": { bg: "rgba(168, 85, 247, 0.1)", text: "#c084fc", border: "rgba(168, 85, 247, 0.2)", dot: "#c084fc" },
+        "2D Artist": { bg: "rgba(236, 72, 153, 0.1)", text: "#f472b6", border: "rgba(236, 72, 153, 0.2)", dot: "#f472b6" },
+        "Game Designer": { bg: "rgba(16, 185, 129, 0.1)", text: "#34d399", border: "rgba(16, 185, 129, 0.2)", dot: "#34d399" },
+        "Sound Designer": { bg: "rgba(245, 158, 11, 0.1)", text: "#fbbf24", border: "rgba(245, 158, 11, 0.2)", dot: "#fbbf24" }
+    };
+
+    function getRoleColor(role, type) {
+        for (const key in roleColors) {
+            if (role.toLowerCase().includes(key.toLowerCase())) {
+                return roleColors[key][type];
+            }
+        }
+        // Fallback for custom or unknown roles
+        const fallback = { bg: "rgba(113, 113, 122, 0.1)", text: "#a1a1aa", border: "rgba(113, 113, 122, 0.2)", dot: "#a1a1aa" };
+        return fallback[type];
+    }
+
+    function applyRoleColors() {
+        const badges = document.querySelectorAll('.role-badge');
+        badges.forEach(badge => {
+            const role = badge.getAttribute('data-role-name') || '';
+            badge.style.backgroundColor = getRoleColor(role, 'bg');
+            badge.style.color = getRoleColor(role, 'text');
+            badge.style.borderColor = getRoleColor(role, 'border');
+        });
+    }
+
+    // Sticky Stats Calculation
+    function updateStickyStats() {
+        const statsContent = document.getElementById('stickyStatsContent');
+        const approvedCountSpan = document.getElementById('approvedTotalCount');
+        if (!statsContent) return;
+
+        let totalApproved = 0;
+        const roleCounts = {};
+
+        // Loop over all rows to find approved ones
+        rows.forEach(row => {
+            if (row.getAttribute('data-status') === 'approved') {
+                totalApproved++;
+                const r = row.getAttribute('data-role') || 'Diğer';
+                roleCounts[r] = (roleCounts[r] || 0) + 1;
+            }
+        });
+
+        approvedCountSpan.innerText = totalApproved;
+
+        if (totalApproved === 0) {
+            statsContent.innerHTML = "<span class='text-zinc-500'>Henüz onaylanan başvuru yok.</span>";
+            return;
+        }
+
+        // Calculate percentages and generate HTML
+        let html = "";
+        for (const [role, count] of Object.entries(roleCounts)) {
+            const perc = Math.round((count / totalApproved) * 100);
+            html += `<div class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full" style="background-color: ${getRoleColor(role, 'dot')}"></span><span class="text-zinc-300">${role}:</span> <span style="color: ${getRoleColor(role, 'text')}" class="font-bold">%${perc}</span> <span class="text-xs text-zinc-500">(${count})</span></div>`;
+        }
+        statsContent.innerHTML = html;
+    }
+
+    // Update Status via AJAX
+    const statusSelects = document.querySelectorAll('.status-select');
+    statusSelects.forEach(select => {
+        select.addEventListener('change', async function() {
+            const appId = this.getAttribute('data-id');
+            const newStatus = this.value;
+            
+            // Temporary loading state
+            this.disabled = true;
+
+            try {
+                const response = await fetch('{% url "dashboard:api_update_status" %}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({ app_id: appId, status: newStatus })
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Update color based on new status
+                    this.classList.remove('text-yellow-400', 'text-green-400', 'text-red-400');
+                    if (newStatus === 'approved') this.classList.add('text-green-400');
+                    else if (newStatus === 'rejected') this.classList.add('text-red-400');
+                    else this.classList.add('text-yellow-400');
+                    
+                    // Update data-status for filtering
+                    this.closest('tr').setAttribute('data-status', newStatus);
+                    
+                    // Update Sticky Stats Bar
+                    updateStickyStats();
+                } else {
+                    alert('Durum güncellenirken hata oluştu: ' + result.error);
+                    this.value = this.querySelector('[selected]').value; // Revert
+                }
+            } catch (error) {
+                alert('Bağlantı hatası.');
+                this.value = this.querySelector('[selected]').value; // Revert
+            } finally {
+                this.disabled = false;
+            }
+        });
+    });
+
+    // Run on load
+    applyRoleColors();
+    parsePortfolios();
+    updateStickyStats();
+</script>
+{% endblock %}
