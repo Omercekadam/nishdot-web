@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nishdot Yasal Metin Şablonları v2.1 — Hukuk Müşavirliği İnceleme Belgesi</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;500;600;700&display=swap');
+
+        :root {
+            --primary: #1a1a2e;
+            --accent: #c0392b;
+            --highlight: #fff3cd;
+            --highlight-border: #ffc107;
+            --note-bg: #e8f4fd;
+            --note-border: #2196F3;
+            --warning-bg: #fff3e0;
+            --warning-border: #ff9800;
+            --danger-bg: #fce4ec;
+            --danger-border: #e91e63;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Noto Serif', 'Times New Roman', serif;
+            font-size: 11pt;
+            line-height: 1.7;
+            color: #1a1a1a;
+            background: #fff;
+            padding: 0;
+        }
+
+        @media print {
+            body { padding: 0; }
+            .page-break { page-break-before: always; }
+            .no-print { display: none !important; }
+            .decision-box { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .note-box { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .warning-box { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .danger-box { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        }
+
+        .container {
+            max-width: 210mm;
+            margin: 0 auto;
+            padding: 25mm 20mm;
+        }
+
+        /* Header */
+        .doc-header {
+            text-align: center;
+            border-bottom: 3px double var(--primary);
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .doc-header h1 {
+            font-family: 'Inter', sans-serif;
+            font-size: 16pt;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 6px;
+            letter-spacing: 0.5px;
+        }
+        .doc-header .subtitle {
+            font-family: 'Inter', sans-serif;
+            font-size: 11pt;
+            color: #666;
+            font-weight: 500;
+        }
+        .doc-header .meta {
+            margin-top: 12px;
+            font-size: 9pt;
+            color: #888;
+        }
+        .doc-header .meta span {
+            margin: 0 10px;
+        }
+        .doc-header .badge {
+            display: inline-block;
+            background: var(--accent);
+            color: #fff;
+            font-family: 'Inter', sans-serif;
+            font-size: 8pt;
+            font-weight: 700;
+            padding: 3px 12px;
+            border-radius: 3px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-top: 10px;
+        }
+
+        /* Print Button */
+        .print-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            padding: 12px 20px;
+            text-align: center;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+        .print-bar button {
+            font-family: 'Inter', sans-serif;
+            font-size: 11pt;
+            font-weight: 600;
+            background: #c0392b;
+            color: white;
+            border: none;
+            padding: 10px 30px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 0 8px;
+            transition: all 0.2s;
+        }
+        .print-bar button:hover {
+            background: #e74c3c;
+            transform: translateY(-1px);
+        }
+        .print-bar .info {
+            color: rgba(255,255,255,0.7);
+            font-family: 'Inter', sans-serif;
+            font-size: 9pt;
+            margin-top: 5px;
+        }
+        body { padding-top: 80px; }
+        @media print { body { padding-top: 0; } }
+
+        /* Sections */
+        h2 {
+            font-family: 'Inter', sans-serif;
+            font-size: 14pt;
+            font-weight: 700;
+            color: var(--primary);
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 6px;
+            margin-top: 35px;
+            margin-bottom: 15px;
+        }
+        h3 {
+            font-family: 'Inter', sans-serif;
+            font-size: 12pt;
+            font-weight: 600;
+            color: var(--primary);
+            margin-top: 20px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        h4 {
+            font-family: 'Inter', sans-serif;
+            font-size: 11pt;
+            font-weight: 700;
+            margin-top: 18px;
+            margin-bottom: 8px;
+        }
+
+        p { margin-bottom: 10px; text-align: justify; }
+
+        /* Decision boxes - things legal counsel needs to decide */
+        .decision-box {
+            background: var(--highlight);
+            border-left: 5px solid var(--highlight-border);
+            padding: 14px 18px;
+            margin: 15px 0;
+            border-radius: 0 4px 4px 0;
+        }
+        .decision-box .label {
+            font-family: 'Inter', sans-serif;
+            font-weight: 700;
+            font-size: 9pt;
+            color: #856404;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 6px;
+        }
+        .decision-box .label::before {
+            content: "⚖️ ";
+        }
+
+        /* Note boxes */
+        .note-box {
+            background: var(--note-bg);
+            border-left: 5px solid var(--note-border);
+            padding: 12px 16px;
+            margin: 15px 0;
+            border-radius: 0 4px 4px 0;
+            font-size: 10pt;
+        }
+        .note-box .label {
+            font-family: 'Inter', sans-serif;
+            font-weight: 700;
+            font-size: 9pt;
+            color: #0d47a1;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+        }
+
+        /* Warning boxes */
+        .warning-box {
+            background: var(--warning-bg);
+            border-left: 5px solid var(--warning-border);
+            padding: 12px 16px;
+            margin: 15px 0;
+            border-radius: 0 4px 4px 0;
+            font-size: 10pt;
+        }
+        .warning-box .label {
+            font-family: 'Inter', sans-serif;
+            font-weight: 700;
+            font-size: 9pt;
+            color: #e65100;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+        }
+
+        /* Danger boxes */
+        .danger-box {
+            background: var(--danger-bg);
+            border-left: 5px solid var(--danger-border);
+            padding: 12px 16px;
+            margin: 15px 0;
+            border-radius: 0 4px 4px 0;
+            font-size: 10pt;
+        }
+        .danger-box .label {
+            font-family: 'Inter', sans-serif;
+            font-weight: 700;
+            font-size: 9pt;
+            color: #880e4f;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+        }
+
+        /* Fill-in blanks */
+        .fill-blank {
+            background: var(--highlight);
+            border: 1px dashed var(--highlight-border);
+            padding: 2px 8px;
+            font-weight: 700;
+            color: #856404;
+        }
+
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            font-size: 9.5pt;
+        }
+        th {
+            font-family: 'Inter', sans-serif;
+            background: var(--primary);
+            color: #fff;
+            padding: 8px 10px;
+            text-align: left;
+            font-size: 9pt;
+            font-weight: 600;
+        }
+        td {
+            padding: 8px 10px;
+            border-bottom: 1px solid #ddd;
+            vertical-align: top;
+        }
+        tr:nth-child(even) td { background: #f9f9f9; }
+        td.needs-decision {
+            background: var(--highlight) !important;
+            font-weight: 600;
+            font-style: italic;
+        }
+
+        /* Lists */
+        ul, ol { margin: 8px 0 8px 25px; }
+        li { margin-bottom: 5px; }
+
+        /* Divider */
+        hr {
+            border: none;
+            border-top: 1px solid #ccc;
+            margin: 30px 0;
+        }
+
+        /* Footer */
+        .doc-footer {
+            margin-top: 40px;
+            padding-top: 15px;
+            border-top: 2px solid var(--primary);
+            font-size: 8pt;
+            color: #999;
+            text-align: center;
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Signature area */
+        .signature-area {
+            margin-top: 40px;
+            display: flex;
+            justify-content: space-between;
+            gap: 40px;
+        }
+        .signature-block {
+            flex: 1;
+            text-align: center;
+        }
+        .signature-block .line {
+            border-bottom: 1px solid #333;
+            margin-bottom: 6px;
+            height: 50px;
+        }
+        .signature-block .name {
+            font-family: 'Inter', sans-serif;
+            font-size: 9pt;
+            font-weight: 600;
+        }
+        .signature-block .title {
+            font-size: 8pt;
+            color: #666;
+        }
+
+        /* Legend */
+        .legend {
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 15px 20px;
+            margin: 20px 0;
+            font-size: 9pt;
+        }
+        .legend h4 {
+            font-family: 'Inter', sans-serif;
+            font-size: 10pt;
+            margin-top: 0;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 6px 0;
+        }
+        .legend-color {
+            width: 20px;
+            height: 14px;
+            border-radius: 2px;
+            flex-shrink: 0;
+        }
+
+        .checkbox-area {
+            border: 2px solid #999;
+            border-radius: 4px;
+            padding: 15px 20px;
+            margin: 15px 0;
+            background: #fafafa;
+        }
+        .checkbox-area label {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            cursor: pointer;
+        }
+        .checkbox-area input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            margin-top: 3px;
+            flex-shrink: 0;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Print Bar -->
+<div class="print-bar no-print">
+    <button onclick="window.print()">📄 PDF Olarak Kaydet / Yazdır</button>
+    <div class="info">Tarayıcınızın yazdırma penceresinde "Hedef" olarak <strong>"PDF Olarak Kaydet"</strong> seçin.</div>
+</div>
+
+<div class="container">
+
+    <!-- HEADER -->
+    <div class="doc-header">
+        <h1>İSTANBUL NİŞANTAŞI ÜNİVERSİTESİ<br>DİJİTAL OYUN TASARIMI KULÜBÜ (NİSHDOT)</h1>
+        <div class="subtitle">Yasal Metin Şablonları — Hukuk Müşavirliği İnceleme Belgesi</div>
+        <div class="meta">
+            <span>Versiyon: 2.1</span> |
+            <span>Tarih: 1 Temmuz 2026</span> |
+            <span>Hazırlayan: Nishdot Yazılım Ekibi</span>
+        </div>
+        <div class="badge">Hukuk Müşavirliği Onayı Bekleniyor</div>
+    </div>
+
+    <!-- LEGEND -->
+    <div class="legend">
+        <h4>📋 Belge Okuma Kılavuzu</h4>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #fff3cd; border: 1px solid #ffc107;"></div>
+            <span><strong>Sarı Kutu (⚖️ Karar Gerekli):</strong> Hukuk müşavirliğinin teyit etmesi veya karar vermesi gereken maddeler.</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #fff3e0; border: 1px solid #ff9800;"></div>
+            <span><strong>Turuncu Kutu (Uyarı):</strong> Dikkat edilmesi gereken hukuki riskler ve belirsizlikler.</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #e8f4fd; border: 1px solid #2196F3;"></div>
+            <span><strong>Mavi Kutu (Not):</strong> Açıklayıcı bilgi ve teknik notlar.</span>
+        </div>
+        <div class="legend-item">
+            <span><span class="fill-blank">Sarı Vurgulu Metin</span> : Hukuk müşavirliği tarafından doldurulacak / onaylanacak alanlar.</span>
+        </div>
+    </div>
+
+    <hr>
+
+    <!-- ==================== BÖLÜM 1: KVKK ==================== -->
+
+    <h2>BÖLÜM 1 — KVKK Aydınlatma Metni</h2>
+    <p><em>Kullanıcının siteye kayıt olurken veya başvuru yaparken okuması gereken temel bilgilendirme metnidir.</em></p>
+
+    <h3>Kişisel Verilerin İşlenmesine İlişkin Aydınlatma Metni</h3>
+
+    <h4>1. Veri Sorumlusunun Kimliği ve İletişim Bilgileri</h4>
+
+    <p>6698 sayılı Kişisel Verilerin Korunması Kanunu ("KVKK") uyarınca kişisel verileriniz; veri sorumlusu sıfatıyla <span class="fill-blank">[ÜNİVERSİTEYİ İŞLETEN TÜZEL KİŞİLİĞİN TAM UNVANI]</span> bünyesinde faaliyet gösteren <strong>Dijital Oyun Tasarımı Kulübü (Nishdot)</strong> tarafından aşağıda açıklanan kapsamda işlenmektedir.</p>
+
+    <div class="decision-box">
+        <div class="label">Karar Gerekli — Veri Sorumlusu Kimliği</div>
+        <p>KVKK'da "veri sorumlusu" sıfatını ancak bağımsız tüzel kişilik veya gerçek kişi taşıyabilir. Öğrenci kulüplerinin ayrı tüzel kişiliği bulunmadığından, yukarıdaki köşeli parantez içindeki alan <strong>üniversiteyi işleten vakıf veya şirketin tam unvanıyla</strong> doldurulmalıdır.</p>
+        <p style="margin-top:8px;"><strong>Doldurulacak Bilgiler:</strong></p>
+        <table>
+            <tr><td style="width:30%;font-weight:600;">Veri Sorumlusu</td><td class="needs-decision">[Tüzel kişiliğin tam unvanı]</td></tr>
+            <tr><td style="font-weight:600;">Adres</td><td class="needs-decision">[Üniversitenin resmi adresi]</td></tr>
+            <tr><td style="font-weight:600;">E-posta</td><td>dijitaloyuntasarimkulubu@nisantasi.edu.tr</td></tr>
+            <tr><td style="font-weight:600;">Telefon</td><td class="needs-decision">[Üniversitenin resmi telefon numarası]</td></tr>
+        </table>
+    </div>
+
+    <h4>2. İşlenen Kişisel Verileriniz, İşlenme Amaçları ve Hukuki Sebepleri</h4>
+
+    <p>Platformumuza üye olmanız ve etkinliklerimize (Game Jam, Workshop vb.) başvurmanız kapsamında aşağıdaki verileriniz toplanmaktadır:</p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Veri Kategorisi</th>
+                <th>Toplanan Veriler</th>
+                <th>İşlenme Amacı</th>
+                <th>Hukuki Sebep</th>
+                <th>Saklama Süresi</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Kimlik Bilgileri</strong></td>
+                <td>Ad, Soyad, Doğum Tarihi</td>
+                <td>Katılımcı doğrulaması, yaş kontrolü</td>
+                <td>md. 5/2-f (Meşru menfaat)¹</td>
+                <td>Etkinlik bitiminden itibaren <strong>1 yıl</strong></td>
+            </tr>
+            <tr>
+                <td><strong>T.C. Kimlik No</strong></td>
+                <td>T.C. Kimlik Numarası</td>
+                <td>Kampüs güvenlik giriş listelerinin hazırlanması</td>
+                <td class="needs-decision">Hukuk Müşavirliği Belirleyecek ²</td>
+                <td>Etkinlik bitiminden itibaren <strong>6 ay</strong></td>
+            </tr>
+            <tr>
+                <td><strong>İletişim Bilgileri</strong></td>
+                <td>E-posta, Telefon No</td>
+                <td>Etkinlik süreçlerinde iletişim ve duyuru</td>
+                <td>md. 5/2-f (Meşru menfaat)</td>
+                <td>Üyelik süresince; silme talebinde <strong>30 gün</strong></td>
+            </tr>
+            <tr>
+                <td><strong>Eğitim Bilgileri</strong></td>
+                <td>Üniversite, Bölüm, Sınıf</td>
+                <td>Öğrenci statüsü doğrulaması, takım eşleştirme</td>
+                <td>md. 5/2-f (Meşru menfaat)</td>
+                <td>Etkinlik bitiminden itibaren <strong>1 yıl</strong></td>
+            </tr>
+            <tr>
+                <td><strong>Sağlık Verileri</strong> <em>(Opsiyonel)</em></td>
+                <td>Kronik hastalık, alerji</td>
+                <td>Acil tıbbi müdahalelerde can güvenliği</td>
+                <td>md. 6/2 (Açık Rıza)</td>
+                <td>Etkinlik bitiminden sonra <strong>7 iş günü</strong></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="note-box">
+        <div class="label">Dipnot ¹</div>
+        <p>Önceki taslakta "5/2-e (bir hakkın tesisi/korunması)" kullanılmıştı; bu madde tipik olarak dava/icra/alacak süreçleri için uygundur. Katılımcı doğrulama ve yaş kontrolü amacı, diğer alanlarla tutarlı olarak "meşru menfaat" temelinde değerlendirilmiştir.</p>
+    </div>
+
+    <div class="decision-box">
+        <div class="label">Karar Gerekli — T.C. Kimlik Numarası Hukuki Dayanağı ²</div>
+        <p>T.C. Kimlik numarası yalnızca kampüs güvenliği giriş listelerinin hazırlanması amacıyla talep edilmektedir. Olası hukuki sebepler:</p>
+        <ul>
+            <li><strong>md. 5/2-ç (Hukuki yükümlülük):</strong> Ancak kampüs güvenliği 5188 sayılı Özel Güvenlik Hizmetlerine Dair Kanun kapsamında lisanslı özel güvenlik personeli tarafından sağlanıyorsa kullanılabilir.</li>
+            <li><strong>md. 5/2-f (Meşru menfaat):</strong> Üniversitenin iç yönetmeliği kanun kapsamında değilse bu seçenek daha sağlamdır.</li>
+            <li><strong>Üçüncü Seçenek:</strong> Üniversite kimlik kartı ile giriş doğrulamasının yeterli olduğu durumlarda bu veri hiç talep edilmemelidir (KVKK "ölçülülük" ilkesi).</li>
+        </ul>
+        <p style="margin-top:10px;"><strong>Müşavirlik Kararı: </strong> ☐ md. 5/2-ç &nbsp;&nbsp; ☐ md. 5/2-f &nbsp;&nbsp; ☐ Bu veri talep edilmesin</p>
+    </div>
+
+    <h4>3. Kişisel Verilerin Aktarılması</h4>
+    <p>Toplanan kişisel verileriniz ticari hiçbir amaçla üçüncü şahıslara <strong>satılmaz, devredilmez veya kiralanmaz</strong>. Yalnızca aşağıdaki taraflarla paylaşılabilir:</p>
+
+    <table>
+        <thead>
+            <tr><th>Aktarılan Taraf</th><th>Aktarım Amacı</th><th>Hukuki Sebep</th></tr>
+        </thead>
+        <tbody>
+            <tr><td>İstanbul Nişantaşı Üniversitesi Rektörlüğü</td><td>Etkinlik izinleri ve kurumsal raporlama</td><td>md. 5/2-ç</td></tr>
+            <tr><td>Üniversite Güvenlik Birimleri</td><td>Kampüs giriş listelerinin oluşturulması</td><td class="needs-decision">Yukarıdaki karara bağlı</td></tr>
+            <tr><td>Yetkili Sağlık Kuruluşları</td><td><em>Yalnızca</em> acil tıbbi müdahale gerektiren durumlarda</td><td>md. 6/3</td></tr>
+        </tbody>
+    </table>
+
+    <h4>4. Kişisel Veri Toplamanın Yöntemi</h4>
+    <p>Kişisel verileriniz; nishdot.com.tr adresi üzerinden doldurduğunuz elektronik başvuru ve üyelik formları aracılığıyla, kısmen veya tamamen otomatik yollarla toplanmaktadır.</p>
+
+    <h4>5. KVKK Madde 11 Kapsamındaki Haklarınız</h4>
+    <p>KVKK'nın 11. maddesi uyarınca aşağıdaki haklara sahipsiniz:</p>
+    <ol type="a">
+        <li>Kişisel verilerinizin işlenip işlenmediğini <strong>öğrenme</strong>,</li>
+        <li>Kişisel verileriniz işlenmişse buna ilişkin <strong>bilgi talep etme</strong>,</li>
+        <li>Kişisel verilerinizin işlenme amacını ve bunların amacına uygun kullanılıp kullanılmadığını <strong>öğrenme</strong>,</li>
+        <li>Yurt içinde veya yurt dışında kişisel verilerinizin aktarıldığı <strong>üçüncü kişileri bilme</strong>,</li>
+        <li>Kişisel verilerinizin eksik veya yanlış işlenmiş olması hâlinde bunların <strong>düzeltilmesini isteme</strong>,</li>
+        <li>KVKK'nın 7. maddesinde öngörülen şartlar çerçevesinde kişisel verilerinizin <strong>silinmesini veya yok edilmesini isteme</strong>,</li>
+        <li>(d) ve (e) bentleri uyarınca yapılan işlemlerin, kişisel verilerin aktarıldığı üçüncü kişilere <strong>bildirilmesini isteme</strong>,</li>
+        <li>İşlenen verilerin münhasıran otomatik sistemler vasıtasıyla analiz edilmesi suretiyle aleyhinize bir sonucun ortaya çıkmasına <strong>itiraz etme</strong>,</li>
+        <li>Kişisel verilerinizin kanuna aykırı olarak işlenmesi sebebiyle zarara uğramanız hâlinde <strong>zararın giderilmesini talep etme</strong>.</li>
+    </ol>
+    <p style="margin-top:10px;"><strong>Başvuru Yöntemi:</strong> dijitaloyuntasarimkulubu@nisantasi.edu.tr adresine kimliğinizi tespit edici bilgiler ile birlikte yazılı olarak başvurabilirsiniz. Başvurularınız en geç <strong>30 gün</strong> içinde sonuçlandırılacaktır.</p>
+    <p><strong>Hesap Silme (Unutulma Hakkı) Prosedürü:</strong> Yukarıdaki e-posta adresine "Hesap Silme Talebi" konulu başvuru gönderilebilir. Talebiniz en geç <strong>30 gün</strong> içinde işleme alınır.</p>
+
+    <div class="decision-box">
+        <div class="label">Karar Gerekli — Saklama Süreleri</div>
+        <p>Tablodaki saklama süreleri (1 yıl, 6 ay, 30 gün, 7 iş günü) taslak niteliğindedir. Üniversitenin veri saklama politikası ve yasal zorunluluklara göre revize edilmesi gerekebilir.</p>
+        <p><strong>Müşavirlik Onayı: </strong> ☐ Saklama süreleri uygundur &nbsp;&nbsp; ☐ Revizyon gerekir</p>
+    </div>
+
+    <hr>
+    <div class="page-break"></div>
+
+    <!-- ==================== BÖLÜM 2: SAĞLIK ==================== -->
+
+    <h2>BÖLÜM 2 — Sağlık Verileri Açık Rıza Beyanı</h2>
+    <p><em>Başvuru formunda sağlık bilgisi alanının yanında gösterilecek metin. Bu kutucuk opsiyoneldir.</em></p>
+
+    <h3>Özel Nitelikli Kişisel Veri (Sağlık) Açık Rıza Beyanı</h3>
+
+    <p>İstanbul Nişantaşı Üniversitesi bünyesinde faaliyet gösteren Nishdot tarafından düzenlenen etkinlikler (Game Jam, Workshop vb.) süresince, olası acil durumlarda tıbbi müdahalenin doğru ve hızlı bir şekilde yapılabilmesi amacıyla; başvuru formunda <strong>kendi özgür irademle</strong> beyan ettiğim kronik hastalık, alerji veya kullandığım ilaçlara ilişkin sağlık verilerimin:</p>
+    <ul>
+        <li>İşlenmesine,</li>
+        <li>Etkinlik bitimini takip eden <strong>7 iş günü</strong> içinde kalıcı olarak silinmek üzere saklanmasına,</li>
+        <li>Yalnızca acil tıbbi müdahale gerektiren durumlarda <strong>yetkili sağlık personeli</strong> ile paylaşılmasına</li>
+    </ul>
+    <p>6698 sayılı KVKK'nın 6. maddesi uyarınca <strong>açık rıza</strong> gösteriyorum.</p>
+
+    <div class="warning-box">
+        <div class="label">Önemli Not</div>
+        <p><strong>Bu kutucuğu işaretlemek zorunlu değildir.</strong> Sağlık bilgisi paylaşmayan katılımcılar etkinliğe sorunsuz katılabilir. Bu sayede rıza "özgür irade" şartını sağlar.</p>
+    </div>
+
+    <div class="note-box">
+        <div class="label">18 Yaş Altı Katılımcılar</div>
+        <p>Katılımcı 18 yaşından küçükse, işbu açık rıza beyanı katılımcının kendisi tarafından değil, <strong>velisi veya yasal temsilcisi</strong> tarafından imzalanmalıdır (bkz. Sözleşme Madde 2.2).</p>
+    </div>
+
+    <p>Bu rızamı dilediğim zaman, herhangi bir gerekçe göstermeksizin <strong>dijitaloyuntasarimkulubu@nisantasi.edu.tr</strong> adresine yazılı bildirimde bulunarak geri alabileceğimi biliyorum. Rızamı geri almam halinde sağlık verilerim <strong>7 iş günü</strong> içinde silinecektir.</p>
+
+    <hr>
+
+    <!-- ==================== BÖLÜM 3: FOTOĞRAF ==================== -->
+
+    <h2>BÖLÜM 3 — Fotoğraf ve Video Kullanım Açık Rızası</h2>
+    <p><em>Başvuru formunda KVKK kutucuğunun altında ayrı bir checkbox olarak yer alacaktır.</em></p>
+
+    <h3>Fotoğraf ve Video Kullanımına İlişkin Açık Rıza Beyanı</h3>
+
+    <p>İstanbul Nişantaşı Üniversitesi bünyesinde faaliyet gösteren Nishdot tarafından düzenlenen etkinlikler sırasında ve etkinlik alanında çekilen <strong>fotoğraf ve videolarımın</strong>; Nishdot'un resmi sosyal medya hesaplarında (Instagram, Twitter/X, YouTube vb.), web sitesinde (nishdot.com.tr) ve basılı/dijital tanıtım materyallerinde, etkinlik tanıtımı ve kulüp faaliyetlerinin duyurulması amacıyla <strong>süresiz, münhasır olmayan (non-exclusive) ve bedelsiz</strong> olarak kullanılmasına kendi özgür irademle izin veriyorum.</p>
+
+    <div class="note-box">
+        <div class="label">18 Yaş Altı Katılımcılar</div>
+        <p>Katılımcı 18 yaşından küçükse, işbu rıza beyanı velisi veya yasal temsilcisi tarafından imzalanmalıdır (bkz. Sözleşme Madde 2.2).</p>
+    </div>
+
+    <div class="note-box">
+        <div class="label">Operasyonel Not</div>
+        <p>Bu rıza metni öne çıkan/bireysel kullanım (portre, takım tanıtımı, röportaj) için tasarlanmıştır. Genel kalabalık/atmosfer çekimlerinde (sahne, salon geneli) her katılımcıdan ayrı imza almak operasyonel olarak güç olabilir. Etkinlik girişinde "bu alanda görüntü/ses kaydı yapılmaktadır" bilgilendirmesi de değerlendirilebilir.</p>
+    </div>
+
+    <p>Bu rızamı dilediğim zaman <strong>dijitaloyuntasarimkulubu@nisantasi.edu.tr</strong> adresine yazılı bildirimde bulunarak ileriye dönük olarak geri alabileceğimi biliyorum. Rızamı geri almam halinde, görsel materyallerim yeni oluşturulacak içeriklerde kullanılmayacaktır. Ancak etkinliklerin doğası gereği kalabalık gruplar halinde çekilmiş ve hâlihazırda Nishdot sosyal medya hesaplarında veya web sitesinde yayımlanmış olan genel etkinlik fotoğraflarının/videolarının geriye dönük olarak yayından kaldırılması veya silinmesi taahhüt edilmemektedir. Bu tür geçmiş paylaşımlardan ve üçüncü kişilerce yapılan alıntılardan Nishdot sorumlu tutulamaz.</p>
+
+    <hr>
+    <div class="page-break"></div>
+
+    <!-- ==================== BÖLÜM 4: TİCARİ İLETİ ==================== -->
+
+    <h2>BÖLÜM 4 — Ticari Elektronik İleti Onayı <em>(Opsiyonel)</em></h2>
+
+    <div class="warning-box">
+        <div class="label">Koşullu Bölüm</div>
+        <p>Bu bölüm yalnızca Nishdot, etkinlik bazlı bilgilendirme dışında genel duyuru/bülten maili veya SMS göndermeyi planlıyorsa kullanılacaktır. Mevcut durumda yalnızca başvurulan etkinliğe dair bilgilendirme yapılıyorsa bu bölüm ve checkbox'ı eklemenize gerek yoktur. (6563 sayılı Elektronik Ticaretin Düzenlenmesi Hakkında Kanun uyarınca gereklidir.)</p>
+    </div>
+
+    <h3>Ticari Elektronik İleti Onayı</h3>
+
+    <p>Nishdot tarafından düzenlenecek yeni etkinlikler, fırsatlar ve duyurularla ilgili tarafıma e-posta/SMS yoluyla <strong>ticari elektronik ileti gönderilmesine</strong> rıza gösteriyorum.</p>
+    <p>Bu onayı dilediğim zaman, gönderilen iletideki "Aboneliği İptal Et" bağlantısı veya <strong>dijitaloyuntasarimkulubu@nisantasi.edu.tr</strong> adresine başvurarak ücretsiz ve kolay bir şekilde geri alabileceğimi biliyorum.</p>
+
+    <hr>
+
+    <!-- ==================== BÖLÜM 5: SÖZLEŞME ==================== -->
+
+    <h2>BÖLÜM 5 — Kullanıcı ve Etkinlik Sözleşmesi</h2>
+    <p><em>Kullanıcının siteye üye olurken veya etkinliğe başvururken kabul ettiği kurallar bütünü.</em></p>
+
+    <h3>Nishdot Kullanıcı ve Etkinlik Katılım Sözleşmesi</h3>
+    <p style="text-align:center;font-size:9pt;color:#666;"><strong>Yürürlük Tarihi:</strong> 1 Temmuz 2026 | <strong>Versiyon:</strong> 2.1</p>
+
+    <h4>Madde 1 — Taraflar ve Kapsam</h4>
+    <p>İşbu sözleşme ("Sözleşme"); nishdot.com.tr adresi üzerinden hizmet sunan, İstanbul Nişantaşı Üniversitesi bünyesinde faaliyet gösteren Dijital Oyun Tasarımı Kulübü ("Nishdot") ile Platforma üye olan ve/veya etkinliklere katılan kullanıcı ("Katılımcı") arasında düzenlenmiştir. Bu Sözleşme, Nishdot'un Kişisel Verilerin İşlenmesine İlişkin Aydınlatma Metni ile birlikte okunmalıdır.</p>
+
+    <h4>Madde 2 — Katılım Koşulları ve Yaş Sınırı</h4>
+    <ul>
+        <li><strong>2.1.</strong> Etkinliklere katılım için kural olarak <strong>18 yaşını doldurmuş olmak</strong> gerekmektedir.</li>
+        <li><strong>2.2.</strong> 18 yaş altı katılımcılar, yalnızca velisinin/yasal temsilcisinin <strong>yazılı izni</strong> ile etkinliklere katılabilir. Sağlık Verileri ve Fotoğraf/Video rıza beyanları da veli/yasal temsilci tarafından imzalanmalıdır.</li>
+        <li><strong>2.3.</strong> Katılımcı, verdiği bilgilerin doğru, eksiksiz ve güncel olduğunu kabul ve taahhüt eder.</li>
+    </ul>
+
+    <h4>Madde 3 — Kullanıcı Yükümlülükleri ve Disiplin</h4>
+    <ul>
+        <li><strong>3.1.</strong> Etkinlikler sırasında genel ahlak kurallarına ve üniversite disiplin yönetmeliklerine uyulması zorunludur.</li>
+        <li><strong>3.2.</strong> İhlal durumunda kademeli yaptırımlar: (a) Uyarı → (b) Geçici Uzaklaştırma (1 dönem–1 yıl) → (c) Kalıcı Uzaklaştırma.</li>
+        <li><strong>3.3.</strong> Katılımcı, yaptırım kararına karşı <strong>7 gün</strong> içinde yazılı itirazda bulunma hakkına sahiptir. İtiraz <strong>15 gün</strong> içinde sonuçlandırılır.</li>
+    </ul>
+
+    <h4>Madde 4 — Fikri Mülkiyet ve Telif Hakları</h4>
+    <ul>
+        <li><strong>4.1.</strong> Üretilen oyunların tüm fikri mülkiyet hakları <strong>geliştiren takıma/kişilere aittir</strong>.</li>
+        <li><strong>4.2.</strong> Katılımcı, Nishdot'a <strong>münhasır olmayan, süresiz, geri alınabilir ve bedelsiz</strong> bir sergileme lisansı verir.</li>
+        <li><strong>4.3.</strong> Bu lisans ticari satış hakkı vermez.</li>
+        <li><strong>4.4.</strong> Lisans geri alınabilir; ancak önceden yayımlanmış/paylaşılmış içeriklerden Nishdot sorumlu tutulamaz.</li>
+        <li><strong>4.5.</strong> Üçüncü parti içerik telif sorumluluğu münhasıran katılımcıya aittir.</li>
+    </ul>
+
+    <h4>Madde 5 — Sorumluluk Sınırlandırması</h4>
+    <ul>
+        <li><strong>5.1.</strong> Katılımcının dijital varlıklarına (bilgisayar, donanım, yazılım) gelebilecek hasarlardan Nishdot sorumlu tutulamaz.</li>
+        <li><strong>5.2.</strong> Fiziksel güvenlik yükümlülüğü mekân sahibine/üniversiteye aittir. Nishdot, kendi kusuru bulunmadığı sürece sorumlu tutulamaz.</li>
+        <li><strong>5.3.</strong> <strong>Yasal Sınırlama:</strong> İşbu Madde 5 kapsamındaki sorumluluk sınırlamaları, 6098 sayılı TBK m. 115 ve 116 uyarınca Nishdot'un <strong>kasıt veya ağır ihmali</strong> bulunan hallerde uygulanmaz.</li>
+    </ul>
+
+    <div class="decision-box">
+        <div class="label">Karar Gerekli — TBK m.115/116 Uyumu</div>
+        <p>Madde 5'teki sorumluluk sınırlandırması, Türk Borçlar Kanunu m. 115 ve 116 uyarınca kasıt veya ağır ihmalden doğan sorumluluğu bertaraf eden anlaşmalar kesin hükümsüz olduğundan, 5.3 fıkrası ile bu çekince açıkça belirtilmiştir. İfade biçiminin uygunluğunun teyidi rica olunur.</p>
+        <p><strong>Müşavirlik Onayı: </strong> ☐ İfade uygundur &nbsp;&nbsp; ☐ Revizyon gerekir</p>
+    </div>
+
+    <h4>Madde 6 — Mücbir Sebepler ve Etkinlik İptali</h4>
+    <p>Doğal afet, salgın hastalık, savaş, terör, grev, hükümet kararları, teknik altyapı arızaları veya Nishdot'un kontrolü dışındaki mücbir sebep halleri nedeniyle etkinlik iptali/ertelemesi durumunda Nishdot tazminat yükümlülüğü altına girmez.</p>
+
+    <h4>Madde 7 — Sözleşme Değişiklikleri</h4>
+    <p>Nishdot sözleşmeyi önceden bildirim yaparak değiştirebilir. Değişiklikler yayımlandığı tarihte yürürlüğe girer.</p>
+
+    <h4>Madde 8 — Bölünebilirlik</h4>
+    <p>Herhangi bir hükmün geçersiz bulunması, kalan hükümlerin geçerliliğini etkilemez.</p>
+
+    <h4>Madde 9 — Uygulanacak Hukuk ve Yetkili Mahkeme</h4>
+    <p>İşbu Sözleşme, Türkiye Cumhuriyeti kanunlarına tabidir. Uyuşmazlıklarda <strong>İstanbul Mahkemeleri ve İcra Daireleri</strong> yetkilidir.</p>
+
+    <div class="warning-box">
+        <div class="label">Tüketici Hukuku Notu</div>
+        <p>Nishdot etkinlikleri şu an ücretsizdir. İleride ücretli etkinlik/ürün satışı söz konusu olursa, 6502 sayılı Tüketicinin Korunması Hakkında Kanun'un emredici yetki kuralları bu maddenin önüne geçebilir.</p>
+    </div>
+
+    <hr>
+
+    <!-- ==================== BÖLÜM 6: ÇEREZ ==================== -->
+
+    <h2>BÖLÜM 6 — Çerez (Cookie) Politikası</h2>
+
+    <h3>Çerez (Cookie) Politikası</h3>
+    <p>Nishdot Web Platformu (nishdot.com.tr), size güvenli ve işlevsel bir hizmet sunabilmek için çerezler kullanmaktadır.</p>
+
+    <table>
+        <thead>
+            <tr><th>Çerez Adı</th><th>Amacı</th><th>Sağlayıcı</th><th>Süresi</th></tr>
+        </thead>
+        <tbody>
+            <tr><td><code>sessionid</code></td><td>Kullanıcı oturumunun açık tutulması</td><td>nishdot.com.tr (1. Parti)</td><td>Tarayıcı kapatılınca sona erer</td></tr>
+            <tr><td><code>csrftoken</code></td><td>Form güvenlik doğrulaması</td><td>nishdot.com.tr (1. Parti)</td><td>1 yıl</td></tr>
+        </tbody>
+    </table>
+
+    <p>Platformumuzda şu an için Google Analytics, Facebook Pixel veya herhangi bir üçüncü parti analiz/pazarlama/reklam çerezi <strong>kullanılmamaktadır</strong>.</p>
+
+    <hr>
+    <div class="page-break"></div>
+
+    <!-- ==================== ÖZET ==================== -->
+
+    <h2>Hukuk Müşavirliği Karar Özeti</h2>
+    <p><em>Aşağıdaki tablo, bu belgede hukuk müşavirliğinin karar vermesi veya teyit etmesi gereken tüm maddelerin bir özetidir.</em></p>
+
+    <table>
+        <thead>
+            <tr><th>#</th><th>Konu</th><th>Bölüm</th><th>Karar/Onay</th></tr>
+        </thead>
+        <tbody>
+            <tr><td>1</td><td>Veri Sorumlusu tüzel kişilik unvanı</td><td>Bölüm 1</td><td style="min-width:120px;">☐ ............................................</td></tr>
+            <tr><td>2</td><td>T.C. Kimlik No hukuki dayanağı</td><td>Bölüm 1</td><td>☐ md. 5/2-ç &nbsp; ☐ md. 5/2-f &nbsp; ☐ Talep edilmesin</td></tr>
+            <tr><td>3</td><td>Saklama sürelerinin uygunluğu</td><td>Bölüm 1</td><td>☐ Uygun &nbsp; ☐ Revizyon gerekir</td></tr>
+            <tr><td>4</td><td>TBK m.115/116 ifade uygunluğu</td><td>Bölüm 5, Md. 5.3</td><td>☐ Uygun &nbsp; ☐ Revizyon gerekir</td></tr>
+            <tr><td>5</td><td>Ticari Elektronik İleti gerekli mi?</td><td>Bölüm 4</td><td>☐ Evet, eklensin &nbsp; ☐ Hayır, şimdilik gereksiz</td></tr>
+            <tr><td>6</td><td>Genel Onay</td><td>Tüm belge</td><td>☐ Onaylandı &nbsp; ☐ Revizyon ile onaylandı</td></tr>
+        </tbody>
+    </table>
+
+    <!-- SIGNATURE -->
+    <div class="signature-area">
+        <div class="signature-block">
+            <div class="line"></div>
+            <div class="name">Nishdot Yönetim Kurulu Başkanı</div>
+            <div class="title">İmza / Tarih</div>
+        </div>
+        <div class="signature-block">
+            <div class="line"></div>
+            <div class="name">Hukuk Müşaviri</div>
+            <div class="title">İmza / Tarih / Kaşe</div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <div class="doc-footer">
+        Nishdot Web Platformu — Yasal Metin Şablonları v2.1 — Gizli / Confidential<br>
+        Bu belge İstanbul Nişantaşı Üniversitesi Hukuk Müşavirliği'nin incelemesi için hazırlanmıştır.
+    </div>
+
+</div>
+
+</body>
+</html>

@@ -1,7 +1,14 @@
 from django.db import models
 from django.conf import settings
 from core.models import TimeStampedModel
+import hashlib
+import base64
+from cryptography.fernet import Fernet
 
+def get_fernet():
+    # Django Secret Key'den 32 bytelık güvenli bir AES-256 anahtarı türet
+    key = hashlib.sha256(settings.SECRET_KEY.encode('utf-8')).digest()
+    return Fernet(base64.urlsafe_b64encode(key))
 class GameJam(TimeStampedModel):
     event = models.OneToOneField(
         "events.Event",
@@ -77,7 +84,8 @@ class JamApplication(TimeStampedModel):
     birth_date       = models.DateField(null=True, blank=True, verbose_name="Doğum Tarihi")
     email            = models.EmailField(verbose_name="E-posta")
     phone_number     = models.CharField(max_length=20, blank=True, verbose_name="Telefon Numarası")
-    national_id      = models.CharField(max_length=11, blank=True, verbose_name="T.C. Kimlik Numarası")
+    national_id      = models.CharField(max_length=255, blank=True, verbose_name="T.C. Kimlik Numarası")
+    national_id_hash = models.CharField(max_length=64, blank=True, verbose_name="T.C. Kimlik Hash (Gizli)")
     university       = models.CharField(max_length=200, blank=True, verbose_name="Üniversite")
     department       = models.CharField(max_length=200, blank=True, verbose_name="Bölüm")
     grade            = models.CharField(max_length=50, blank=True, verbose_name="Sınıf")
@@ -92,6 +100,7 @@ class JamApplication(TimeStampedModel):
     motivation       = models.TextField(blank=True, verbose_name="Motivasyon")
     additional_notes = models.TextField(blank=True, verbose_name="Ek Notlar")
     kvkk_accepted    = models.BooleanField(default=False, verbose_name="KVKK Onayı")
+    media_consent    = models.BooleanField(default=False, verbose_name="Fotoğraf/Video Rızası")
 
     # ── Dinamik Alanlar ──
     custom_answers = models.JSONField(default=dict, blank=True, verbose_name="Özel Cevaplar")
@@ -115,8 +124,30 @@ class JamApplication(TimeStampedModel):
         ordering = ["-created_at"]
         constraints = [
             models.UniqueConstraint(fields=["jam", "email"], name="unique_application_per_jam"),
-            models.UniqueConstraint(fields=["jam", "national_id"], name="unique_national_id_per_jam"),
+            models.UniqueConstraint(fields=["jam", "national_id_hash"], name="unique_national_id_per_jam"),
         ]
 
     def __str__(self):
         return f"{self.full_name} - {self.jam.event.title}"
+
+    def save(self, *args, **kwargs):
+        if self.national_id and len(self.national_id) == 11 and not self.national_id.startswith('gAAAAA'):
+            # T.C. Kimlik numarasının benzersizliğini veritabanında kontrol edebilmek için
+            # şifrelemeden bağımsız bir hash (özet) alıyoruz.
+            self.national_id_hash = hashlib.sha256(self.national_id.encode('utf-8')).hexdigest()
+            # Gerçek T.C. Kimlik Numarasını AES ile şifreliyoruz.
+            fernet = get_fernet()
+            self.national_id = fernet.encrypt(self.national_id.encode('utf-8')).decode('utf-8')
+        super().save(*args, **kwargs)
+
+    @property
+    def decrypted_national_id(self):
+        if not self.national_id:
+            return ""
+        if self.national_id.startswith('gAAAAA'):
+            try:
+                fernet = get_fernet()
+                return fernet.decrypt(self.national_id.encode('utf-8')).decode('utf-8')
+            except:
+                return "ŞİFRE ÇÖZÜLEMEDİ"
+        return self.national_id

@@ -227,15 +227,30 @@
                             <textarea name="additional_notes" rows="2" class="form-input py-3" placeholder="Varsa organizatörlere iletmek istedikleriniz..."></textarea>
                         </div>
 
-                        <div class="p-6 border border-zinc-700/50 bg-zinc-900/50 rounded-xl mt-8">
-                            <label class="flex items-start gap-4 cursor-pointer">
-                                <div class="mt-1">
-                                    <input type="checkbox" name="kvkk_accepted" required class="w-5 h-5 rounded border-zinc-600 bg-zinc-800 text-brand-pink focus:ring-brand-pink/50 focus:ring-offset-zinc-900">
-                                </div>
-                                <span class="text-sm text-zinc-400 leading-relaxed">
-                                    6698 sayılı Kişisel Verilerin Korunması Kanunu (KVKK) kapsamında, paylaştığım kişisel verilerimin İstanbul Nişantaşı Üniversitesi Dijital Oyun Tasarımı Kulübü tarafından etkinlik organizasyonu ve iletişim amacıyla işlenmesini ve saklanmasını okudum, anladım ve <a href="#" class="text-brand-pink hover:underline">kabul ediyorum</a>. *
-                                </span>
-                            </label>
+                        <div class="space-y-4 mt-8">
+                            <!-- KVKK Onayı (Aydınlatma Metni - Zorunlu) -->
+                            <div class="p-6 border border-zinc-700/50 bg-zinc-900/50 rounded-xl">
+                                <label class="flex items-start gap-4 cursor-pointer">
+                                    <div class="mt-1">
+                                        <input type="checkbox" name="kvkk_accepted" required class="w-5 h-5 rounded border-zinc-600 bg-zinc-800 text-brand-pink focus:ring-brand-pink/50 focus:ring-offset-zinc-900">
+                                    </div>
+                                    <span class="text-sm text-zinc-400 leading-relaxed">
+                                        6698 sayılı Kişisel Verilerin Korunması Kanunu (KVKK) kapsamında, paylaştığım kişisel verilerimin Nişantaşı Üniversitesi Dijital Oyun Tasarımı Kulübü tarafından işlenmesine dair <a href="/kvkk/" target="_blank" class="text-brand-pink hover:underline">Aydınlatma Metni</a>'ni okudum ve anladım. *
+                                    </span>
+                                </label>
+                            </div>
+
+                            <!-- Fotoğraf/Video Açık Rıza (Zorunlu) -->
+                            <div class="p-6 border border-zinc-700/50 bg-zinc-900/50 rounded-xl">
+                                <label class="flex items-start gap-4 cursor-pointer">
+                                    <div class="mt-1">
+                                        <input type="checkbox" name="media_consent" required class="w-5 h-5 rounded border-zinc-600 bg-zinc-800 text-brand-pink focus:ring-brand-pink/50 focus:ring-offset-zinc-900">
+                                    </div>
+                                    <span class="text-sm text-zinc-400 leading-relaxed">
+                                        Etkinlik alanında çekilen fotoğraf ve videolarımın Nishdot sosyal medya hesaplarında ve tanıtım materyallerinde kullanılmasına açık rıza ile izin veriyorum. *
+                                    </span>
+                                </label>
+                            </div>
                         </div>
                     </div>
 

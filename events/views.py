@@ -32,12 +32,21 @@ class EventApplyWizardView(TemplateView):
         email = request.POST.get('email')
         national_id = request.POST.get('national_id')
         
+        # KVKK ve Rıza Kontrolleri
+        if request.POST.get('kvkk_accepted') != 'on':
+            return self.render_to_response(self.get_context_data(error="KVKK Aydınlatma Metni'ni okuyup onaylamanız zorunludur."))
+        if request.POST.get('media_consent') != 'on':
+            return self.render_to_response(self.get_context_data(error="Etkinlik kuralları gereği fotoğraf ve video kullanım izni (Açık Rıza) vermeniz zorunludur."))
+        
         # Mükerrer başvuru kontrolleri (E-posta ve T.C. Kimlik)
         if JamApplication.objects.filter(jam=jam, email=email).exists():
             error_msg = "Bu e-posta adresiyle daha önce bir başvuru yapılmış. Başvurunuzda bir değişiklik yapmak istiyorsanız veya bir sorun olduğunu düşünüyorsanız lütfen bizimle iletişime geçin."
             return self.render_to_response(self.get_context_data(error=error_msg))
             
-        if JamApplication.objects.filter(jam=jam, national_id=national_id).exists():
+        # T.C. Kimlik numarası şifreli olduğu için hash üzerinden kontrol ediyoruz
+        import hashlib
+        national_id_hash = hashlib.sha256(national_id.encode('utf-8')).hexdigest()
+        if JamApplication.objects.filter(jam=jam, national_id_hash=national_id_hash).exists():
             error_msg = "Bu T.C. Kimlik numarasıyla daha önce bir başvuru yapılmış. Bir hata olduğunu düşünüyorsanız lütfen bizimle iletişime geçin."
             return self.render_to_response(self.get_context_data(error=error_msg))
         
@@ -64,7 +73,8 @@ class EventApplyWizardView(TemplateView):
                 
                 motivation=request.POST.get('motivation', ''),
                 additional_notes=request.POST.get('additional_notes', ''),
-                kvkk_accepted=request.POST.get('kvkk_accepted') == 'on'
+                kvkk_accepted=True,
+                media_consent=True
             )
             return self.render_to_response(self.get_context_data(success=True))
         except IntegrityError:
