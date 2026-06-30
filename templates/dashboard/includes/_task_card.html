@@ -1,0 +1,93 @@
+<div class="bg-zinc-800/80 hover:bg-zinc-800 rounded-xl p-4 cursor-pointer border border-zinc-700/50 hover:border-brand-pink/50 transition-all shadow-md group h-full flex flex-col"
+     draggable="true" 
+     ondragstart="drag(event)" 
+     onclick="openTaskModal(this)"
+     id="task-{{ task.id }}"
+     data-task-id="{{ task.id }}"
+     data-title="{{ task.title }}"
+     data-description="{{ task.description }}"
+     data-status="{{ task.status }}"
+     data-priority="{{ task.priority }}"
+     data-category="{{ task.category }}"
+     data-assignee="{{ task.assignee_id|default:'' }}"
+     data-deadline="{% if task.deadline %}{{ task.deadline|date:'Y-m-d\TH:i' }}{% endif %}">
+     
+    <!-- Top Row: Title, Priority & Deadline -->
+    <div class="flex justify-between items-start mb-1">
+        <div class="flex items-start">
+            <h4 class="text-white font-bold text-base leading-snug">{{ task.title }}</h4>
+            
+            <!-- Priority Indicator -->
+            <div class="shrink-0 ml-2 mt-1">
+                {% if task.priority == 'urgent' %}
+                    <span class="flex h-3 w-3 relative">
+                      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                      <span class="relative inline-flex rounded-full h-3 w-3 bg-red-500" title="Acil"></span>
+                    </span>
+                {% elif task.priority == 'high' %}
+                    <span class="h-3 w-3 rounded-full bg-orange-500 block" title="Yüksek Öncelik"></span>
+                {% elif task.priority == 'medium' %}
+                    <span class="h-3 w-3 rounded-full bg-blue-500 block" title="Orta Öncelik"></span>
+                {% else %}
+                    <span class="h-3 w-3 rounded-full bg-green-500 block" title="Düşük Öncelik"></span>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Deadline (Top Right, No Icon) -->
+        {% if task.deadline %}
+        <div class="text-[10px] font-bold text-zinc-400 shrink-0 text-right ml-2 leading-tight">
+            {{ task.deadline|date:"d M Y" }}<br>
+            <span class="text-zinc-500">{{ task.deadline|date:"H:i" }}</span>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Assignee Full Name -->
+    <div class="text-zinc-400 text-sm mb-3 font-medium">
+        {% if task.assignee %}
+            {{ task.assignee.first_name }} {{ task.assignee.last_name }}
+        {% else %}
+            <span class="text-zinc-600 italic">Atanmadı</span>
+        {% endif %}
+    </div>
+
+    <!-- Description -->
+    <div class="text-zinc-400 text-xs flex-1 mb-4">
+        {% if task.description %}
+            {{ task.description|truncatechars:120|linebreaksbr }}
+        {% else %}
+            <span class="text-zinc-600 italic">Açıklama yok</span>
+        {% endif %}
+    </div>
+
+    <!-- Bottom Row: Creator & Category -->
+    <div class="flex justify-between items-end mt-auto pt-3 border-t border-zinc-700/50">
+        <!-- Creator -->
+        <div class="text-[10px] text-zinc-500 flex items-center gap-1">
+            Oluşturan: <span class="text-zinc-300">
+                {% if task.creator %}
+                    {{ task.creator.first_name|default:task.creator.username }}
+                {% else %}
+                    Sistem
+                {% endif %}
+            </span>
+        </div>
+        
+        <!-- Category Badge with Inline Styles -->
+        <span class="text-[9px] font-bold uppercase px-2 py-0.5 rounded border"
+            {% if task.category == 'admin' %}
+                style="color: #e4e4e7; background-color: rgba(63, 63, 70, 0.5); border-color: #52525b;"
+            {% elif task.category == 'event' %}
+                style="color: #c084fc; background-color: rgba(168, 85, 247, 0.1); border-color: rgba(168, 85, 247, 0.3);"
+            {% elif task.category == 'design' %}
+                style="color: #f472b6; background-color: rgba(236, 72, 153, 0.1); border-color: rgba(236, 72, 153, 0.3);"
+            {% elif task.category == 'tech' %}
+                style="color: #60a5fa; background-color: rgba(59, 130, 246, 0.1); border-color: rgba(59, 130, 246, 0.3);"
+            {% elif task.category == 'social' %}
+                style="color: #4ade80; background-color: rgba(34, 197, 94, 0.1); border-color: rgba(34, 197, 94, 0.3);"
+            {% endif %}>
+            {{ task.get_category_display }}
+        </span>
+    </div>
+</div>

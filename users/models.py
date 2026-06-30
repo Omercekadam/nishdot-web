@@ -68,6 +68,8 @@ class CustomUser(AbstractUser, TimeStampedModel):
         default=Role.MEMBER,
         verbose_name="Rol"
     )
+    
+    job_title = models.CharField(max_length=100, blank=True, verbose_name="Kulüp İçi Görev / Unvan")
 
     # ── Profil Alanları ──
     is_verified = models.BooleanField(default=False, verbose_name="Doğrulandı mı?")

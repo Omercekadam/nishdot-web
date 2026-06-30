@@ -1,0 +1,392 @@
+{% extends 'dashboard/base.html' %}
+
+{% block extra_head %}
+<!-- Cropper.js -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
+{% endblock %}
+
+{% block dashboard_content %}
+<div class="p-8">
+    
+    <div class="flex justify-between items-center mb-8">
+        <div>
+            <h1 class="text-3xl font-bold text-white tracking-tight">Etkinlik Oluşturucu</h1>
+            <p class="text-zinc-400 mt-1">Sistemdeki tüm etkinlikleri (Jam, Workshop, Buluşma vb.) yönetin.</p>
+        </div>
+        <button onclick="openEventModal()" class="bg-brand-pink hover:bg-brand-pink/90 text-white font-semibold py-2 px-4 rounded-xl transition-colors flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            Yeni Etkinlik Aç
+        </button>
+    </div>
+
+    <!-- Mevcut Etkinlikler Listesi -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for event in events %}
+        <div class="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden shadow-lg flex flex-col hover:border-brand-pink/50 transition-colors">
+            {% if event.thumbnail %}
+            <div class="h-40 w-full bg-cover bg-center" style="background-image: url('{{ event.thumbnail.url }}');"></div>
+            {% elif event.cover_image %}
+            <div class="h-40 w-full bg-cover bg-center" style="background-image: url('{{ event.cover_image.url }}');"></div>
+            {% else %}
+            <div class="h-40 w-full bg-zinc-800 flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-zinc-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+            </div>
+            {% endif %}
+            <div class="p-5 flex-1 flex flex-col">
+                <div class="flex justify-between items-start mb-2">
+                    <h3 class="text-xl font-bold text-white">{{ event.title }}</h3>
+                    <span class="px-2 py-1 text-xs rounded-full bg-zinc-800 text-zinc-300 border border-zinc-700 uppercase tracking-wider">
+                        {{ event.get_event_type_display }}
+                    </span>
+                </div>
+                <p class="text-sm text-zinc-400 line-clamp-2 mb-4">{{ event.description }}</p>
+                <div class="mt-auto pt-4 border-t border-zinc-800 text-sm text-zinc-500 flex justify-between items-center">
+                    <div>
+                        {% if event.event_type == 'game_jam' and event.jam %}
+                            <span class="block">Başvuru: <strong class="text-zinc-300">{{ event.jam.applications.count }}</strong></span>
+                        {% endif %}
+                        <span class="block mt-1">Tarih: {{ event.start_date|date:"d M Y" }}</span>
+                    </div>
+                    <div class="flex gap-2">
+                        {% if event.event_type == 'game_jam' and event.jam %}
+                        <button onclick="toggleJamStatus({{ event.jam.id }}, this)" class="p-2 {% if event.jam.is_applications_open %}bg-green-500/10 text-green-400 hover:bg-green-500{% else %}bg-red-500/10 text-red-400 hover:bg-red-500{% endif %} rounded-xl hover:text-white transition-colors" title="Başvuruları Aç/Kapat">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
+                            </svg>
+                        </button>
+                        {% endif %}
+                        <button onclick="openEventModal({{ event.id }})" class="p-2 bg-brand-pink/10 text-brand-pink rounded-xl hover:bg-brand-pink hover:text-white transition-colors" title="Etkinliği Düzenle">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-span-full py-12 text-center text-zinc-500">
+            Henüz oluşturulmuş bir etkinlik bulunmuyor.
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Modal Form -->
+    <div id="createEventModal" class="fixed inset-0 z-50 hidden">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeEventModal()"></div>
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-4xl max-h-[90vh] overflow-y-auto bg-zinc-900 border border-zinc-700/50 rounded-2xl shadow-2xl p-8">
+            
+            <div class="flex justify-between items-center mb-6">
+                <h3 id="modalTitle" class="text-2xl font-bold text-white">Yeni Etkinlik Oluştur</h3>
+                <button onclick="closeEventModal()" class="text-zinc-500 hover:text-white">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            <form id="eventForm" class="space-y-6">
+                <input type="hidden" id="evId" value="">
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Tip Seçimi -->
+                    <div class="col-span-full">
+                        <label class="block text-sm font-medium text-zinc-300 mb-2">Etkinlik Tipi</label>
+                        <select id="evType" class="w-full bg-zinc-950 border border-zinc-800 text-white rounded-xl px-4 py-3 focus:outline-none focus:border-brand-pink transition-all" onchange="toggleJamFields()">
+                            <option value="game_jam">Game Jam</option>
+                            <option value="workshop">Workshop</option>
+                            <option value="meetup">Buluşma</option>
+                            <option value="talk">Konuşma</option>
+                            <option value="other">Diğer</option>
+                        </select>
+                    </div>
+
+                    <!-- Kapak Görseli ve Kırpma Alanı -->
+                    <div class="col-span-full">
+                        <label class="block text-sm font-medium text-zinc-300 mb-2">Afiş / Kapak Görseli (Geniş Format Önerilir)</label>
+                        <input type="file" id="evCoverImage" accept="image/*" class="w-full bg-zinc-950 border border-zinc-800 text-zinc-400 rounded-xl px-4 py-2 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-brand-pink/10 file:text-brand-pink hover:file:bg-brand-pink/20 transition-all">
+                        
+                        <!-- Kırpma Konteyneri -->
+                        <div id="cropperContainer" class="mt-4 hidden border border-zinc-800 rounded-xl overflow-hidden bg-zinc-950 p-2 text-center relative max-h-[400px]">
+                            <img id="cropperImage" src="" alt="Kırpılacak Görsel" class="max-w-full max-h-[350px] object-contain mx-auto">
+                        </div>
+                    </div>
+
+                    <!-- Başlık -->
+                    <div class="col-span-full">
+                        <label class="block text-sm font-medium text-zinc-300 mb-2">Etkinlik Adı</label>
+                        <input type="text" id="evTitle" required class="w-full bg-zinc-950 border border-zinc-800 text-white rounded-xl px-4 py-3 focus:outline-none focus:border-brand-pink transition-all">
+                    </div>
+
+                    <!-- Tarihler -->
+                    <div>
+                        <label class="block text-sm font-medium text-zinc-300 mb-2">Başlangıç Tarihi</label>
+                        <input type="datetime-local" id="evStart" required class="w-full bg-zinc-950 border border-zinc-800 text-white rounded-xl px-4 py-3 focus:outline-none focus:border-brand-pink transition-all">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-zinc-300 mb-2">Bitiş Tarihi</label>
+                        <input type="datetime-local" id="evEnd" required class="w-full bg-zinc-950 border border-zinc-800 text-white rounded-xl px-4 py-3 focus:outline-none focus:border-brand-pink transition-all">
+                    </div>
+
+                    <!-- Konum -->
+                    <div class="col-span-full">
+                        <label class="block text-sm font-medium text-zinc-300 mb-2">Konum / Yer</label>
+                        <input type="text" id="evLocation" class="w-full bg-zinc-950 border border-zinc-800 text-white rounded-xl px-4 py-3 focus:outline-none focus:border-brand-pink transition-all">
+                    </div>
+
+                    <!-- SADECE JAM İÇİN ALANLAR -->
+                    <div id="jamFieldsWrapper" class="col-span-full grid grid-cols-1 md:grid-cols-2 gap-6 bg-brand-pink/5 p-6 rounded-2xl border border-brand-pink/20 mt-4">
+                        <div class="col-span-full">
+                            <h4 class="text-brand-pink font-semibold border-b border-brand-pink/20 pb-2 mb-4">Game Jam Ayarları</h4>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-brand-pink mb-2">Başvuru Bitiş (Deadline)</label>
+                            <input type="datetime-local" id="evDeadline" class="w-full bg-zinc-950 border border-zinc-800 text-white rounded-xl px-4 py-3 focus:outline-none focus:border-brand-pink transition-all">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-brand-pink mb-2">Maks. Takım Boyutu</label>
+                            <input type="number" id="evTeamSize" value="5" min="1" max="10" class="w-full bg-zinc-950 border border-zinc-800 text-white rounded-xl px-4 py-3 focus:outline-none focus:border-brand-pink transition-all">
+                        </div>
+                        
+                        <div class="col-span-full">
+                            <label class="block text-sm font-medium text-brand-pink mb-2">Açık Roller (Virgülle ayırın)</label>
+                            <input type="text" id="evRoles" value="Developer, 3D Artist, 2D Artist, Game Designer, Sound Designer" class="w-full bg-zinc-950 border border-zinc-800 text-white rounded-xl px-4 py-3 focus:outline-none focus:border-brand-pink transition-all">
+                        </div>
+
+                        <div class="col-span-full flex items-center mt-2">
+                            <input type="checkbox" id="evStatus" checked class="w-5 h-5 rounded bg-zinc-950 border-zinc-800 text-brand-pink focus:ring-brand-pink cursor-pointer">
+                            <label for="evStatus" class="ml-3 text-sm font-medium text-zinc-300 cursor-pointer">Başvurular Açık Olarak Başlat</label>
+                        </div>
+                    </div>
+
+                    <!-- Açıklama -->
+                    <div class="col-span-full">
+                        <label class="block text-sm font-medium text-zinc-300 mb-2">Etkinlik Açıklaması</label>
+                        <textarea id="evDescription" rows="4" class="w-full bg-zinc-950 border border-zinc-800 text-white rounded-xl px-4 py-3 focus:outline-none focus:border-brand-pink transition-all"></textarea>
+                    </div>
+                </div>
+
+                <div class="flex justify-end pt-4 border-t border-zinc-800">
+                    <button type="submit" id="btnSubmitEvent" class="bg-brand-pink hover:bg-brand-pink/90 text-white font-semibold py-3 px-6 rounded-xl transition-all shadow-[0_4px_14px_rgba(235,89,109,0.39)]">
+                        Kaydet
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Data Store -->
+<div id="eventsData" class="hidden">
+    {% for event in events %}
+    <div id="event-data-{{ event.id }}"
+         data-id="{{ event.id }}"
+         data-type="{{ event.event_type }}"
+         data-title="{{ event.title }}"
+         data-description="{{ event.description }}"
+         data-start="{{ event.start_date|date:'Y-m-d\TH:i' }}"
+         data-end="{{ event.end_date|date:'Y-m-d\TH:i' }}"
+         data-location="{{ event.location }}"
+         {% if event.jam %}
+         data-deadline="{{ event.jam.application_deadline|date:'Y-m-d\TH:i' }}"
+         data-teamsize="{{ event.jam.max_team_size }}"
+         data-isopen="{{ event.jam.is_applications_open|yesno:'true,false' }}"
+         data-roles="{{ event.jam.available_roles|join:', ' }}"
+         {% endif %}>
+    </div>
+    {% endfor %}
+</div>
+
+<script>
+    let cropper = null;
+
+    function toggleJamFields() {
+        const type = document.getElementById('evType').value;
+        const wrapper = document.getElementById('jamFieldsWrapper');
+        if (type === 'game_jam') {
+            wrapper.classList.remove('hidden');
+        } else {
+            wrapper.classList.add('hidden');
+        }
+    }
+
+    function openEventModal(eventId = null) {
+        const modal = document.getElementById('createEventModal');
+        const form = document.getElementById('eventForm');
+        
+        form.reset();
+        document.getElementById('evId').value = "";
+        document.getElementById('modalTitle').innerText = "Yeni Etkinlik Oluştur";
+        document.getElementById('evStatus').checked = true;
+        
+        // Reset Cropper
+        if(cropper) { cropper.destroy(); cropper = null; }
+        document.getElementById('cropperContainer').classList.add('hidden');
+        document.getElementById('cropperImage').src = "";
+        
+        if (eventId) {
+            document.getElementById('modalTitle').innerText = "Etkinliği Düzenle";
+            const dataDiv = document.getElementById('event-data-' + eventId);
+            if (dataDiv) {
+                document.getElementById('evId').value = dataDiv.getAttribute('data-id');
+                document.getElementById('evType').value = dataDiv.getAttribute('data-type');
+                document.getElementById('evTitle').value = dataDiv.getAttribute('data-title');
+                document.getElementById('evDescription').value = dataDiv.getAttribute('data-description');
+                document.getElementById('evStart').value = dataDiv.getAttribute('data-start');
+                document.getElementById('evEnd').value = dataDiv.getAttribute('data-end');
+                document.getElementById('evLocation').value = dataDiv.getAttribute('data-location');
+                
+                if (dataDiv.getAttribute('data-type') === 'game_jam') {
+                    document.getElementById('evDeadline').value = dataDiv.getAttribute('data-deadline');
+                    document.getElementById('evTeamSize').value = dataDiv.getAttribute('data-teamsize');
+                    document.getElementById('evRoles').value = dataDiv.getAttribute('data-roles');
+                    document.getElementById('evStatus').checked = dataDiv.getAttribute('data-isopen') === 'true';
+                }
+            }
+        }
+        
+        toggleJamFields();
+        modal.classList.remove('hidden');
+    }
+
+    function closeEventModal() {
+        document.getElementById('createEventModal').classList.add('hidden');
+        if(cropper) { cropper.destroy(); cropper = null; }
+    }
+
+    // Görüntü Yükleme ve Cropper Başlatma
+    document.getElementById('evCoverImage').addEventListener('change', function(e) {
+        const files = e.target.files;
+        if (files && files.length > 0) {
+            const file = files[0];
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                const img = document.getElementById('cropperImage');
+                img.src = evt.target.result;
+                document.getElementById('cropperContainer').classList.remove('hidden');
+                
+                if(cropper) { cropper.destroy(); }
+                cropper = new Cropper(img, {
+                    aspectRatio: 16 / 9,
+                    viewMode: 1,
+                    autoCropArea: 1,
+                    responsive: true,
+                    background: false
+                });
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    document.getElementById('eventForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const btn = document.getElementById('btnSubmitEvent');
+        const originalText = btn.innerText;
+        btn.innerText = "Kaydediliyor...";
+        btn.disabled = true;
+
+        const formData = new FormData();
+        formData.append('event_id', document.getElementById('evId').value);
+        formData.append('event_type', document.getElementById('evType').value);
+        formData.append('title', document.getElementById('evTitle').value);
+        formData.append('start_date', document.getElementById('evStart').value);
+        formData.append('end_date', document.getElementById('evEnd').value);
+        formData.append('location', document.getElementById('evLocation').value);
+        formData.append('description', document.getElementById('evDescription').value);
+        
+        if (document.getElementById('evType').value === 'game_jam') {
+            formData.append('application_deadline', document.getElementById('evDeadline').value);
+            formData.append('max_team_size', document.getElementById('evTeamSize').value);
+            formData.append('available_roles', document.getElementById('evRoles').value);
+            formData.append('is_applications_open', document.getElementById('evStatus').checked);
+        }
+
+        // Eğer kırpıcı aktifse kırpılmış görseli gönder ve orijinali de ekle
+        if (cropper) {
+            const fileInput = document.getElementById('evCoverImage');
+            if (fileInput.files.length > 0) {
+                formData.append('cover_image', fileInput.files[0]); // Tam boyutlu orijinal kapak görseli
+            }
+
+            cropper.getCroppedCanvas({
+                width: 1280, // Maksimum genişlik
+                height: 720
+            }).toBlob(async function(blob) {
+                formData.append('thumbnail', blob, 'thumb.jpg'); // 16:9 Kart boyutu (Thumbnail)
+                await sendData(formData, btn, originalText);
+            }, 'image/jpeg', 0.85);
+        } else {
+            // Görsel değiştirilmediyse doğrudan gönder
+            await sendData(formData, btn, originalText);
+        }
+    });
+
+    async function toggleJamStatus(jamId, btnElement) {
+        btnElement.disabled = true;
+        const originalHtml = btnElement.innerHTML;
+        btnElement.innerHTML = '<span class="text-xs font-bold px-1">...</span>';
+
+        try {
+            const res = await fetch("{% url 'dashboard:api_toggle_jam_status' %}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": "{{ csrf_token }}"
+                },
+                body: JSON.stringify({ jam_id: jamId })
+            });
+
+            const result = await res.json();
+            if(result.success) {
+                // Sınıfları ve durumu güncelle
+                if(result.is_open) {
+                    btnElement.className = "p-2 bg-green-500/10 text-green-400 hover:bg-green-500 rounded-xl hover:text-white transition-colors";
+                } else {
+                    btnElement.className = "p-2 bg-red-500/10 text-red-400 hover:bg-red-500 rounded-xl hover:text-white transition-colors";
+                }
+                btnElement.innerHTML = originalHtml;
+                btnElement.disabled = false;
+            } else {
+                alert("Hata: " + result.error);
+                btnElement.innerHTML = originalHtml;
+                btnElement.disabled = false;
+            }
+        } catch (error) {
+            alert("Bağlantı hatası.");
+            btnElement.innerHTML = originalHtml;
+            btnElement.disabled = false;
+        }
+    }
+
+    async function sendData(formData, btn, originalText) {
+        try {
+            const res = await fetch("{% url 'dashboard:api_save_event' %}", {
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": "{{ csrf_token }}"
+                },
+                body: formData
+            });
+
+            const result = await res.json();
+            if(result.success) {
+                window.location.reload();
+            } else {
+                alert("Hata: " + result.error);
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }
+        } catch (error) {
+            alert("Bağlantı hatası.");
+            btn.innerText = originalText;
+            btn.disabled = false;
+        }
+    }
+</script>
+{% endblock %}

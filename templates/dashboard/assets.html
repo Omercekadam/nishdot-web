@@ -1,0 +1,336 @@
+{% extends 'dashboard/base.html' %}
+
+{% block dashboard_content %}
+<div class="p-8 max-w-7xl mx-auto">
+    
+    <!-- Üst Başlık ve Sekmeler -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 gap-4">
+        <div>
+            <h1 class="text-3xl font-bold text-white tracking-tight">Kasa ve Envanter</h1>
+            <p class="text-zinc-400 mt-1">Kulüp bütçesi ve eşya takibi.</p>
+        </div>
+        
+        <!-- Sekme Butonları -->
+        <div class="flex bg-zinc-900 rounded-xl p-1 border border-zinc-800">
+            <button onclick="switchTab('finance')" id="tab-finance" class="px-6 py-2.5 rounded-lg text-sm font-bold transition-all bg-zinc-800 text-white shadow-sm">
+                Kasa (Bütçe)
+            </button>
+            <button onclick="switchTab('equipment')" id="tab-equipment" class="px-6 py-2.5 rounded-lg text-sm font-bold transition-all text-zinc-400 hover:text-white">
+                Envanter 
+            </button>
+        </div>
+    </div>
+
+    <!-- ================= KASA (FİNANS) SEKME İÇERİĞİ ================= -->
+    <div id="content-finance" class="block">
+        <!-- İstatistik Kartları -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 shadow-lg">
+                <p class="text-zinc-500 text-sm font-bold uppercase tracking-wider mb-2">Toplam Bakiye</p>
+                <p class="text-4xl font-black {% if total_balance >= 0 %}text-white{% else %}text-red-400{% endif %}">
+                    {{ total_balance|floatformat:2 }} ₺
+                </p>
+            </div>
+            <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 shadow-lg">
+                <p class="text-zinc-500 text-sm font-bold uppercase tracking-wider mb-2">Toplam Gelir</p>
+                <p class="text-3xl font-bold text-green-400">+{{ total_income|floatformat:2 }} ₺</p>
+            </div>
+            <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 shadow-lg">
+                <p class="text-zinc-500 text-sm font-bold uppercase tracking-wider mb-2">Toplam Gider</p>
+                <p class="text-3xl font-bold text-red-400">-{{ total_expense|floatformat:2 }} ₺</p>
+            </div>
+        </div>
+
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-xl font-bold text-white">Kasa İşlemleri Geçmişi</h2>
+            <button onclick="openFinanceModal()" class="bg-green-500/10 text-green-400 hover:bg-green-500 hover:text-white font-semibold py-2 px-4 rounded-xl transition-colors flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                İşlem Ekle
+            </button>
+        </div>
+
+        <!-- Finans Tablosu -->
+        <div class="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden shadow-lg">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm text-zinc-400">
+                    <thead class="bg-zinc-950/50 text-xs uppercase text-zinc-500 font-bold border-b border-zinc-800">
+                        <tr>
+                            <th scope="col" class="px-6 py-4">Tarih</th>
+                            <th scope="col" class="px-6 py-4">İşlem Türü</th>
+                            <th scope="col" class="px-6 py-4">Açıklama</th>
+                            <th scope="col" class="px-6 py-4 text-right">Tutar</th>
+                            <th scope="col" class="px-6 py-4 text-right">Aksiyon</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-zinc-800/50">
+                        {% for item in finances %}
+                        <tr class="hover:bg-zinc-800/20 transition-colors">
+                            <td class="px-6 py-4 whitespace-nowrap">{{ item.created_at|date:"d M Y, H:i" }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                {% if item.type == 'income' %}
+                                    <span class="px-3 py-1 bg-green-500/10 text-green-400 text-xs font-bold rounded border border-green-500/20">Gelir</span>
+                                {% else %}
+                                    <span class="px-3 py-1 bg-red-500/10 text-red-400 text-xs font-bold rounded border border-red-500/20">Gider</span>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 text-white font-medium">{{ item.title }}</td>
+                            <td class="px-6 py-4 text-right whitespace-nowrap font-bold text-lg {% if item.type == 'income' %}text-green-400{% else %}text-red-400{% endif %}">
+                                {% if item.type == 'income' %}+{% else %}-{% endif %}{{ item.amount|floatformat:2 }} ₺
+                            </td>
+                            <td class="px-6 py-4 text-right whitespace-nowrap">
+                                <button onclick="deleteAsset({{ item.id }})" class="text-zinc-500 hover:text-red-400 transition-colors p-2" title="Sil">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                </button>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="px-6 py-12 text-center text-zinc-500">Kasa işlemi bulunmuyor.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= ENVANTER SEKME İÇERİĞİ ================= -->
+    <div id="content-equipment" class="hidden">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-xl font-bold text-white">Demirbaş ve Zimmet Listesi</h2>
+            <button onclick="openEquipmentModal()" class="bg-blue-500/10 text-blue-400 hover:bg-blue-500 hover:text-white font-semibold py-2 px-4 rounded-xl transition-colors flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                </svg>
+                Eşya / Demirbaş Ekle
+            </button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            {% for eq in equipments %}
+            <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 shadow-lg flex flex-col hover:border-blue-500/30 transition-colors">
+                <div class="flex justify-between items-start mb-4">
+                    <h3 class="text-xl font-bold text-white">{{ eq.title }}</h3>
+                    <div class="flex gap-2">
+                        <span class="bg-blue-500/10 text-blue-400 px-2 py-1 rounded text-xs font-bold border border-blue-500/20">
+                            {{ eq.quantity }} Adet
+                        </span>
+                        <button onclick="deleteAsset({{ eq.id }})" class="text-zinc-500 hover:text-red-400 transition-colors" title="Sil">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                
+                {% if eq.notes %}
+                <p class="text-zinc-400 text-sm mb-4">{{ eq.notes }}</p>
+                {% endif %}
+                
+                <div class="mt-auto pt-4 border-t border-zinc-800 flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs text-zinc-500">Zimmetli Kişi:</span>
+                        {% if eq.assignee %}
+                        <div class="flex items-center gap-1.5 bg-zinc-800 px-2 py-1 rounded text-white text-xs">
+                            <div class="h-4 w-4 rounded-full bg-blue-500 flex items-center justify-center text-[8px] font-bold">
+                                {{ eq.assignee.first_name|default:eq.assignee.username|make_list|first|upper }}
+                            </div>
+                            {{ eq.assignee.first_name|default:eq.assignee.username }}
+                        </div>
+                        {% else %}
+                        <span class="text-zinc-600 text-xs italic">Kulüp Odası / Atanmadı</span>
+                        {% endif %}
+                    </div>
+                    <span class="text-xs text-zinc-600">{{ eq.created_at|date:"d M Y" }}</span>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-span-full py-12 text-center text-zinc-500">Envanterde kayıtlı eşya bulunmuyor.</div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- ================= MODALLAR ================= -->
+
+<!-- Finans Modeli -->
+<div id="financeModal" class="fixed inset-0 z-50 hidden">
+    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeFinanceModal()"></div>
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg bg-zinc-900 border border-zinc-700/50 rounded-2xl shadow-2xl p-8">
+        <h3 class="text-2xl font-bold text-white mb-6">Yeni Kasa İşlemi</h3>
+        <form id="financeForm" class="space-y-6">
+            <div>
+                <label class="block text-sm font-medium text-zinc-300 mb-2">İşlem Türü</label>
+                <select id="finType" class="w-full bg-zinc-950 border border-zinc-800 text-white rounded-xl px-4 py-3 focus:outline-none focus:border-brand-pink transition-all">
+                    <option value="income">Gelir (+)</option>
+                    <option value="expense">Gider (-)</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-zinc-300 mb-2">Açıklama / Başlık</label>
+                <input type="text" id="finTitle" required placeholder="Örn: Kulüp aidatı veya Yemek siparişi" class="w-full bg-zinc-950 border border-zinc-800 text-white rounded-xl px-4 py-3 focus:outline-none focus:border-brand-pink transition-all">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-zinc-300 mb-2">Tutar (TL)</label>
+                <input type="number" id="finAmount" step="0.01" required min="0.01" class="w-full bg-zinc-950 border border-zinc-800 text-white rounded-xl px-4 py-3 focus:outline-none focus:border-brand-pink transition-all">
+            </div>
+            <div class="flex justify-end pt-4 border-t border-zinc-800">
+                <button type="submit" class="bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-6 rounded-xl transition-colors w-full">
+                    İşlemi Kaydet
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Envanter Modeli -->
+<div id="equipmentModal" class="fixed inset-0 z-50 hidden">
+    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeEquipmentModal()"></div>
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg bg-zinc-900 border border-zinc-700/50 rounded-2xl shadow-2xl p-8">
+        <h3 class="text-2xl font-bold text-white mb-6">Yeni Demirbaş Ekle</h3>
+        <form id="equipmentForm" class="space-y-6">
+            <input type="hidden" id="eqType" value="equipment">
+            
+            <div>
+                <label class="block text-sm font-medium text-zinc-300 mb-2">Eşya Adı</label>
+                <input type="text" id="eqTitle" required placeholder="Örn: VR Gözlük, Kutu Oyunu" class="w-full bg-zinc-950 border border-zinc-800 text-white rounded-xl px-4 py-3 focus:outline-none focus:border-brand-pink transition-all">
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-zinc-300 mb-2">Adet</label>
+                    <input type="number" id="eqQuantity" required min="1" value="1" class="w-full bg-zinc-950 border border-zinc-800 text-white rounded-xl px-4 py-3 focus:outline-none focus:border-brand-pink transition-all">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-zinc-300 mb-2">Zimmetli Kişi</label>
+                    <select id="eqAssignee" class="w-full bg-zinc-950 border border-zinc-800 text-white rounded-xl px-4 py-3 focus:outline-none focus:border-brand-pink transition-all">
+                        <option value="">Kulüp Odası</option>
+                        {% for staff in staff_users %}
+                            <option value="{{ staff.id }}">{{ staff.first_name }} {{ staff.last_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-zinc-300 mb-2">Ekstra Notlar</label>
+                <textarea id="eqNotes" rows="2" placeholder="Durumu, özelliği vb." class="w-full bg-zinc-950 border border-zinc-800 text-white rounded-xl px-4 py-3 focus:outline-none focus:border-brand-pink transition-all resize-y"></textarea>
+            </div>
+            
+            <div class="flex justify-end pt-4 border-t border-zinc-800">
+                <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-6 rounded-xl transition-colors w-full">
+                    Demirbaşı Kaydet
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function switchTab(tab) {
+        const btnFin = document.getElementById('tab-finance');
+        const btnEq = document.getElementById('tab-equipment');
+        const contFin = document.getElementById('content-finance');
+        const contEq = document.getElementById('content-equipment');
+
+        if (tab === 'finance') {
+            btnFin.className = "px-6 py-2.5 rounded-lg text-sm font-bold transition-all bg-zinc-800 text-white shadow-sm";
+            btnEq.className = "px-6 py-2.5 rounded-lg text-sm font-bold transition-all text-zinc-400 hover:text-white";
+            contFin.classList.remove('hidden');
+            contFin.classList.add('block');
+            contEq.classList.remove('block');
+            contEq.classList.add('hidden');
+        } else {
+            btnEq.className = "px-6 py-2.5 rounded-lg text-sm font-bold transition-all bg-zinc-800 text-white shadow-sm";
+            btnFin.className = "px-6 py-2.5 rounded-lg text-sm font-bold transition-all text-zinc-400 hover:text-white";
+            contEq.classList.remove('hidden');
+            contEq.classList.add('block');
+            contFin.classList.remove('block');
+            contFin.classList.add('hidden');
+        }
+    }
+
+    function openFinanceModal() {
+        document.getElementById('financeForm').reset();
+        document.getElementById('financeModal').classList.remove('hidden');
+    }
+    function closeFinanceModal() {
+        document.getElementById('financeModal').classList.add('hidden');
+    }
+
+    function openEquipmentModal() {
+        document.getElementById('equipmentForm').reset();
+        document.getElementById('equipmentModal').classList.remove('hidden');
+    }
+    function closeEquipmentModal() {
+        document.getElementById('equipmentModal').classList.add('hidden');
+    }
+
+    async function saveAsset(data) {
+        try {
+            const res = await fetch("{% url 'dashboard:api_save_asset' %}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": "{{ csrf_token }}"
+                },
+                body: JSON.stringify(data)
+            });
+            const result = await res.json();
+            if(result.success) {
+                window.location.reload();
+            } else {
+                alert("Hata: " + result.error);
+            }
+        } catch (error) {
+            alert("Bağlantı hatası.");
+        }
+    }
+
+    document.getElementById('financeForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        saveAsset({
+            type: document.getElementById('finType').value,
+            title: document.getElementById('finTitle').value,
+            amount: document.getElementById('finAmount').value
+        });
+    });
+
+    document.getElementById('equipmentForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        saveAsset({
+            type: 'equipment',
+            title: document.getElementById('eqTitle').value,
+            quantity: document.getElementById('eqQuantity').value,
+            assignee_id: document.getElementById('eqAssignee').value,
+            notes: document.getElementById('eqNotes').value
+        });
+    });
+
+    async function deleteAsset(id) {
+        if(!confirm("Bu kaydı silmek istediğinize emin misiniz?")) return;
+        try {
+            const res = await fetch("{% url 'dashboard:api_delete_asset' %}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": "{{ csrf_token }}"
+                },
+                body: JSON.stringify({ asset_id: id })
+            });
+            const result = await res.json();
+            if(result.success) {
+                window.location.reload();
+            } else {
+                alert("Hata: " + result.error);
+            }
+        } catch (error) {
+            alert("Bağlantı hatası.");
+        }
+    }
+</script>
+{% endblock %}

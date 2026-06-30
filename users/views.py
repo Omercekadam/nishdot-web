@@ -44,7 +44,25 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         user_email = self.request.user.email
         applications = JamApplication.objects.filter(email=user_email).order_by("-created_at")
         
+        # Siteye yayınlanmış duyuruları çekiyoruz (Hedef kitleye göre filtreleyerek)
+        from dashboard.models import Announcement
+        from django.db.models import Q
+        user = self.request.user
+        
+        query = Q(published_to_site=True) & (
+            Q(target_audience='all') |
+            Q(custom_users=user)
+        )
+        
+        if user.is_staff or user.role in ['admin', 'board']:
+            query |= Q(target_audience='board')
+        else:
+            query |= Q(target_audience='members')
+            
+        announcements = Announcement.objects.filter(query).exclude(dismissed_by=user).distinct().order_by("-created_at")
+        
         context["applications"] = applications
+        context["announcements"] = announcements
         if "form" not in context:
             context["form"] = UserProfileUpdateForm(instance=self.request.user)
         return context

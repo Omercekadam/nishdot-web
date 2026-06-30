@@ -1,0 +1,279 @@
+{% extends 'dashboard/base.html' %}
+
+{% block dashboard_content %}
+<div class="p-8 max-w-7xl mx-auto">
+    
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-white tracking-tight">Çoklu Duyuru Merkezi</h1>
+        <p class="text-zinc-400 mt-1">Tek tıkla tüm platformlara (Site, Mail, Discord) haber fırlatın.</p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        <!-- SOL: ATEŞLEME İSTASYONU (FORM) -->
+        <div class="lg:col-span-2">
+            <div class="bg-zinc-900 border border-zinc-800 rounded-3xl p-8 shadow-2xl relative overflow-hidden">
+                <!-- Arka plan parlaması -->
+                <div class="absolute -top-32 -right-32 w-64 h-64 bg-brand-pink/20 blur-[100px] rounded-full pointer-events-none"></div>
+
+                <h2 class="text-xl font-black text-white mb-6 flex items-center gap-3 relative z-10">
+                    <span class="bg-zinc-800 p-2 rounded-xl text-brand-pink">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
+                        </svg>
+                    </span>
+                    Ateşleme İstasyonu
+                </h2>
+
+                <form id="broadcastForm" class="space-y-6 relative z-10">
+                    <div>
+                        <label class="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2">Duyuru Başlığı</label>
+                        <input type="text" id="bTitle" required placeholder="Örn: Yeni Etkinlik!" class="w-full bg-zinc-950 border border-zinc-800 text-white rounded-2xl px-5 py-4 focus:outline-none focus:border-brand-pink transition-colors text-lg font-medium shadow-inner">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2">Duyuru İçeriği</label>
+                        <textarea id="bContent" required rows="6" placeholder="Kulüp üyelerine iletmek istediğiniz mesajı buraya yazın..." class="w-full bg-zinc-950 border border-zinc-800 text-white rounded-2xl px-5 py-4 focus:outline-none focus:border-brand-pink transition-colors shadow-inner resize-none"></textarea>
+                    </div>
+
+                    <!-- Platform Checkboxları -->
+                    <div class="pt-4 border-t border-zinc-800">
+                        <label class="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-4">Hedef Platformlar</label>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            
+                            <!-- SİTE -->
+                            <label class="cursor-pointer relative">
+                                <input type="checkbox" id="cSite" checked class="peer sr-only">
+                                <div class="bg-zinc-950 border border-zinc-800 rounded-2xl p-4 peer-checked:border-brand-pink peer-checked:bg-brand-pink/5 transition-all flex flex-col items-center justify-center text-center gap-2 group hover:border-zinc-600 aspect-square">
+                                    <div class="w-10 h-10 rounded-full bg-zinc-900 group-hover:bg-zinc-800 peer-checked:bg-brand-pink/20 flex items-center justify-center text-brand-pink transition-colors">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+                                        </svg>
+                                    </div>
+                                    <span class="text-white font-bold text-sm">Site Panosu</span>
+                                </div>
+                                <div class="absolute top-3 right-3 w-4 h-4 rounded-full border-2 border-zinc-700 peer-checked:border-brand-pink peer-checked:bg-brand-pink flex items-center justify-center transition-all">
+                                    <svg class="w-2.5 h-2.5 text-zinc-950 opacity-0 peer-checked:opacity-100" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>
+                                </div>
+                            </label>
+
+                            <!-- EMAIL -->
+                            <label class="cursor-pointer relative">
+                                <input type="checkbox" id="cEmail" class="peer sr-only" onchange="toggleEmailOptions()">
+                                <div class="bg-zinc-950 border border-zinc-800 rounded-2xl p-4 peer-checked:border-blue-500 peer-checked:bg-blue-500/5 transition-all flex flex-col items-center justify-center text-center gap-2 group hover:border-zinc-600 aspect-square">
+                                    <div class="w-10 h-10 rounded-full bg-zinc-900 group-hover:bg-zinc-800 peer-checked:bg-blue-500/20 flex items-center justify-center text-blue-400 transition-colors">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                        </svg>
+                                    </div>
+                                    <span class="text-white font-bold text-sm">E-Posta (Toplu)</span>
+                                </div>
+                                <div class="absolute top-3 right-3 w-4 h-4 rounded-full border-2 border-zinc-700 peer-checked:border-blue-500 peer-checked:bg-blue-500 flex items-center justify-center transition-all">
+                                    <svg class="w-2.5 h-2.5 text-zinc-950 opacity-0 peer-checked:opacity-100" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>
+                                </div>
+                            </label>
+
+                            <!-- DISCORD (DISABLED) -->
+                            <label class="cursor-not-allowed relative opacity-50">
+                                <input type="checkbox" id="cDiscord" disabled class="peer sr-only">
+                                <div class="bg-zinc-950 border border-zinc-800 rounded-2xl p-4 flex flex-col items-center justify-center text-center gap-2 aspect-square">
+                                    <div class="w-10 h-10 rounded-full bg-zinc-900 flex items-center justify-center text-zinc-500">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z" />
+                                        </svg>
+                                    </div>
+                                    <span class="text-white font-bold text-sm">Discord Sunucusu</span>
+                                </div>
+                                <div class="absolute -top-2 -right-2 bg-zinc-700 text-[9px] font-bold text-white px-2 py-0.5 rounded-full border-2 border-zinc-900">
+                                    YAKINDA
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Genel Ayarlar: Hedef Kitle (Kimin İçin?) -->
+                    <div class="pt-4 border-t border-zinc-800">
+                        <label class="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-3">Duyuru Hedef Kitlesi (Kimin İçin?)</label>
+                        <select id="sAudience" onchange="toggleCustomUsers()" class="w-full bg-zinc-950 border border-zinc-800 text-white rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-pink transition-colors">
+                            <option value="all">Sistemdeki Tüm Kullanıcılar</option>
+                            <option value="members">Sadece Normal Üyeler</option>
+                            <option value="board">Sadece Yönetim Kurulu (Staff)</option>
+                            <option value="custom">Elle Bireysel Seçim...</option>
+                        </select>
+                    </div>
+
+                    <!-- Elle Kullanıcı Seçimi Paneli -->
+                    <div id="customUsersPanel" class="hidden bg-zinc-950 border border-zinc-800 rounded-xl p-4">
+                        <label class="block text-[10px] font-bold text-zinc-400 uppercase tracking-wide mb-3">Duyuruyu Görecek / Mail Alacak Kişileri İşaretleyin</label>
+                        <div class="max-h-40 overflow-y-auto space-y-2 pr-2 custom-scrollbar">
+                            {% for u in all_users %}
+                            <label class="flex items-center gap-3 p-2 rounded-lg hover:bg-zinc-900 cursor-pointer transition-colors border border-transparent hover:border-zinc-800">
+                                <input type="checkbox" name="customUser" value="{{ u.id }}" class="w-4 h-4 rounded border-zinc-700 text-brand-pink focus:ring-brand-pink bg-zinc-950">
+                                <div class="flex flex-col">
+                                    <span class="text-white text-sm font-semibold">{{ u.get_full_name|default:u.username }}</span>
+                                    <span class="text-zinc-500 text-xs">{{ u.email }}</span>
+                                </div>
+                            </label>
+                            {% empty %}
+                            <div class="text-zinc-500 text-xs text-center py-2">Sistemde kullanıcı bulunmuyor.</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Email Ekstra Seçenekleri (Sadece Email Seçilirse Çıkar) -->
+                    <div id="emailOptions" class="hidden bg-blue-500/5 border border-blue-500/20 rounded-2xl p-5 space-y-4 mt-4">
+                        <h4 class="text-blue-400 font-bold text-sm flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                            E-Posta Gönderim Ayarları
+                        </h4>
+                        
+                        <div>
+                            <label class="block text-[10px] font-bold text-zinc-400 uppercase tracking-wide mb-1">Gönderici (SMTP) Hesabı</label>
+                            <select id="sSmtp" class="w-full bg-zinc-950 border border-zinc-800 text-white rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500 transition-colors">
+                                <option value="smtp1">dogrulamanishdot@gmail.com</option>
+                                <option value="smtp2">gamejamnishdot@gmail.com</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button type="submit" id="submitBtn" class="w-full bg-brand-pink hover:bg-pink-600 text-white font-bold text-lg py-5 px-6 rounded-2xl transition-colors mt-4">
+                        Duyuruyu Ateşle
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- SAĞ: DUYURU GEÇMİŞİ -->
+        <div>
+            <h3 class="text-lg font-bold text-white mb-4">Geçmiş Duyurular</h3>
+            
+            <div class="space-y-4">
+                {% for ann in announcements %}
+                <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 hover:border-zinc-700 transition-colors">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-zinc-500 text-[10px] font-bold uppercase">{{ ann.created_at|date:"d M Y, H:i" }}</span>
+                        
+                        <!-- Mini Badges -->
+                        <div class="flex gap-1">
+                            {% if ann.published_to_site %}
+                            <span class="w-5 h-5 rounded bg-brand-pink/10 text-brand-pink flex items-center justify-center text-xs" title="Sitede Paylaşıldı">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 20 20" fill="currentColor"><path d="M10 2a8 8 0 100 16 8 8 0 000-16zM6.92 5.08a2 2 0 112.828-2.828l5.656 5.656a2 2 0 010 2.828l-5.656 5.656a2 2 0 01-2.828-2.828l4.242-4.242L6.92 5.08z" /></svg>
+                            </span>
+                            {% endif %}
+                            {% if ann.sent_via_email %}
+                            <span class="w-5 h-5 rounded bg-blue-500/10 text-blue-400 flex items-center justify-center text-xs" title="Mail Atıldı">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 20 20" fill="currentColor"><path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" /><path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" /></svg>
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <h4 class="text-white font-bold text-sm mb-1 line-clamp-1">{{ ann.title }}</h4>
+                    <p class="text-zinc-400 text-xs line-clamp-2">{{ ann.content }}</p>
+                </div>
+                {% empty %}
+                <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-8 text-center text-zinc-500 text-sm">
+                    Daha önce hiç duyuru atılmamış.
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<style>
+/* Custom scrollbar for custom users panel to keep UI neat */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: rgba(24, 24, 27, 0.5); /* zinc-950 */
+    border-radius: 10px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(63, 63, 70, 0.5); /* zinc-700 */
+    border-radius: 10px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(82, 82, 91, 0.8); /* zinc-600 */
+}
+</style>
+
+<script>
+    function toggleEmailOptions() {
+        const isChecked = document.getElementById('cEmail').checked;
+        const options = document.getElementById('emailOptions');
+        if(isChecked) {
+            options.classList.remove('hidden');
+        } else {
+            options.classList.add('hidden');
+        }
+    }
+
+    function toggleCustomUsers() {
+        const val = document.getElementById('sAudience').value;
+        const panel = document.getElementById('customUsersPanel');
+        if(val === 'custom') {
+            panel.classList.remove('hidden');
+        } else {
+            panel.classList.add('hidden');
+        }
+    }
+
+    document.getElementById('broadcastForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const btn = document.getElementById('submitBtn');
+        btn.disabled = true;
+        btn.innerHTML = 'Fırlatılıyor...';
+
+        // Custom user IDs array
+        const selectedUsers = [];
+        if (document.getElementById('sAudience').value === 'custom') {
+            document.querySelectorAll('input[name="customUser"]:checked').forEach(cb => {
+                selectedUsers.push(cb.value);
+            });
+            if(selectedUsers.length === 0) {
+                alert("Lütfen en az bir kullanıcı seçin.");
+                btn.disabled = false;
+                btn.innerHTML = 'Duyuruyu Ateşle';
+                return;
+            }
+        }
+
+        const data = {
+            title: document.getElementById('bTitle').value,
+            content: document.getElementById('bContent').value,
+            publish_site: document.getElementById('cSite').checked,
+            send_email: document.getElementById('cEmail').checked,
+            smtp_account: document.getElementById('sSmtp').value,
+            target_audience: document.getElementById('sAudience').value,
+            custom_users: selectedUsers
+        };
+
+        try {
+            const res = await fetch("{% url 'dashboard:api_create_broadcast' %}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": "{{ csrf_token }}"
+                },
+                body: JSON.stringify(data)
+            });
+            const result = await res.json();
+            if(result.success) {
+                alert("Duyuru başarıyla ateşlendi!");
+                window.location.reload();
+            } else {
+                alert("Hata: " + result.error);
+                btn.disabled = false;
+                btn.innerHTML = 'Duyuruyu Ateşle';
+            }
+        } catch (err) {
+            alert("Bağlantı hatası.");
+            btn.disabled = false;
+            btn.innerHTML = 'Duyuruyu Ateşle';
+        }
+    });
+</script>
+{% endblock %}

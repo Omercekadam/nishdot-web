@@ -106,14 +106,18 @@
 
                 <!-- Aksiyon Alanı -->
                 <div class="mt-4 flex gap-4 items-center">
-                    {% if event.status == 'published' %}
-                    <a href="{% url 'events:apply' event.slug %}" class="btn-primary inline-flex items-center justify-center px-10 py-3 text-lg font-bold">
-                        Hemen Başvur
-                    </a>
-                    {% elif event.status == 'completed' %}
+                    {% if event.status == 'completed' %}
                     <button disabled class="bg-zinc-800 text-zinc-500 cursor-not-allowed inline-flex items-center justify-center px-10 py-3 text-lg font-bold rounded-xl border border-zinc-700">
                         Etkinlik Tamamlandı
                     </button>
+                    {% elif event.event_type == 'game_jam' and event.jam and not event.jam.is_applications_open %}
+                    <button disabled class="bg-zinc-800 text-zinc-500 cursor-not-allowed inline-flex items-center justify-center px-10 py-3 text-lg font-bold rounded-xl border border-zinc-700">
+                        Başvurular Kapalı
+                    </button>
+                    {% elif event.status == 'published' %}
+                    <a href="{% url 'events:apply' event.slug %}" class="btn-primary inline-flex items-center justify-center px-10 py-3 text-lg font-bold">
+                        Hemen Başvur
+                    </a>
                     {% endif %}
                     <button onclick="navigator.clipboard.writeText(window.location.href); alert('Link kopyalandı!')" class="flex items-center justify-center w-14 h-14 rounded-xl border border-white/10 text-white hover:bg-white/5 transition-colors shrink-0" title="Paylaş">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">

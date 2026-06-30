@@ -1,0 +1,196 @@
+{% extends 'dashboard/base.html' %}
+
+{% block dashboard_content %}
+<div class="p-8 max-w-7xl mx-auto">
+    
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-white tracking-tight">Üye Rehberi</h1>
+        <p class="text-zinc-400 mt-1">Kulüp üyeleri, yetki dağılımı ve iletişim rehberi.</p>
+    </div>
+
+    <!-- Filtreler / İstatistikler -->
+    <div class="flex gap-4 mb-6">
+        <div class="bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-2">
+            <span class="text-zinc-500 text-xs font-bold uppercase">Toplam Üye</span>
+            <div class="text-white font-black text-xl">{{ total_members }}</div>
+        </div>
+    </div>
+
+    <!-- YÖNETİM KURULU / STAFF -->
+    <div class="mb-10">
+        <h2 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+            <span class="w-3 h-3 rounded-full bg-brand-pink"></span>
+            Yönetim & Yetkili Kadro
+        </h2>
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+            {% for member in board_members %}
+                {% include 'dashboard/includes/_member_card.html' with member=member %}
+            {% empty %}
+                <div class="col-span-full text-zinc-500 py-4">Yönetim kadrosunda kimse bulunmuyor.</div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- AYIRICI -->
+    <div class="w-full h-px bg-gradient-to-r from-transparent via-zinc-800 to-transparent mb-10"></div>
+
+    <!-- NORMAL ÜYELER -->
+    <div>
+        <h2 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+            <span class="w-3 h-3 rounded-full bg-zinc-600"></span>
+            Kulüp Üyeleri
+        </h2>
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+            {% for member in regular_members %}
+                {% include 'dashboard/includes/_member_card.html' with member=member %}
+            {% empty %}
+                <div class="col-span-full text-zinc-500 py-4">Henüz kayıtlı normal üye bulunmuyor.</div>
+            {% endfor %}
+        </div>
+    </div>
+
+</div>
+
+<!-- Üye Detay / Düzenleme Modali -->
+<div id="memberModal" class="fixed inset-0 z-50 hidden">
+    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeMemberModal()"></div>
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-zinc-900 border border-zinc-700/50 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+        
+        <!-- Header -->
+        <div class="bg-zinc-950 p-6 flex items-center gap-5 border-b border-zinc-800">
+            <div id="modalAvatar" class="w-14 h-14 rounded-full bg-gradient-to-tr from-brand-pink to-purple-600 flex items-center justify-center text-white text-2xl font-black shrink-0 shadow-lg">
+                A
+            </div>
+            <div>
+                <h3 id="modalName" class="text-xl font-bold text-white mb-0.5">İsim Soyisim</h3>
+                <p id="modalEmail" class="text-zinc-400 text-sm">email@example.com</p>
+            </div>
+        </div>
+
+        <div class="p-8 overflow-y-auto space-y-8">
+            <!-- Profil Detayları (Salt Okunur) -->
+            <div class="grid grid-cols-2 gap-6">
+                <div>
+                    <p class="text-zinc-500 text-[11px] font-bold uppercase tracking-wide mb-1">Telefon</p>
+                    <p id="modalPhone" class="text-white text-sm font-medium">-</p>
+                </div>
+                <div>
+                    <p class="text-zinc-500 text-[11px] font-bold uppercase tracking-wide mb-1">Portfolyo / Link</p>
+                    <p id="modalPortfolio" class="text-brand-pink text-sm font-medium truncate">-</p>
+                </div>
+                <div>
+                    <p class="text-zinc-500 text-[11px] font-bold uppercase tracking-wide mb-1">Üniversite</p>
+                    <p id="modalUni" class="text-white text-sm font-medium">-</p>
+                </div>
+                <div>
+                    <p class="text-zinc-500 text-[11px] font-bold uppercase tracking-wide mb-1">Bölüm</p>
+                    <p id="modalDept" class="text-white text-sm font-medium">-</p>
+                </div>
+            </div>
+
+            {% if request.user.is_superuser %}
+            <!-- Sadece Superuser İçin Düzenleme Alanı -->
+            <div class="border-t border-zinc-800 pt-6">
+                <h4 class="text-brand-pink font-bold text-sm mb-5 flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                    Süper Yönetici Kontrolleri
+                </h4>
+                <form id="roleForm" class="space-y-5">
+                    <input type="hidden" id="editUserId">
+                    
+                    <div>
+                        <label class="block text-[11px] font-bold text-zinc-400 uppercase tracking-wide mb-2">Sistem Rolü</label>
+                        <select id="editRole" class="w-full bg-zinc-950 border border-zinc-800 text-white rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-pink transition-colors">
+                            <option value="member">Kulüp Üyesi (Member)</option>
+                            <option value="board">Yönetim Kurulu (Board)</option>
+                            <option value="admin">Yönetici (Admin)</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-[11px] font-bold text-zinc-400 uppercase tracking-wide mb-2">Özel Görev / Unvan</label>
+                        <input type="text" id="editJobTitle" placeholder="Örn: Kulüp Başkanı..." class="w-full bg-zinc-950 border border-zinc-800 text-white rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-pink transition-colors">
+                    </div>
+
+                    <div class="flex items-center gap-3 bg-zinc-950 p-4 rounded-xl border border-zinc-800">
+                        <input type="checkbox" id="editIsStaff" class="w-5 h-5 rounded border-zinc-700 text-brand-pink focus:ring-brand-pink bg-zinc-900 cursor-pointer">
+                        <div>
+                            <label for="editIsStaff" class="text-white text-sm font-bold block cursor-pointer">Karargah (Staff) Erişimi</label>
+                            <span class="text-zinc-500 text-xs">Kullanıcı yönetim paneline girebilir.</span>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full bg-brand-pink hover:bg-pink-600 text-white font-bold py-3 px-4 rounded-xl transition-all mt-4 shadow-lg shadow-brand-pink/20">
+                        Yetkileri Kaydet
+                    </button>
+                </form>
+            </div>
+            {% endif %}
+
+<script>
+    function openMemberModal(id, first, last, email, phone, uni, dept, portfolio, role, is_staff, job_title) {
+        // Detayları Doldur
+        document.getElementById('modalAvatar').innerText = first ? first.charAt(0).toUpperCase() : '?';
+        document.getElementById('modalName').innerText = (first + ' ' + last).trim() || 'İsimsiz';
+        document.getElementById('modalEmail').innerText = email;
+        document.getElementById('modalPhone').innerText = phone || '-';
+        document.getElementById('modalUni').innerText = uni || '-';
+        document.getElementById('modalDept').innerText = dept || '-';
+        
+        const portEl = document.getElementById('modalPortfolio');
+        if (portfolio) {
+            portEl.innerHTML = `<a href="${portfolio}" target="_blank" class="hover:underline">${portfolio}</a>`;
+        } else {
+            portEl.innerText = '-';
+        }
+
+        {% if request.user.is_superuser %}
+        // Formu Doldur (Sadece Superuser)
+        document.getElementById('editUserId').value = id;
+        document.getElementById('editRole').value = role;
+        document.getElementById('editJobTitle').value = job_title;
+        document.getElementById('editIsStaff').checked = (is_staff === 'true');
+        {% endif %}
+
+        document.getElementById('memberModal').classList.remove('hidden');
+    }
+
+    function closeMemberModal() {
+        document.getElementById('memberModal').classList.add('hidden');
+    }
+
+    {% if request.user.is_superuser %}
+    document.getElementById('roleForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const data = {
+            user_id: document.getElementById('editUserId').value,
+            role: document.getElementById('editRole').value,
+            job_title: document.getElementById('editJobTitle').value,
+            is_staff: document.getElementById('editIsStaff').checked
+        };
+
+        try {
+            const res = await fetch("{% url 'dashboard:api_update_user_profile' %}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": "{{ csrf_token }}"
+                },
+                body: JSON.stringify(data)
+            });
+            const result = await res.json();
+            if(result.success) {
+                window.location.reload();
+            } else {
+                alert("Hata: " + result.error);
+            }
+        } catch (error) {
+            alert("Bağlantı hatası.");
+        }
+    });
+    {% endif %}
+</script>
+{% endblock %}

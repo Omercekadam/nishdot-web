@@ -1,0 +1,316 @@
+{% extends 'dashboard/base.html' %}
+
+{% block dashboard_content %}
+<div class="p-4 md:p-8 h-[calc(100vh-theme(spacing.16))] flex flex-col">
+    
+    <div class="flex justify-between items-center mb-6 shrink-0">
+        <div>
+            <h1 class="text-3xl font-bold text-white tracking-tight">Görev Yönetimi</h1>
+            <p class="text-zinc-400 mt-1">Yönetim kurulu hedefleri ve yapılacaklar listesi.</p>
+        </div>
+        <button onclick="openTaskModal()" class="bg-brand-pink hover:bg-brand-pink/90 text-white font-semibold py-2 px-4 rounded-xl transition-colors flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            Yeni Görev
+        </button>
+    </div>
+
+    <!-- Kanban Board -->
+    <div class="flex-1 overflow-x-auto overflow-y-hidden pb-4">
+        <div class="flex gap-6 h-full min-w-max md:min-w-0">
+            
+            <!-- YAPILACAKLAR SÜTUNU -->
+            <div class="w-[450px] lg:w-[600px] shrink-0 flex flex-col bg-zinc-900/50 rounded-2xl border border-zinc-800">
+                <div class="p-4 border-b border-zinc-800 flex justify-between items-center bg-zinc-900 rounded-t-2xl shrink-0">
+                    <h3 class="font-bold text-white flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-zinc-500"></span> Yapılacaklar
+                    </h3>
+                    <span class="bg-zinc-800 text-zinc-400 text-xs px-2 py-1 rounded-full font-bold">{{ todo_tasks|length }}</span>
+                </div>
+                <div class="flex-1 p-4 overflow-y-auto grid grid-cols-1 md:grid-cols-2 gap-4 content-start kanban-column" data-status="todo" ondragover="allowDrop(event)" ondrop="drop(event)">
+                    {% for task in todo_tasks %}
+                        {% include 'dashboard/includes/_task_card.html' with task=task %}
+                    {% empty %}
+                        <div class="col-span-full text-zinc-600 text-sm text-center py-4 border-2 border-dashed border-zinc-800 rounded-xl empty-placeholder">Görev yok</div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- SÜRÜYOR SÜTUNU -->
+            <div class="w-[450px] lg:w-[600px] shrink-0 flex flex-col bg-zinc-900/50 rounded-2xl border border-zinc-800">
+                <div class="p-4 border-b border-zinc-800 flex justify-between items-center bg-zinc-900 rounded-t-2xl shrink-0">
+                    <h3 class="font-bold text-white flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span> Sürüyor
+                    </h3>
+                    <span class="bg-zinc-800 text-zinc-400 text-xs px-2 py-1 rounded-full font-bold">{{ in_progress_tasks|length }}</span>
+                </div>
+                <div class="flex-1 p-4 overflow-y-auto grid grid-cols-1 md:grid-cols-2 gap-4 content-start kanban-column" data-status="in_progress" ondragover="allowDrop(event)" ondrop="drop(event)">
+                    {% for task in in_progress_tasks %}
+                        {% include 'dashboard/includes/_task_card.html' with task=task %}
+                    {% empty %}
+                        <div class="col-span-full text-zinc-600 text-sm text-center py-4 border-2 border-dashed border-zinc-800 rounded-xl empty-placeholder">Görev yok</div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- BİTTİ SÜTUNU -->
+            <div class="w-[450px] lg:w-[600px] shrink-0 flex flex-col bg-zinc-900/50 rounded-2xl border border-zinc-800">
+                <div class="p-4 border-b border-zinc-800 flex justify-between items-center bg-zinc-900 rounded-t-2xl shrink-0">
+                    <h3 class="font-bold text-white flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-green-500"></span> Bitti
+                    </h3>
+                    <span class="bg-zinc-800 text-zinc-400 text-xs px-2 py-1 rounded-full font-bold">{{ done_tasks|length }}</span>
+                </div>
+                <div class="flex-1 p-4 overflow-y-auto grid grid-cols-1 md:grid-cols-2 gap-4 content-start kanban-column" data-status="done" ondragover="allowDrop(event)" ondrop="drop(event)">
+                    {% for task in done_tasks %}
+                        {% include 'dashboard/includes/_task_card.html' with task=task %}
+                    {% empty %}
+                        <div class="col-span-full text-zinc-600 text-sm text-center py-4 border-2 border-dashed border-zinc-800 rounded-xl empty-placeholder">Görev yok</div>
+                    {% endfor %}
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Modal Form -->
+    <div id="createTaskModal" class="fixed inset-0 z-50 hidden">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeTaskModal()"></div>
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-3xl max-h-[90vh] overflow-y-auto bg-zinc-900 border border-zinc-700/50 rounded-2xl shadow-2xl p-8">
+            
+            <div class="flex justify-between items-center mb-6">
+                <h3 id="modalTitle" class="text-2xl font-bold text-white">Yeni Görev</h3>
+                <button onclick="closeTaskModal()" class="text-zinc-500 hover:text-white">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            <form id="taskForm" class="space-y-6">
+                <input type="hidden" id="taskId" value="">
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="col-span-full">
+                        <label class="block text-sm font-medium text-zinc-300 mb-2">Görev Başlığı</label>
+                        <input type="text" id="taskTitle" required class="w-full bg-zinc-950 border border-zinc-800 text-white rounded-xl px-4 py-3 focus:outline-none focus:border-brand-pink transition-all">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-zinc-300 mb-2">Durum</label>
+                        <select id="taskStatus" class="w-full bg-zinc-950 border border-zinc-800 text-white rounded-xl px-4 py-3 focus:outline-none focus:border-brand-pink transition-all">
+                            <option value="todo">Yapılacaklar</option>
+                            <option value="in_progress">Sürüyor</option>
+                            <option value="done">Bitti</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-zinc-300 mb-2">Atanan Kişi</label>
+                        <select id="taskAssignee" class="w-full bg-zinc-950 border border-zinc-800 text-white rounded-xl px-4 py-3 focus:outline-none focus:border-brand-pink transition-all">
+                            <option value="">-- Atanmadı --</option>
+                            {% for staff in staff_users %}
+                                <option value="{{ staff.id }}">{{ staff.first_name }} {{ staff.last_name }} (@{{ staff.username }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-zinc-300 mb-2">Öncelik</label>
+                        <select id="taskPriority" class="w-full bg-zinc-950 border border-zinc-800 text-white rounded-xl px-4 py-3 focus:outline-none focus:border-brand-pink transition-all">
+                            <option value="low">Düşük</option>
+                            <option value="medium" selected>Orta</option>
+                            <option value="high">Yüksek</option>
+                            <option value="urgent">Acil</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-zinc-300 mb-2">Kategori</label>
+                        <select id="taskCategory" class="w-full bg-zinc-950 border border-zinc-800 text-white rounded-xl px-4 py-3 focus:outline-none focus:border-brand-pink transition-all">
+                            <option value="admin">Yönetim</option>
+                            <option value="event">Etkinlik</option>
+                            <option value="design">Tasarım</option>
+                            <option value="tech">Teknik</option>
+                            <option value="social">Sosyal Medya</option>
+                        </select>
+                    </div>
+                    
+                    <div class="col-span-full">
+                        <label class="block text-sm font-medium text-zinc-300 mb-2">Son Teslim Tarihi (Deadline)</label>
+                        <input type="datetime-local" id="taskDeadline" class="w-full bg-zinc-950 border border-zinc-800 text-white rounded-xl px-4 py-3 focus:outline-none focus:border-brand-pink transition-all">
+                    </div>
+
+                    <div class="col-span-full">
+                        <label class="block text-sm font-medium text-zinc-300 mb-2">Açıklama / Detaylar</label>
+                        <textarea id="taskDescription" rows="4" class="w-full bg-zinc-950 border border-zinc-800 text-white rounded-xl px-4 py-3 focus:outline-none focus:border-brand-pink transition-all resize-y"></textarea>
+                    </div>
+                </div>
+
+                <div class="flex justify-between items-center pt-4 border-t border-zinc-800">
+                    <button type="button" id="btnDeleteTask" onclick="deleteTask()" class="hidden text-red-500 hover:text-red-400 font-medium px-4 py-2 transition-colors">
+                        Görevi Sil
+                    </button>
+                    <div class="ml-auto">
+                        <button type="submit" id="btnSubmitTask" class="bg-brand-pink hover:bg-brand-pink/90 text-white font-semibold py-3 px-6 rounded-xl transition-all shadow-[0_4px_14px_rgba(235,89,109,0.39)]">
+                            Kaydet
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- DRAG & DROP LOGIC ---
+    let draggedTask = null;
+
+    function drag(event) {
+        draggedTask = event.target;
+        event.dataTransfer.setData("text", event.target.id);
+        event.target.classList.add('opacity-50');
+    }
+
+    function allowDrop(event) {
+        event.preventDefault(); // Varsayılanı engelle ki drop çalışsın
+    }
+
+    async function drop(event) {
+        event.preventDefault();
+        
+        let targetColumn = event.target.closest('.kanban-column');
+        if(!targetColumn) return;
+
+        if (draggedTask) {
+            draggedTask.classList.remove('opacity-50');
+            // Remove empty placeholder if exists
+            const placeholder = targetColumn.querySelector('.empty-placeholder');
+            if(placeholder) placeholder.remove();
+            
+            targetColumn.appendChild(draggedTask);
+            
+            const newStatus = targetColumn.getAttribute('data-status');
+            const taskId = draggedTask.getAttribute('data-task-id');
+            
+            // Backend'e güncelleme gönder
+            try {
+                await fetch("{% url 'dashboard:api_update_task_status' %}", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": "{{ csrf_token }}"
+                    },
+                    body: JSON.stringify({ task_id: taskId, status: newStatus })
+                });
+            } catch (err) {
+                console.error("Durum güncellenemedi:", err);
+            }
+        }
+    }
+
+    document.addEventListener("dragend", function(event) {
+        if(event.target) {
+            event.target.classList.remove('opacity-50');
+        }
+    });
+
+    // --- MODAL LOGIC ---
+    function openTaskModal(el = null) {
+        const modal = document.getElementById('createTaskModal');
+        const form = document.getElementById('taskForm');
+        
+        form.reset();
+        document.getElementById('taskId').value = "";
+        document.getElementById('modalTitle').innerText = "Yeni Görev";
+        document.getElementById('btnDeleteTask').classList.add('hidden');
+        
+        if (el) {
+            document.getElementById('modalTitle').innerText = "Görevi Düzenle";
+            document.getElementById('taskId').value = el.getAttribute('data-task-id');
+            document.getElementById('taskTitle').value = el.getAttribute('data-title');
+            document.getElementById('taskDescription').value = el.getAttribute('data-description');
+            document.getElementById('taskStatus').value = el.getAttribute('data-status');
+            document.getElementById('taskPriority').value = el.getAttribute('data-priority');
+            document.getElementById('taskCategory').value = el.getAttribute('data-category');
+            document.getElementById('taskAssignee').value = el.getAttribute('data-assignee');
+            document.getElementById('taskDeadline').value = el.getAttribute('data-deadline');
+            document.getElementById('btnDeleteTask').classList.remove('hidden');
+        }
+        
+        modal.classList.remove('hidden');
+    }
+
+    function closeTaskModal() {
+        document.getElementById('createTaskModal').classList.add('hidden');
+    }
+
+    document.getElementById('taskForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const btn = document.getElementById('btnSubmitTask');
+        const originalText = btn.innerText;
+        btn.innerText = "Kaydediliyor...";
+        btn.disabled = true;
+
+        const data = {
+            task_id: document.getElementById('taskId').value,
+            title: document.getElementById('taskTitle').value,
+            description: document.getElementById('taskDescription').value,
+            status: document.getElementById('taskStatus').value,
+            priority: document.getElementById('taskPriority').value,
+            category: document.getElementById('taskCategory').value,
+            assignee_id: document.getElementById('taskAssignee').value,
+            deadline: document.getElementById('taskDeadline').value,
+        };
+
+        try {
+            const res = await fetch("{% url 'dashboard:api_save_task' %}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": "{{ csrf_token }}"
+                },
+                body: JSON.stringify(data)
+            });
+            const result = await res.json();
+            if(result.success) {
+                window.location.reload();
+            } else {
+                alert("Hata: " + result.error);
+                btn.disabled = false;
+                btn.innerText = originalText;
+            }
+        } catch (error) {
+            alert("Bağlantı hatası.");
+            btn.disabled = false;
+            btn.innerText = originalText;
+        }
+    });
+
+    async function deleteTask() {
+        const taskId = document.getElementById('taskId').value;
+        if(!taskId) return;
+        if(!confirm("Görevi silmek istediğinize emin misiniz?")) return;
+
+        try {
+            const res = await fetch("{% url 'dashboard:api_delete_task' %}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": "{{ csrf_token }}"
+                },
+                body: JSON.stringify({ task_id: taskId })
+            });
+            const result = await res.json();
+            if(result.success) {
+                window.location.reload();
+            } else {
+                alert("Hata: " + result.error);
+            }
+        } catch (error) {
+            alert("Bağlantı hatası.");
+        }
+    }
+</script>
+{% endblock %}

@@ -31,6 +31,7 @@ class Event(TimeStampedModel):
     location    = models.CharField(max_length=300, verbose_name="Konum")
 
     cover_image = models.ImageField(upload_to="events/covers/", blank=True, verbose_name="Kapak Görseli")
+    thumbnail   = models.ImageField(upload_to="events/thumbnails/", blank=True, verbose_name="Liste Görseli (Kırpılmış)")
 
     class Meta(TimeStampedModel.Meta):
         verbose_name = "Etkinlik"
