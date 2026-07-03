@@ -6,54 +6,94 @@
 {% block content %}
 <!-- HERO SECTION -->
 <section id="home" class="relative min-h-[80vh] flex items-center justify-center overflow-hidden py-20">
-    <!-- Background Image Conveyor Belt -->
+        <!-- Background Image Conveyor Belt -->
     <div class="absolute inset-0 z-0 opacity-40 overflow-hidden flex flex-col gap-2 py-4 justify-center pointer-events-none">
         <!-- Row 1 (Left) -->
-        <div class="flex gap-8 w-max animate-slide-left pl-4">
-            <img src="{% static 'images/hero/A7300011.JPG' %}" class="h-[384px] w-[384px] shrink-0 object-cover rounded-lg" alt="">
-            <img src="{% static 'images/hero/A7300050.JPG' %}" class="h-[384px] w-[384px] shrink-0 object-cover rounded-lg" alt="">
-            <img src="{% static 'images/hero/A7300069.JPG' %}" class="h-[384px] w-[384px] shrink-0 object-cover rounded-lg" alt="">
-            <img src="{% static 'images/hero/A7300147.JPG' %}" class="h-[384px] w-[384px] shrink-0 object-cover rounded-lg" alt="">
-            <img src="{% static 'images/hero/A7300219.JPG' %}" class="h-[384px] w-[384px] shrink-0 object-cover rounded-lg" alt="">
-            <!-- Duplicates for smooth scroll -->
-            <img src="{% static 'images/hero/A7300011.JPG' %}" class="h-[384px] w-[384px] shrink-0 object-cover rounded-lg" alt="">
-            <img src="{% static 'images/hero/A7300050.JPG' %}" class="h-[384px] w-[384px] shrink-0 object-cover rounded-lg" alt="">
-            <img src="{% static 'images/hero/A7300069.JPG' %}" class="h-[384px] w-[384px] shrink-0 object-cover rounded-lg" alt="">
-            <img src="{% static 'images/hero/A7300147.JPG' %}" class="h-[384px] w-[384px] shrink-0 object-cover rounded-lg" alt="">
-            <img src="{% static 'images/hero/A7300219.JPG' %}" class="h-[384px] w-[384px] shrink-0 object-cover rounded-lg" alt="">
+        <div class="flex w-max animate-slide-left">
+            <div class="flex gap-4 pr-4">
+
+            <img src="{% static 'images/hero/A7300011.webp' %}" class="h-[384px] w-[384px] shrink-0 object-cover rounded-lg" alt="">
+            <img src="{% static 'images/hero/A7300050.webp' %}" class="h-[384px] w-[384px] shrink-0 object-cover rounded-lg" alt="">
+            <img src="{% static 'images/hero/A7300069.webp' %}" class="h-[384px] w-[384px] shrink-0 object-cover rounded-lg" alt="">
+            <img src="{% static 'images/hero/A7300147.webp' %}" class="h-[384px] w-[384px] shrink-0 object-cover rounded-lg" alt="">
+            <img src="{% static 'images/hero/A7300219.webp' %}" class="h-[384px] w-[384px] shrink-0 object-cover rounded-lg" alt="">
+            <img src="{% static 'images/hero/A7300008.webp' %}" class="h-[384px] w-[384px] shrink-0 object-cover rounded-lg" alt="">
+            <img src="{% static 'images/hero/A7300012.webp' %}" class="h-[384px] w-[384px] shrink-0 object-cover rounded-lg" alt="">
+            <img src="{% static 'images/hero/DSC01847.webp' %}" class="h-[384px] w-[384px] shrink-0 object-cover rounded-lg" alt="">
+            <img src="{% static 'images/hero/DSC02014.webp' %}" class="h-[384px] w-[384px] shrink-0 object-cover rounded-lg" alt="">
+            </div>
+            <div class="flex gap-4 pr-4">
+
+            <img src="{% static 'images/hero/A7300011.webp' %}" class="h-[384px] w-[384px] shrink-0 object-cover rounded-lg" alt="">
+            <img src="{% static 'images/hero/A7300050.webp' %}" class="h-[384px] w-[384px] shrink-0 object-cover rounded-lg" alt="">
+            <img src="{% static 'images/hero/A7300069.webp' %}" class="h-[384px] w-[384px] shrink-0 object-cover rounded-lg" alt="">
+            <img src="{% static 'images/hero/A7300147.webp' %}" class="h-[384px] w-[384px] shrink-0 object-cover rounded-lg" alt="">
+            <img src="{% static 'images/hero/A7300219.webp' %}" class="h-[384px] w-[384px] shrink-0 object-cover rounded-lg" alt="">
+            <img src="{% static 'images/hero/A7300008.webp' %}" class="h-[384px] w-[384px] shrink-0 object-cover rounded-lg" alt="">
+            <img src="{% static 'images/hero/A7300012.webp' %}" class="h-[384px] w-[384px] shrink-0 object-cover rounded-lg" alt="">
+            <img src="{% static 'images/hero/DSC01847.webp' %}" class="h-[384px] w-[384px] shrink-0 object-cover rounded-lg" alt="">
+            <img src="{% static 'images/hero/DSC02014.webp' %}" class="h-[384px] w-[384px] shrink-0 object-cover rounded-lg" alt="">
+            </div>
         </div>
         <!-- Row 2 (Right) -->
-        <div class="flex gap-4 w-max animate-slide-right pl-4">
-            <img src="{% static 'images/hero/A7300235.JPG' %}" class="h-[256px] w-[256px] shrink-0 object-cover rounded-lg" alt="">
-            <img src="{% static 'images/hero/DSC01581.JPG' %}" class="h-[256px] w-[256px] shrink-0 object-cover rounded-lg" alt="">
-            <img src="{% static 'images/hero/DSC_6901.JPG' %}" class="h-[256px] w-[256px] shrink-0 object-cover rounded-lg" alt="">
-            <img src="{% static 'images/hero/DSC_8015.JPG' %}" class="h-[256px] w-[256px] shrink-0 object-cover rounded-lg" alt="">
-            <img src="{% static 'images/hero/IMG_5306.JPG' %}" class="h-[256px] w-[256px] shrink-0 object-cover rounded-lg" alt="">
-            <img src="{% static 'images/hero/IMG_5333.JPG' %}" class="h-[256px] w-[256px] shrink-0 object-cover rounded-lg" alt="">
-            <!-- Duplicates -->
-            <img src="{% static 'images/hero/A7300235.JPG' %}" class="h-[256px] w-[256px] shrink-0 object-cover rounded-lg" alt="">
-            <img src="{% static 'images/hero/DSC01581.JPG' %}" class="h-[256px] w-[256px] shrink-0 object-cover rounded-lg" alt="">
-            <img src="{% static 'images/hero/DSC_6901.JPG' %}" class="h-[256px] w-[256px] shrink-0 object-cover rounded-lg" alt="">
-            <img src="{% static 'images/hero/DSC_8015.JPG' %}" class="h-[256px] w-[256px] shrink-0 object-cover rounded-lg" alt="">
-            <img src="{% static 'images/hero/IMG_5306.JPG' %}" class="h-[256px] w-[256px] shrink-0 object-cover rounded-lg" alt="">
-            <img src="{% static 'images/hero/IMG_5333.JPG' %}" class="h-[256px] w-[256px] shrink-0 object-cover rounded-lg" alt="">
+        <div class="flex w-max animate-slide-right">
+            <div class="flex gap-4 pr-4">
+
+            <img src="{% static 'images/hero/A7300235.webp' %}" class="h-[256px] w-[256px] shrink-0 object-cover rounded-lg" alt="">
+            <img src="{% static 'images/hero/DSC01581.webp' %}" class="h-[256px] w-[256px] shrink-0 object-cover rounded-lg" alt="">
+            <img src="{% static 'images/hero/DSC_6901.webp' %}" class="h-[256px] w-[256px] shrink-0 object-cover rounded-lg" alt="">
+            <img src="{% static 'images/hero/DSC_8015.webp' %}" class="h-[256px] w-[256px] shrink-0 object-cover rounded-lg" alt="">
+            <img src="{% static 'images/hero/IMG_5306.webp' %}" class="h-[256px] w-[256px] shrink-0 object-cover rounded-lg" alt="">
+            <img src="{% static 'images/hero/IMG_5333.webp' %}" class="h-[256px] w-[256px] shrink-0 object-cover rounded-lg" alt="">
+            <img src="{% static 'images/hero/DSC_6129.webp' %}" class="h-[256px] w-[256px] shrink-0 object-cover rounded-lg" alt="">
+            <img src="{% static 'images/hero/DSC_6808.webp' %}" class="h-[256px] w-[256px] shrink-0 object-cover rounded-lg" alt="">
+            <img src="{% static 'images/hero/DSC_6932.webp' %}" class="h-[256px] w-[256px] shrink-0 object-cover rounded-lg" alt="">
+            <img src="{% static 'images/hero/DSC_7455.webp' %}" class="h-[256px] w-[256px] shrink-0 object-cover rounded-lg" alt="">
+            <img src="{% static 'images/hero/DSC_7815.webp' %}" class="h-[256px] w-[256px] shrink-0 object-cover rounded-lg" alt="">
+            </div>
+            <div class="flex gap-4 pr-4">
+
+            <img src="{% static 'images/hero/A7300235.webp' %}" class="h-[256px] w-[256px] shrink-0 object-cover rounded-lg" alt="">
+            <img src="{% static 'images/hero/DSC01581.webp' %}" class="h-[256px] w-[256px] shrink-0 object-cover rounded-lg" alt="">
+            <img src="{% static 'images/hero/DSC_6901.webp' %}" class="h-[256px] w-[256px] shrink-0 object-cover rounded-lg" alt="">
+            <img src="{% static 'images/hero/DSC_8015.webp' %}" class="h-[256px] w-[256px] shrink-0 object-cover rounded-lg" alt="">
+            <img src="{% static 'images/hero/IMG_5306.webp' %}" class="h-[256px] w-[256px] shrink-0 object-cover rounded-lg" alt="">
+            <img src="{% static 'images/hero/IMG_5333.webp' %}" class="h-[256px] w-[256px] shrink-0 object-cover rounded-lg" alt="">
+            <img src="{% static 'images/hero/DSC_6129.webp' %}" class="h-[256px] w-[256px] shrink-0 object-cover rounded-lg" alt="">
+            <img src="{% static 'images/hero/DSC_6808.webp' %}" class="h-[256px] w-[256px] shrink-0 object-cover rounded-lg" alt="">
+            <img src="{% static 'images/hero/DSC_6932.webp' %}" class="h-[256px] w-[256px] shrink-0 object-cover rounded-lg" alt="">
+            <img src="{% static 'images/hero/DSC_7455.webp' %}" class="h-[256px] w-[256px] shrink-0 object-cover rounded-lg" alt="">
+            <img src="{% static 'images/hero/DSC_7815.webp' %}" class="h-[256px] w-[256px] shrink-0 object-cover rounded-lg" alt="">
+            </div>
         </div>
         <!-- Row 3 (Left) -->
-        <div class="flex gap-8 w-max animate-slide-left pl-4">
-            <img src="{% static 'images/hero/IMG_5360.JPG' %}" class="h-[384px] w-[384px] shrink-0 object-cover rounded-lg" alt="">
-            <img src="{% static 'images/hero/IMG_5403.JPG' %}" class="h-[384px] w-[384px] shrink-0 object-cover rounded-lg" alt="">
-            <img src="{% static 'images/hero/IMG_5438.JPG' %}" class="h-[384px] w-[384px] shrink-0 object-cover rounded-lg" alt="">
-            <img src="{% static 'images/hero/YMN00092.JPG' %}" class="h-[384px] w-[384px] shrink-0 object-cover rounded-lg" alt="">
-            <img src="{% static 'images/hero/A7300245.JPG' %}" class="h-[384px] w-[384px] shrink-0 object-cover rounded-lg" alt="">
-            <!-- Duplicates -->
-            <img src="{% static 'images/hero/IMG_5360.JPG' %}" class="h-[384px] w-[384px] shrink-0 object-cover rounded-lg" alt="">
-            <img src="{% static 'images/hero/IMG_5403.JPG' %}" class="h-[384px] w-[384px] shrink-0 object-cover rounded-lg" alt="">
-            <img src="{% static 'images/hero/IMG_5438.JPG' %}" class="h-[384px] w-[384px] shrink-0 object-cover rounded-lg" alt="">
-            <img src="{% static 'images/hero/YMN00092.JPG' %}" class="h-[384px] w-[384px] shrink-0 object-cover rounded-lg" alt="">
-            <img src="{% static 'images/hero/A7300245.JPG' %}" class="h-[384px] w-[384px] shrink-0 object-cover rounded-lg" alt="">
+        <div class="flex w-max animate-slide-left">
+            <div class="flex gap-4 pr-4">
+
+            <img src="{% static 'images/hero/IMG_5360.webp' %}" class="h-[384px] w-[384px] shrink-0 object-cover rounded-lg" alt="">
+            <img src="{% static 'images/hero/IMG_5403.webp' %}" class="h-[384px] w-[384px] shrink-0 object-cover rounded-lg" alt="">
+            <img src="{% static 'images/hero/IMG_5438.webp' %}" class="h-[384px] w-[384px] shrink-0 object-cover rounded-lg" alt="">
+            <img src="{% static 'images/hero/YMN00092.webp' %}" class="h-[384px] w-[384px] shrink-0 object-cover rounded-lg" alt="">
+            <img src="{% static 'images/hero/A7300245.webp' %}" class="h-[384px] w-[384px] shrink-0 object-cover rounded-lg" alt="">
+            <img src="{% static 'images/hero/Ekran görüntüsü 2025-11-22 203812.webp' %}" class="h-[384px] w-[384px] shrink-0 object-cover rounded-lg" alt="">
+            <img src="{% static 'images/hero/Ekran görüntüsü 2026-07-03 190711.webp' %}" class="h-[384px] w-[384px] shrink-0 object-cover rounded-lg" alt="">
+            <img src="{% static 'images/hero/Ekran görüntüsü 2026-07-03 192020.webp' %}" class="h-[384px] w-[384px] shrink-0 object-cover rounded-lg" alt="">
+            <img src="{% static 'images/hero/IMG-20250110-WA0005.webp' %}" class="h-[384px] w-[384px] shrink-0 object-cover rounded-lg" alt="">
+            </div>
+            <div class="flex gap-4 pr-4">
+
+            <img src="{% static 'images/hero/IMG_5360.webp' %}" class="h-[384px] w-[384px] shrink-0 object-cover rounded-lg" alt="">
+            <img src="{% static 'images/hero/IMG_5403.webp' %}" class="h-[384px] w-[384px] shrink-0 object-cover rounded-lg" alt="">
+            <img src="{% static 'images/hero/IMG_5438.webp' %}" class="h-[384px] w-[384px] shrink-0 object-cover rounded-lg" alt="">
+            <img src="{% static 'images/hero/YMN00092.webp' %}" class="h-[384px] w-[384px] shrink-0 object-cover rounded-lg" alt="">
+            <img src="{% static 'images/hero/A7300245.webp' %}" class="h-[384px] w-[384px] shrink-0 object-cover rounded-lg" alt="">
+            <img src="{% static 'images/hero/Ekran görüntüsü 2025-11-22 203812.webp' %}" class="h-[384px] w-[384px] shrink-0 object-cover rounded-lg" alt="">
+            <img src="{% static 'images/hero/Ekran görüntüsü 2026-07-03 190711.webp' %}" class="h-[384px] w-[384px] shrink-0 object-cover rounded-lg" alt="">
+            <img src="{% static 'images/hero/Ekran görüntüsü 2026-07-03 192020.webp' %}" class="h-[384px] w-[384px] shrink-0 object-cover rounded-lg" alt="">
+            <img src="{% static 'images/hero/IMG-20250110-WA0005.webp' %}" class="h-[384px] w-[384px] shrink-0 object-cover rounded-lg" alt="">
+            </div>
         </div>
     </div>
-    
     <!-- Gradient Overlay for readability -->
     <div class="absolute inset-0 z-10 bg-gradient-to-b from-zinc-900/90 via-zinc-900/60 to-zinc-900"></div>
 
@@ -76,12 +116,12 @@
 
         <!-- Social Icons -->
         <div class="flex items-center gap-6 mt-20 opacity-80">
-            <a href="https://discord.com/invite/fch8HnsKwE" target="_blank" rel="noopener noreferrer" class="hover:opacity-100 transition-all hover:scale-110 drop-shadow-none hover:drop-shadow-[0_0_15px_rgba(235,89,109,0.8)]"><span class="sr-only">Discord</span><img src="{% static 'images/social/DiscordLogo.png' %}" alt="Discord" class="h-10 w-auto"></a>
-            <a href="https://www.tiktok.com/@nishdott" target="_blank" rel="noopener noreferrer" class="hover:opacity-100 transition-all hover:scale-110 drop-shadow-none hover:drop-shadow-[0_0_15px_rgba(235,89,109,0.8)]"><span class="sr-only">TikTok</span><img src="{% static 'images/social/TiktokLogo.png' %}" alt="TikTok" class="h-10 w-auto"></a>
-            <a href="https://chat.whatsapp.com/DiufgZg3t1C2a4Y5L4iOLi" target="_blank" rel="noopener noreferrer" class="hover:opacity-100 transition-all hover:scale-110 drop-shadow-none hover:drop-shadow-[0_0_15px_rgba(235,89,109,0.8)]"><span class="sr-only">WhatsApp</span><img src="{% static 'images/social/WhatsappLogo.png' %}" alt="WhatsApp" class="h-10 w-auto"></a>
-            <a href="https://www.youtube.com/@nishdot" target="_blank" rel="noopener noreferrer" class="hover:opacity-100 transition-all hover:scale-110 drop-shadow-none hover:drop-shadow-[0_0_15px_rgba(235,89,109,0.8)]"><span class="sr-only">YouTube</span><img src="{% static 'images/social/YoutubeLogo.png' %}" alt="YouTube" class="h-10 w-auto"></a>
-            <a href="https://www.instagram.com/nishdott/" target="_blank" rel="noopener noreferrer" class="hover:opacity-100 transition-all hover:scale-110 drop-shadow-none hover:drop-shadow-[0_0_15px_rgba(235,89,109,0.8)]"><span class="sr-only">Instagram</span><img src="{% static 'images/social/InstagramLogo.png' %}" alt="Instagram" class="h-10 w-auto"></a>
-            <a href="https://www.linkedin.com/company/nishdot/" target="_blank" rel="noopener noreferrer" class="hover:opacity-100 transition-all hover:scale-110 drop-shadow-none hover:drop-shadow-[0_0_15px_rgba(235,89,109,0.8)]"><span class="sr-only">LinkedIn</span><img src="{% static 'images/social/LinkedinLogo.png' %}" alt="LinkedIn" class="h-10 w-auto"></a>
+            <a href="https://discord.com/invite/fch8HnsKwE" target="_blank" rel="noopener noreferrer" class="hover:opacity-100 transition-all hover:scale-110 drop-shadow-none hover:drop-shadow-[0_0_15px_rgba(235,89,109,0.8)]"><span class="sr-only">Discord</span><img src="{% static 'images/social/DiscordLogo.webp' %}" alt="Discord" class="h-10 w-auto"></a>
+            <a href="https://www.tiktok.com/@nishdott" target="_blank" rel="noopener noreferrer" class="hover:opacity-100 transition-all hover:scale-110 drop-shadow-none hover:drop-shadow-[0_0_15px_rgba(235,89,109,0.8)]"><span class="sr-only">TikTok</span><img src="{% static 'images/social/TiktokLogo.webp' %}" alt="TikTok" class="h-10 w-auto"></a>
+            <a href="https://chat.whatsapp.com/DiufgZg3t1C2a4Y5L4iOLi" target="_blank" rel="noopener noreferrer" class="hover:opacity-100 transition-all hover:scale-110 drop-shadow-none hover:drop-shadow-[0_0_15px_rgba(235,89,109,0.8)]"><span class="sr-only">WhatsApp</span><img src="{% static 'images/social/WhatsappLogo.webp' %}" alt="WhatsApp" class="h-10 w-auto"></a>
+            <a href="https://www.youtube.com/@nishdot" target="_blank" rel="noopener noreferrer" class="hover:opacity-100 transition-all hover:scale-110 drop-shadow-none hover:drop-shadow-[0_0_15px_rgba(235,89,109,0.8)]"><span class="sr-only">YouTube</span><img src="{% static 'images/social/YoutubeLogo.webp' %}" alt="YouTube" class="h-10 w-auto"></a>
+            <a href="https://www.instagram.com/nishdott/" target="_blank" rel="noopener noreferrer" class="hover:opacity-100 transition-all hover:scale-110 drop-shadow-none hover:drop-shadow-[0_0_15px_rgba(235,89,109,0.8)]"><span class="sr-only">Instagram</span><img src="{% static 'images/social/InstagramLogo.webp' %}" alt="Instagram" class="h-10 w-auto"></a>
+            <a href="https://www.linkedin.com/company/nishdot/" target="_blank" rel="noopener noreferrer" class="hover:opacity-100 transition-all hover:scale-110 drop-shadow-none hover:drop-shadow-[0_0_15px_rgba(235,89,109,0.8)]"><span class="sr-only">LinkedIn</span><img src="{% static 'images/social/LinkedinLogo.webp' %}" alt="LinkedIn" class="h-10 w-auto"></a>
         </div>
     </div>
 </section>
@@ -109,7 +149,7 @@
                     {% elif event.cover_image %}
                         <img src="{{ event.cover_image.url }}" alt="{{ event.title }}" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500">
                     {% else %}
-                        <img src="{% static 'images/nishdotlogolightpng.png' %}" alt="Event Logo" class="max-h-24 opacity-50 group-hover:opacity-100 transition-opacity">
+                        <img src="{% static 'images/nishdotlogolightpng.webp' %}" alt="Event Logo" class="max-h-24 opacity-50 group-hover:opacity-100 transition-opacity">
                     {% endif %}
                 </div>
                 
@@ -162,7 +202,7 @@
             
             <!-- Mascot placeholder (optional based on design) -->
             <div class="mt-12 flex justify-center">
-                <img src="{% static 'images/tonish_mascot.png' %}" alt="Tonish Mascot" class="h-40 hover:scale-105 transition-transform duration-300">
+                <img src="{% static 'images/tonish_mascot.webp' %}" alt="Tonish Mascot" class="h-40 hover:scale-105 transition-transform duration-300">
             </div>
         </div>
     </div>
@@ -308,13 +348,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // Smooth scroll for nav links
     navLinks.forEach(link => {
         link.addEventListener('click', function(e) {
-            const targetId = this.getAttribute('href');
-            if (targetId.startsWith('#')) {
+            const url = new URL(this.href, window.location.origin);
+            if (url.pathname === window.location.pathname && url.hash) {
                 e.preventDefault();
-                if (targetId === '#home') {
+                if (url.hash === '#home') {
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                 } else {
-                    const targetElement = document.querySelector(targetId);
+                    const targetElement = document.querySelector(url.hash);
                     if (targetElement) {
                         targetElement.scrollIntoView({ behavior: 'smooth' });
                     }

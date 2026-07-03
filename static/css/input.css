@@ -43,11 +43,11 @@
   }
   
   .animate-slide-left {
-    animation: slide-left 20s linear infinite;
+    animation: slide-left 50s linear infinite;
   }
   
   .animate-slide-right {
-    animation: slide-right 20s linear infinite;
+    animation: slide-right 50s linear infinite;
   }
 }
 

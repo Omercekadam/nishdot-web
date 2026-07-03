@@ -43,7 +43,7 @@ class Event(TimeStampedModel):
 
     def save(self, *args, **kwargs):
         from io import BytesIO
-        from PIL import Image
+        from PIL import Image, ImageOps
         from django.core.files.uploadedfile import InMemoryUploadedFile
         import sys
         import os
@@ -58,6 +58,7 @@ class Event(TimeStampedModel):
                 return image_field
 
             img = Image.open(image_field)
+            img = ImageOps.exif_transpose(img)
             if img.mode != 'RGB':
                 img = img.convert('RGB')
 
