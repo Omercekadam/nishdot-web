@@ -458,6 +458,23 @@ def send_broadcast_email_async(subject, message, recipient_list, smtp_account='s
                 )
                 from_email = config('SMTP_USERNAME', default='')
                 
+            html_content = f"""
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #eee; border-radius: 10px; overflow: hidden;">
+                <div style="background-color: #eb596d; padding: 20px; text-align: center;">
+                    <h2 style="color: white; margin: 0;">Nishdot Duyuru</h2>
+                </div>
+                <div style="padding: 30px; color: #333; line-height: 1.6;">
+                    <h3 style="color: #1f2937; margin-top: 0;">{subject}</h3>
+                    <div style="font-size: 15px;">
+                        {message.replace(chr(10), '<br>')}
+                    </div>
+                    <br><br>
+                    <hr style="border: 0; border-top: 1px solid #eee;">
+                    <p style="font-size: 12px; color: #999; text-align: center; margin-bottom: 0;">Bu e-posta İstanbul Nişantaşı Üniversitesi Dijital Oyun Tasarımı Kulübü (Nishdot) tarafından gönderilmiştir.</p>
+                </div>
+            </div>
+            """
+            
             email = EmailMultiAlternatives(
                 subject=subject,
                 body=message,
@@ -465,6 +482,7 @@ def send_broadcast_email_async(subject, message, recipient_list, smtp_account='s
                 to=recipient_list,
                 connection=conn
             )
+            email.attach_alternative(html_content, "text/html")
             email.send()
         except Exception as e:
             print(f"Mail gönderme hatası: {e}")
@@ -528,7 +546,7 @@ def api_create_broadcast(request):
             email_list = [u.email for u in users if u.email]
             if email_list:
                 send_broadcast_email_async(
-                    subject=f"📢 {title}",
+                    subject=title,
                     message=content,
                     recipient_list=email_list,
                     smtp_account=smtp_account
@@ -689,3 +707,106 @@ def api_delete_log(request):
         return JsonResponse({'success': True})
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+from events.models import Raffle, RaffleParticipant
+import random
+
+class RaffleListView(StaffRequiredMixin, TemplateView):
+    template_name = "dashboard/raffles_list.html"
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['raffles'] = Raffle.objects.all()
+        context['events'] = Event.objects.filter(status__in=[Event.Status.PUBLISHED, Event.Status.DRAFT])
+        return context
+
+@staff_member_required
+@require_POST
+def api_create_raffle(request):
+    try:
+        data = json.loads(request.body)
+        event_id = data.get('event_id')
+        title = data.get('title')
+        
+        event = get_object_or_404(Event, id=event_id)
+        Raffle.objects.create(event=event, title=title)
+        return JsonResponse({'success': True})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+from django.views.generic import DetailView
+
+class RaffleQRView(StaffRequiredMixin, DetailView):
+    model = Raffle
+    template_name = "dashboard/raffle_qr.html"
+    context_object_name = "raffle"
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Construct full URL for QR code
+        context['join_url'] = self.request.build_absolute_uri(
+            f"/events/raffle/join/{self.object.secret_id}/"
+        )
+        return context
+
+class RaffleDrawView(StaffRequiredMixin, DetailView):
+    model = Raffle
+    template_name = "dashboard/raffle_draw.html"
+    context_object_name = "raffle"
+
+@staff_member_required
+def api_raffle_participants(request, pk):
+    raffle = get_object_or_404(Raffle, pk=pk)
+    participants = list(raffle.participants.values('id', 'user__first_name', 'user__last_name', 'user__username'))
+    
+    formatted_participants = []
+    for p in participants:
+        name = f"{p['user__first_name']} {p['user__last_name']}".strip()
+        if not name:
+            name = p['user__username']
+        formatted_participants.append({
+            'id': p['id'],
+            'name': name
+        })
+        
+    return JsonResponse({
+        'count': len(formatted_participants),
+        'participants': formatted_participants
+    })
+
+@staff_member_required
+@require_POST
+def api_raffle_remove_participant(request, pk):
+    raffle = get_object_or_404(Raffle, pk=pk)
+    try:
+        data = json.loads(request.body)
+        participant_id = data.get('participant_id')
+        participant = get_object_or_404(RaffleParticipant, id=participant_id, raffle=raffle)
+        participant.delete()
+        return JsonResponse({'success': True})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+@staff_member_required
+@require_POST
+def api_raffle_pick_winner(request, pk):
+    raffle = get_object_or_404(Raffle, pk=pk)
+        
+    participants = list(raffle.participants.all())
+    if not participants:
+        return JsonResponse({'success': False, 'error': 'Henüz katılımcı yok.'})
+        
+    winner = random.choice(participants)
+    return JsonResponse({
+        'success': True,
+        'winner': winner.user.get_full_name() or winner.user.username
+    })
+
+@staff_member_required
+@require_POST
+def api_raffle_toggle(request, pk):
+    raffle = get_object_or_404(Raffle, pk=pk)
+    data = json.loads(request.body)
+    raffle.is_active = data.get('is_active', False)
+    raffle.save()
+    return JsonResponse({'success': True})

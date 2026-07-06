@@ -1,0 +1,97 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block title %}Çekiliş Katılımı - {{ raffle.title }}{% endblock %}
+
+{% block dashboard_content %}
+<div class="fixed inset-0 bg-zinc-950 z-[100] flex flex-col items-center justify-center overflow-hidden">
+    <!-- Dekoratif Arka Plan -->
+    <div class="absolute inset-0 pointer-events-none overflow-hidden">
+        <div class="absolute -top-1/4 -right-1/4 w-1/2 h-1/2 bg-brand-pink/20 rounded-full blur-[150px] animate-pulse"></div>
+        <div class="absolute -bottom-1/4 -left-1/4 w-1/2 h-1/2 bg-purple-500/20 rounded-full blur-[150px] animate-pulse" style="animation-delay: 2s;"></div>
+    </div>
+
+    <!-- Kapat / Geri Dön -->
+    <a href="{% url 'dashboard:raffles' %}" class="absolute top-6 left-6 text-zinc-400 hover:text-white transition-colors z-10 flex items-center gap-2">
+        <i class="fas fa-arrow-left"></i> Yönetime Dön
+    </a>
+
+    <!-- İçerik -->
+    <div class="relative z-10 w-full max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-between gap-12 px-8">
+        
+        <!-- Sol Taraf: Bilgiler ve Sayaç -->
+        <div class="flex-1 text-center md:text-left">
+            <div class="flex items-center justify-center md:justify-start gap-6 mb-8">
+                <img src="{% static 'images/nishdotlogolightpng.webp' %}" alt="Nishdot Logo" class="h-20 md:h-28 object-contain">
+                <div class="px-4 py-1 bg-brand-pink/20 border border-brand-pink/30 rounded-full text-brand-pink font-bold tracking-widest text-sm animate-pulse">
+                    CANLI ÇEKİLİŞ
+                </div>
+            </div>
+            
+            <h1 class="text-5xl md:text-6xl font-black text-white mb-4 leading-tight">{{ raffle.title }}</h1>
+            <p class="text-xl text-zinc-400 mb-12">{{ raffle.event.title }}</p>
+            
+            <div class="bg-zinc-900/50 backdrop-blur-xl border border-zinc-800 rounded-3xl p-8 inline-block shadow-2xl">
+                <p class="text-sm font-semibold text-zinc-500 uppercase tracking-widest mb-2">Anlık Katılımcı</p>
+                <div class="text-7xl font-black text-transparent bg-clip-text bg-gradient-to-br from-brand-pink to-purple-500" id="participantCount">
+                    0
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sağ Taraf: QR Kod -->
+        <div class="w-full max-w-md bg-white p-6 rounded-[2rem] shadow-[0_0_100px_rgba(235,89,109,0.3)] relative">
+            <div class="absolute -inset-1 bg-gradient-to-br from-brand-pink to-purple-500 rounded-[2.2rem] opacity-30 blur-lg -z-10 animate-pulse"></div>
+            
+            <div class="aspect-square bg-white rounded-2xl flex items-center justify-center p-4 relative" id="qrcode">
+                <!-- QR kod buraya çizilecek -->
+            </div>
+            
+            <div class="mt-6 text-center">
+                <p class="text-zinc-900 font-bold text-2xl mb-1">Tarat & Katıl!</p>
+                <p class="text-zinc-500 font-medium text-sm mb-4">Kameranızı koda yönlendirin</p>
+                
+                <!-- Local testler için tıklanabilir link -->
+                <a href="{{ join_url }}" target="_blank" class="inline-block text-xs text-brand-pink hover:text-brand-pink/80 font-bold underline decoration-brand-pink/30 hover:decoration-brand-pink transition-all">
+                    Veya buraya tıklayarak tarayıcıdan katıl (Test İçin)
+                </a>
+            </div>
+        </div>
+        
+    </div>
+</div>
+
+<script src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js"></script>
+<script>
+    // QR Code Oluştur
+    const joinUrl = "{{ join_url }}";
+    const qrcodeElement = document.getElementById("qrcode");
+    
+    // Boyutu container'a göre ayarla
+    const size = Math.min(qrcodeElement.offsetWidth - 32, 400);
+    
+    new QRCode(qrcodeElement, {
+        text: joinUrl,
+        width: size,
+        height: size,
+        colorDark : "#000000",
+        colorLight : "#ffffff",
+        correctLevel : QRCode.CorrectLevel.H
+    });
+
+    // Katılımcı sayısını anlık güncelle
+    async function updateCount() {
+        try {
+            const res = await fetch("{% url 'dashboard:api_raffle_participants' raffle.id %}");
+            const data = await res.json();
+            document.getElementById('participantCount').innerText = data.count;
+        } catch(err) {
+            console.error("Sayaç güncellenemedi", err);
+        }
+    }
+
+    // Her 2 saniyede bir güncelle
+    setInterval(updateCount, 2000);
+    updateCount();
+</script>
+{% endblock %}

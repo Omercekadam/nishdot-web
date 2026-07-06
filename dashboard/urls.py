@@ -29,4 +29,14 @@ urlpatterns = [
     path('api/dismiss-announcement/<int:announcement_id>/', views.api_dismiss_announcement, name='api_dismiss_announcement'),
     path('api/resolve-log/', views.api_resolve_log, name='api_resolve_log'),
     path('api/delete-log/', views.api_delete_log, name='api_delete_log'),
+    
+    # Raffles
+    path('raffles/', views.RaffleListView.as_view(), name='raffles'),
+    path('api/create-raffle/', views.api_create_raffle, name='api_create_raffle'),
+    path('raffles/<int:pk>/qr/', views.RaffleQRView.as_view(), name='raffle_qr'),
+    path('raffles/<int:pk>/draw/', views.RaffleDrawView.as_view(), name='raffle_draw'),
+    path('api/raffles/<int:pk>/participants/', views.api_raffle_participants, name='api_raffle_participants'),
+    path('api/raffles/<int:pk>/remove-participant/', views.api_raffle_remove_participant, name='api_raffle_remove_participant'),
+    path('api/raffles/<int:pk>/pick-winner/', views.api_raffle_pick_winner, name='api_raffle_pick_winner'),
+    path('api/raffles/<int:pk>/toggle/', views.api_raffle_toggle, name='api_raffle_toggle'),
 ]

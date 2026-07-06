@@ -1,4 +1,6 @@
+import uuid
 from django.db import models
+from django.conf import settings
 
 from core.models import TimeStampedModel
 
@@ -95,3 +97,33 @@ class Event(TimeStampedModel):
             self.thumbnail = compress_image(self.thumbnail, max_width=800)
 
         super().save(*args, **kwargs)
+
+class Raffle(TimeStampedModel):
+    """
+    Etkinlikler içinde düzenlenen anlık çekilişleri (giveaway/raffle) temsil eder.
+    """
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='raffles', verbose_name="Etkinlik")
+    title = models.CharField(max_length=200, verbose_name="Çekiliş Başlığı")
+    secret_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, verbose_name="Gizli QR ID")
+    is_active = models.BooleanField(default=True, verbose_name="Aktif mi?")
+    
+    class Meta:
+        verbose_name = "Çekiliş"
+        verbose_name_plural = "Çekilişler"
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.title} ({self.event.title})"
+
+class RaffleParticipant(models.Model):
+    raffle = models.ForeignKey(Raffle, on_delete=models.CASCADE, related_name='participants')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='raffle_participations')
+    joined_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Çekiliş Katılımcısı"
+        verbose_name_plural = "Çekiliş Katılımcıları"
+        unique_together = ('raffle', 'user') # Bir kişi aynı çekilişe sadece bir kez katılabilir
+
+    def __str__(self):
+        return f"{self.user.get_full_name()} - {self.raffle.title}"

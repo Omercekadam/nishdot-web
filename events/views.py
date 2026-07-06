@@ -97,3 +97,32 @@ class EventApplyWizardView(TemplateView):
             # Diğer beklenmeyen hatalar için
             error_msg = "Başvurunuz alınırken beklenmeyen bir hata oluştu. Lütfen daha sonra tekrar deneyiniz."
             return self.render_to_response(self.get_context_data(error=error_msg))
+
+from django.contrib.auth.mixins import LoginRequiredMixin
+from .models import Raffle, RaffleParticipant
+
+class RaffleJoinView(LoginRequiredMixin, TemplateView):
+    template_name = "events/raffle_join.html"
+    login_url = "/auth/login/"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        raffle = get_object_or_404(Raffle, secret_id=self.kwargs['secret_id'])
+        context['raffle'] = raffle
+        
+        if not raffle.is_active:
+            context['status'] = "closed"
+            return context
+
+        # Çekilişe katılımcı olarak ekle
+        participant, created = RaffleParticipant.objects.get_or_create(
+            raffle=raffle,
+            user=self.request.user
+        )
+        
+        if created:
+            context['status'] = "success"
+        else:
+            context['status'] = "already_joined"
+            
+        return context

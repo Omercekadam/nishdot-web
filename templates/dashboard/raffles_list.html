@@ -1,0 +1,199 @@
+{% extends 'dashboard/base.html' %}
+
+{% block dashboard_content %}
+<div class="p-8 max-w-7xl mx-auto">
+    <div class="mb-8 flex justify-between items-center">
+        <div>
+            <h1 class="text-3xl font-bold text-white tracking-tight">Anlık Çekiliş Yönetimi</h1>
+            <p class="text-zinc-400 mt-1">Etkinlikleriniz için QR kodlu canlı çekilişler oluşturun ve yönetin.</p>
+        </div>
+        <button onclick="document.getElementById('createRaffleModal').classList.remove('hidden')" class="bg-brand-pink hover:bg-opacity-90 text-white px-4 py-2 rounded-xl font-semibold transition-all">
+            + Yeni Çekiliş
+        </button>
+    </div>
+
+    <!-- Mevcut Çekilişler -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for raffle in raffles %}
+        <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 relative overflow-hidden group">
+            <div class="flex justify-between items-start mb-4">
+                <div>
+                    <h3 class="text-xl font-bold text-white">{{ raffle.title }}</h3>
+                    <p class="text-xs text-brand-pink font-semibold">{{ raffle.event.title }}</p>
+                </div>
+                {% if raffle.is_active %}
+                <span class="px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded-full font-bold">Aktif</span>
+                {% else %}
+                <span class="px-2 py-1 bg-red-500/20 text-red-400 text-xs rounded-full font-bold">Kapalı</span>
+                {% endif %}
+            </div>
+            
+            <div class="flex items-center justify-between mb-6">
+                <p class="text-zinc-400 text-sm">{{ raffle.participants.count }} Katılımcı</p>
+                <button onclick="viewParticipants({{ raffle.id }}, '{{ raffle.title|escapejs }}')" class="text-brand-pink text-xs font-bold hover:underline">
+                    Katılımcıları Gör
+                </button>
+            </div>
+            
+            <div class="flex gap-2">
+                <a href="{% url 'dashboard:raffle_qr' raffle.id %}" target="_blank" class="flex-1 bg-zinc-800 hover:bg-zinc-700 text-white text-center py-2 rounded-lg text-sm font-semibold transition-colors">
+                    <i class="fas fa-qrcode mr-1"></i> QR Göster
+                </a>
+                <a href="{% url 'dashboard:raffle_draw' raffle.id %}" target="_blank" class="flex-1 bg-brand-pink/20 hover:bg-brand-pink/30 text-brand-pink text-center py-2 rounded-lg text-sm font-semibold transition-colors">
+                    <i class="fas fa-gift mr-1"></i> Kura Çek
+                </a>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-span-full py-12 text-center border border-dashed border-zinc-800 rounded-2xl">
+            <p class="text-zinc-500">Henüz hiç çekiliş oluşturulmamış.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Modal: Yeni Çekiliş -->
+<div id="createRaffleModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-zinc-900 border border-zinc-800 rounded-2xl max-w-md w-full p-6 shadow-2xl">
+        <h2 class="text-2xl font-bold text-white mb-6">Yeni Çekiliş Oluştur</h2>
+        
+        <form id="createRaffleForm" class="space-y-4">
+            {% csrf_token %}
+            <div>
+                <label class="block text-sm font-semibold text-zinc-400 mb-2">Çekiliş Başlığı</label>
+                <input type="text" name="title" required placeholder="Örn: HyperX Kulaklık Çekilişi" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-brand-pink">
+            </div>
+            <div>
+                <label class="block text-sm font-semibold text-zinc-400 mb-2">İlgili Etkinlik</label>
+                <select name="event_id" required class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-brand-pink">
+                    <option value="">-- Etkinlik Seçin --</option>
+                    {% for event in events %}
+                    <option value="{{ event.id }}">{{ event.title }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="pt-4 flex gap-3">
+                <button type="button" onclick="document.getElementById('createRaffleModal').classList.add('hidden')" class="flex-1 bg-zinc-800 hover:bg-zinc-700 text-white font-bold py-3 rounded-xl transition-colors">İptal</button>
+                <button type="submit" class="flex-1 bg-brand-pink hover:bg-opacity-90 text-white font-bold py-3 rounded-xl transition-colors">Oluştur</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal: Katılımcıları Gör -->
+<div id="participantsModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-zinc-900 border border-zinc-800 rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <h2 class="text-xl font-bold text-white" id="participantsModalTitle">Çekiliş</h2>
+                <p class="text-brand-pink text-sm font-semibold mt-1" id="participantsModalCount"></p>
+            </div>
+            <button onclick="document.getElementById('participantsModal').classList.add('hidden')" class="text-zinc-500 hover:text-white transition-colors">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+        
+        <div style="max-height: 50vh; overflow-y: auto;" class="pr-2 custom-scrollbar">
+            <ul id="participantsList" class="space-y-1">
+                <!-- Katılımcılar JS ile buraya yüklenecek -->
+            </ul>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentRaffleId = null;
+const csrfToken = '{{ csrf_token }}';
+
+async function viewParticipants(raffleId, title) {
+    currentRaffleId = raffleId;
+    const modal = document.getElementById('participantsModal');
+    const titleEl = document.getElementById('participantsModalTitle');
+    const listEl = document.getElementById('participantsList');
+    const countEl = document.getElementById('participantsModalCount');
+    
+    titleEl.innerText = title;
+    listEl.innerHTML = '<li class="text-zinc-500 text-center py-4">Yükleniyor...</li>';
+    countEl.innerText = '';
+    modal.classList.remove('hidden');
+    
+    try {
+        const res = await fetch(`/management/api/raffles/${raffleId}/participants/`);
+        const data = await res.json();
+        
+        countEl.innerText = `${data.count} Kişi`;
+        
+        if (data.participants.length > 0) {
+            listEl.innerHTML = data.participants.map(p => 
+                `<li class="py-2 border-b border-zinc-800 text-white font-medium flex items-center justify-between gap-2" id="participant-${p.id}">
+                    <div class="flex items-center gap-2">
+                        <div class="w-6 h-6 rounded-full bg-zinc-800 flex items-center justify-center text-xs text-brand-pink shrink-0"><i class="fas fa-user"></i></div>
+                        <span class="truncate max-w-[200px]">${p.name}</span>
+                    </div>
+                    <button onclick="removeParticipant(${p.id})" class="text-red-500 hover:text-red-400 text-xs font-bold px-2 py-1 bg-red-500/10 hover:bg-red-500/20 rounded-md transition-colors shrink-0">
+                        Çıkar
+                    </button>
+                </li>`
+            ).join('');
+        } else {
+            listEl.innerHTML = '<li class="text-zinc-500 text-center py-4">Henüz katılımcı yok.</li>';
+        }
+    } catch(err) {
+        listEl.innerHTML = '<li class="text-red-500 text-center py-4">Bir hata oluştu.</li>';
+    }
+}
+
+async function removeParticipant(participantId) {
+    if(!confirm("Bu kişiyi çekilişten çıkarmak istediğinize emin misiniz?")) return;
+    
+    try {
+        const res = await fetch(`/management/api/raffles/${currentRaffleId}/remove-participant/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({participant_id: participantId})
+        });
+        const data = await res.json();
+        if(data.success) {
+            document.getElementById(`participant-${participantId}`).remove();
+            const countEl = document.getElementById('participantsModalCount');
+            const currentCount = parseInt(countEl.innerText);
+            countEl.innerText = `${currentCount - 1} Kişi`;
+        } else {
+            alert('Silinemedi: ' + data.error);
+        }
+    } catch(err) {
+        alert('Bağlantı hatası.');
+    }
+}
+
+document.getElementById('createRaffleForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const data = Object.fromEntries(formData);
+    
+    try {
+        const res = await fetch("{% url 'dashboard:api_create_raffle' %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+            },
+            body: JSON.stringify(data)
+        });
+        
+        const result = await res.json();
+        if(result.success) {
+            window.location.reload();
+        } else {
+            alert('Hata: ' + result.error);
+        }
+    } catch(err) {
+        alert('Bağlantı hatası.');
+    }
+});
+</script>
+{% endblock %}
