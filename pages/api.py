@@ -36,8 +36,23 @@ def send_contact_email(full_name, sender_email, subject, message):
     except Exception as e:
         print(f"İLETİŞİM FORMU MAİL GÖNDERME HATASI: {e}")
 
+from django_ratelimit.decorators import ratelimit
+from dashboard.models import SecurityLog
+
+@ratelimit(key='ip', rate='3/h', block=False)
 @require_POST
 async def contact_api_view(request):
+    if getattr(request, 'limited', False):
+        @sync_to_async
+        def create_log():
+            SecurityLog.objects.create(
+                ip_address=request.META.get('REMOTE_ADDR', ''),
+                action=SecurityLog.ActionType.CONTACT_SPAM,
+                user_agent=request.META.get('HTTP_USER_AGENT', '')
+            )
+        await create_log()
+        return JsonResponse({"error": "Kısa sürede çok fazla istek gönderdiniz. Lütfen 1 saat sonra tekrar deneyiniz."}, status=429)
+
     try:
         data = json.loads(request.body)
         

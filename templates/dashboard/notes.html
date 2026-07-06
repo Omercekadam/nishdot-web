@@ -46,11 +46,31 @@
             </div>
             
             <div class="flex justify-between items-center pt-4 border-t border-zinc-800/50">
-                <div class="flex items-center gap-2">
-                    <div class="h-8 w-8 rounded-full bg-zinc-800 flex items-center justify-center text-xs font-bold text-brand-pink border border-brand-pink/20">
-                        {{ note.author.first_name|default:note.author.username|make_list|first|upper }}
+                <div class="flex flex-col gap-2">
+                    <div class="flex items-center gap-2">
+                        <span class="text-[10px] uppercase font-bold text-zinc-500">Yazar:</span>
+                        <div class="h-6 w-6 rounded-full bg-zinc-800 flex items-center justify-center text-[10px] font-bold text-brand-pink border border-brand-pink/20">
+                            {{ note.author.first_name|default:note.author.username|make_list|first|upper }}
+                        </div>
+                        <span class="text-xs text-zinc-400">{{ note.author.first_name|default:note.author.username }}</span>
                     </div>
-                    <span class="text-xs text-zinc-500">{{ note.author.first_name|default:note.author.username }}</span>
+                    {% if note.attendees.exists %}
+                    <div class="flex items-center gap-2 mt-1">
+                        <span class="text-[10px] uppercase font-bold text-zinc-500">Katılanlar ({{ note.attendees.count }}):</span>
+                        <div class="flex -space-x-2 overflow-hidden">
+                            {% for attendee in note.attendees.all|slice:":5" %}
+                            <div class="inline-block h-6 w-6 rounded-full ring-2 ring-zinc-900 bg-zinc-800 flex items-center justify-center text-[10px] font-bold text-brand-pink" title="{{ attendee.first_name|default:attendee.username }}">
+                                {{ attendee.first_name|default:attendee.username|make_list|first|upper }}
+                            </div>
+                            {% endfor %}
+                            {% if note.attendees.count > 5 %}
+                            <div class="inline-block h-6 w-6 rounded-full ring-2 ring-zinc-900 bg-zinc-800 flex items-center justify-center text-[10px] font-bold text-zinc-400">
+                                +{{ note.attendees.count|add:"-5" }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
                 </div>
                 
                 <div class="flex gap-2">
@@ -101,6 +121,19 @@
                     <textarea id="noteContent" rows="10" required placeholder="Alınan kararlar, konuşulan konular..." class="w-full bg-zinc-950 border border-zinc-800 text-white rounded-xl px-4 py-3 focus:outline-none focus:border-brand-pink transition-all resize-y"></textarea>
                 </div>
 
+                <div>
+                    <label class="block text-sm font-medium text-zinc-300 mb-2">Katılımcılar</label>
+                    <div class="bg-zinc-950 border border-zinc-800 rounded-xl max-h-48 overflow-y-auto p-2 space-y-1 custom-scrollbar">
+                        {% for member in board_members %}
+                        <label class="flex items-center gap-3 p-2 hover:bg-zinc-900 rounded-lg cursor-pointer transition-colors">
+                            <input type="checkbox" name="attendees" value="{{ member.id }}" class="w-4 h-4 rounded border-zinc-700 text-brand-pink focus:ring-brand-pink bg-zinc-950">
+                            <span class="text-sm text-white">{{ member.get_full_name|default:member.username }} <span class="text-xs text-zinc-500">({{ member.get_role_display }})</span></span>
+                        </label>
+                        {% endfor %}
+                    </div>
+                    <p class="text-xs text-zinc-500 mt-1">Toplantıya katılan yönetim kurulu üyelerini işaretleyin.</p>
+                </div>
+
                 <div class="flex justify-end pt-4 border-t border-zinc-800">
                     <button type="submit" id="btnSubmitNote" class="bg-brand-pink hover:bg-brand-pink/90 text-white font-semibold py-3 px-6 rounded-xl transition-all shadow-[0_4px_14px_rgba(235,89,109,0.39)]">
                         Kaydet
@@ -116,7 +149,8 @@
     {% for note in notes %}
     <div id="note-data-{{ note.id }}"
          data-id="{{ note.id }}"
-         data-title="{{ note.title }}">
+         data-title="{{ note.title }}"
+         data-attendees="{% for a in note.attendees.all %}{{ a.id }}{% if not forloop.last %},{% endif %}{% endfor %}">
         <textarea class="hidden" id="note-content-data-{{ note.id }}">{{ note.content }}</textarea>
     </div>
     {% endfor %}
@@ -141,6 +175,7 @@
         const form = document.getElementById('noteForm');
         
         form.reset();
+        document.querySelectorAll('input[name="attendees"]').forEach(cb => cb.checked = false);
         document.getElementById('noteId').value = "";
         document.getElementById('modalTitle').innerText = "Yeni Not Ekle";
         
@@ -151,6 +186,15 @@
                 document.getElementById('noteId').value = dataDiv.getAttribute('data-id');
                 document.getElementById('noteTitle').value = dataDiv.getAttribute('data-title');
                 document.getElementById('noteContent').value = document.getElementById('note-content-data-' + noteId).value;
+                const attendeesStr = dataDiv.getAttribute('data-attendees');
+                if (attendeesStr) {
+                    const attendeesArr = attendeesStr.split(',');
+                    document.querySelectorAll('input[name="attendees"]').forEach(cb => {
+                        if (attendeesArr.includes(cb.value)) {
+                            cb.checked = true;
+                        }
+                    });
+                }
             }
         }
         
@@ -169,10 +213,12 @@
         btn.innerText = "Kaydediliyor...";
         btn.disabled = true;
 
+        const selectedAttendees = Array.from(document.querySelectorAll('input[name="attendees"]:checked')).map(cb => cb.value);
         const data = {
             note_id: document.getElementById('noteId').value,
             title: document.getElementById('noteTitle').value,
             content: document.getElementById('noteContent').value,
+            attendees: selectedAttendees,
         };
 
         try {

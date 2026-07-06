@@ -1,3 +1,6 @@
+from django.utils.decorators import method_decorator
+from django_ratelimit.decorators import ratelimit
+from dashboard.models import SecurityLog
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.views import LoginView
@@ -12,6 +15,7 @@ from jams.models import JamApplication
 
 User = get_user_model()
 
+@method_decorator(ratelimit(key='ip', rate='3/h', block=False), name='post')
 class UserRegisterView(CreateView):
     template_name = "users/register.html"
     form_class = UserRegisterForm
@@ -22,18 +26,39 @@ class UserRegisterView(CreateView):
             return redirect("users:dashboard")
         return super().get(request, *args, **kwargs)
 
+
+    def post(self, request, *args, **kwargs):
+        if getattr(request, 'limited', False):
+            SecurityLog.objects.create(
+                ip_address=request.META.get('REMOTE_ADDR', ''),
+                action=SecurityLog.ActionType.REGISTER_SPAM,
+                user_agent=request.META.get('HTTP_USER_AGENT', '')
+            )
+            return render(request, 'pages/429.html', {'message': 'Kısa sürede çok fazla istek gönderdiniz. Lütfen 1 saat sonra tekrar deneyiniz.'}, status=429)
+        return super().post(request, *args, **kwargs)
     def form_valid(self, form):
         user = form.save()
         login(self.request, user)
         messages.success(self.request, f"Aramıza hoş geldin, {user.first_name}!")
         return redirect(self.success_url)
 
+@method_decorator(ratelimit(key='ip', rate='5/5m', block=False), name='post')
 class UserLoginView(LoginView):
     template_name = "users/login.html"
     form_class = UserLoginForm
     redirect_authenticated_user = True
 
 
+
+    def post(self, request, *args, **kwargs):
+        if getattr(request, 'limited', False):
+            SecurityLog.objects.create(
+                ip_address=request.META.get('REMOTE_ADDR', ''),
+                action=SecurityLog.ActionType.LOGIN_BRUTE_FORCE,
+                user_agent=request.META.get('HTTP_USER_AGENT', '')
+            )
+            return render(request, 'pages/429.html', {'message': 'Çok fazla hatalı giriş denemesi yaptınız. Lütfen 5 dakika sonra tekrar deneyiniz.'}, status=429)
+        return super().post(request, *args, **kwargs)
 class DashboardView(LoginRequiredMixin, TemplateView):
     template_name = "users/dashboard.html"
     login_url = "users:login"

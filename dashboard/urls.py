@@ -27,4 +27,6 @@ urlpatterns = [
     path('broadcast/', views.BroadcastCenterView.as_view(), name='broadcast'),
     path('api/create-broadcast/', views.api_create_broadcast, name='api_create_broadcast'),
     path('api/dismiss-announcement/<int:announcement_id>/', views.api_dismiss_announcement, name='api_dismiss_announcement'),
+    path('api/resolve-log/', views.api_resolve_log, name='api_resolve_log'),
+    path('api/delete-log/', views.api_delete_log, name='api_delete_log'),
 ]

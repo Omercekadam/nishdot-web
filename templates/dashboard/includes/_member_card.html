@@ -19,6 +19,21 @@
             {{ member.get_role_display }}
         {% endif %}
     </p>
+
+    {% if member.role == 'admin' or member.role == 'board' or member.is_staff %}
+    <!-- Katılım Oranı (Sadece Yönetim Kurulu) -->
+    <div class="mb-3 w-full px-4" title="Katıldığı Toplantılar / Toplam Toplantılar">
+        <div class="flex justify-between items-center mb-1">
+            <span class="text-[9px] font-bold text-zinc-500 uppercase tracking-wider">Toplantı Katılımı</span>
+            <span class="text-[10px] font-bold {% if member.attendance_rate >= 80 %}text-green-400{% elif member.attendance_rate >= 50 %}text-yellow-400{% else %}text-red-400{% endif %}">
+                %{{ member.attendance_rate }}
+            </span>
+        </div>
+        <div class="w-full bg-zinc-800 rounded-full h-1.5 overflow-hidden">
+            <div class="h-1.5 rounded-full {% if member.attendance_rate >= 80 %}bg-green-500{% elif member.attendance_rate >= 50 %}bg-yellow-500{% else %}bg-red-500{% endif %}" style="width: {{ member.attendance_rate }}%"></div>
+        </div>
+    </div>
+    {% endif %}
     
     <!-- Badgeler -->
     <div class="mt-auto flex flex-wrap gap-1 justify-center">

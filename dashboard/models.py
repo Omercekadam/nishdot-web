@@ -5,6 +5,7 @@ class MeetingNote(models.Model):
     title = models.CharField(max_length=200, verbose_name="Toplantı Başlığı")
     content = models.TextField(verbose_name="Notlar")
     author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, verbose_name="Yazar")
+    attendees = models.ManyToManyField(settings.AUTH_USER_MODEL, blank=True, related_name="attended_meetings", verbose_name="Katılımcılar")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -96,3 +97,25 @@ class Announcement(models.Model):
 
     def __str__(self):
         return self.title
+
+class SecurityLog(models.Model):
+    class ActionType(models.TextChoices):
+        LOGIN_BRUTE_FORCE = "login_brute_force", "Giriş (Brute-Force) Sınırı"
+        REGISTER_SPAM = "register_spam", "Kayıt (Spam) Sınırı"
+        CONTACT_SPAM = "contact_spam", "İletişim Formu (Spam) Sınırı"
+        APPLY_SPAM = "apply_spam", "Başvuru (Spam) Sınırı"
+        OTHER = "other", "Diğer"
+
+    ip_address = models.GenericIPAddressField(verbose_name="IP Adresi")
+    action = models.CharField(max_length=50, choices=ActionType.choices, verbose_name="Engellenen İşlem")
+    user_agent = models.TextField(blank=True, verbose_name="Kullanıcı Tarayıcısı")
+    timestamp = models.DateTimeField(auto_now_add=True, verbose_name="Tarih / Saat")
+    resolved = models.BooleanField(default=False, verbose_name="İncelendi/Çözüldü")
+
+    class Meta:
+        ordering = ["-timestamp"]
+        verbose_name = "Güvenlik İhlali (Rate Limit)"
+        verbose_name_plural = "Güvenlik İhlalleri"
+
+    def __str__(self):
+        return f"{self.ip_address} - {self.get_action_display()} ({self.timestamp.strftime('%Y-%m-%d %H:%M')})"

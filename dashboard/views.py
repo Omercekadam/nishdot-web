@@ -136,7 +136,13 @@ class MeetingNotesView(StaffRequiredMixin, TemplateView):
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['notes'] = MeetingNote.objects.select_related('author').all().order_by('-created_at')
+        context['notes'] = MeetingNote.objects.select_related('author').prefetch_related('attendees').all().order_by('-created_at')
+        
+        User = get_user_model()
+        all_users = User.objects.all().order_by('first_name', 'username')
+        board_members = [u for u in all_users if u.role in ['admin', 'board'] or u.is_staff]
+        context['board_members'] = board_members
+        
         return context
 
 @staff_member_required
@@ -147,6 +153,7 @@ def api_save_note(request):
         note_id = data.get('note_id')
         title = data.get('title')
         content = data.get('content')
+        attendee_ids = data.get('attendees', [])
         
         if note_id:
             note = get_object_or_404(MeetingNote, id=note_id)
@@ -159,6 +166,11 @@ def api_save_note(request):
                 content=content,
                 author=request.user
             )
+            
+        if attendee_ids:
+            note.attendees.set(attendee_ids)
+        else:
+            note.attendees.clear()
             
         return JsonResponse({'success': True, 'note_id': note.id})
     except Exception as e:
@@ -378,6 +390,15 @@ class MembersDirectoryView(StaffRequiredMixin, TemplateView):
         board_members = [m for m in all_members if m.role in ['admin', 'board'] or m.is_staff]
         regular_members = [m for m in all_members if m not in board_members]
         
+        # Calculate attendance rate for board members
+        total_meetings = MeetingNote.objects.count()
+        for member in board_members:
+            if total_meetings > 0:
+                attended = member.attended_meetings.count()
+                member.attendance_rate = int((attended / total_meetings) * 100)
+            else:
+                member.attendance_rate = 0
+                
         context['board_members'] = board_members
         context['regular_members'] = regular_members
         context['total_members'] = len(all_members)
@@ -517,11 +538,16 @@ def api_create_broadcast(request):
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=400)
 
+from dashboard.models import SecurityLog
+
 class DashboardView(StaffRequiredMixin, TemplateView):
     template_name = "dashboard/index.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        
+        # Security Logs
+        context['security_logs'] = SecurityLog.objects.filter(resolved=False).order_by('-timestamp')[:10]
         
         all_jams = GameJam.objects.select_related('event').order_by("-created_at")
         jam_id = self.request.GET.get('jam')
@@ -638,3 +664,28 @@ def export_applications_csv(request):
         ])
         
     return response
+
+@staff_member_required
+@require_POST
+def api_resolve_log(request):
+    try:
+        data = json.loads(request.body)
+        log_id = data.get('log_id')
+        log = get_object_or_404(SecurityLog, id=log_id)
+        log.resolved = True
+        log.save()
+        return JsonResponse({'success': True})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+@staff_member_required
+@require_POST
+def api_delete_log(request):
+    try:
+        data = json.loads(request.body)
+        log_id = data.get('log_id')
+        log = get_object_or_404(SecurityLog, id=log_id)
+        log.delete()
+        return JsonResponse({'success': True})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)

@@ -8,6 +8,11 @@ class EventDetailView(DetailView):
     template_name = "events/event_detail.html"
     context_object_name = "event"
 
+from django.utils.decorators import method_decorator
+from django_ratelimit.decorators import ratelimit
+from dashboard.models import SecurityLog
+
+@method_decorator(ratelimit(key='ip', rate='5/h', block=False), name='post')
 class EventApplyWizardView(TemplateView):
     template_name = "events/event_apply.html"
 
@@ -17,6 +22,14 @@ class EventApplyWizardView(TemplateView):
         return context
 
     def post(self, request, *args, **kwargs):
+        if getattr(request, 'limited', False):
+            SecurityLog.objects.create(
+                ip_address=request.META.get('REMOTE_ADDR', ''),
+                action=SecurityLog.ActionType.APPLY_SPAM,
+                user_agent=request.META.get('HTTP_USER_AGENT', '')
+            )
+            return self.render_to_response(self.get_context_data(error="Kısa sürede çok fazla istek gönderdiniz. Lütfen 1 saat sonra tekrar deneyiniz."))
+
         event = get_object_or_404(Event, slug=self.kwargs['slug'])
         
         # Etkinliğe bağlı GameJam objesini al, yoksa form submit edilemez
