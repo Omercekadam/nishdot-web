@@ -117,6 +117,55 @@ def api_save_event(request):
         return JsonResponse({'success': False, 'error': str(e)}, status=400)
 
 @staff_member_required
+def api_event_games_list(request, pk):
+    from events.models import Event, EventGame
+    event = get_object_or_404(Event, pk=pk)
+    games = event.games.all()
+    
+    games_data = []
+    for g in games:
+        games_data.append({
+            'id': g.id,
+            'title': g.title,
+            'url': g.url,
+            'cover_url': g.cover_image.url if g.cover_image else ''
+        })
+    return JsonResponse({'games': games_data})
+
+@staff_member_required
+@require_POST
+def api_add_event_game(request):
+    from events.models import Event, EventGame
+    try:
+        event_id = request.POST.get('event_id')
+        title = request.POST.get('title')
+        url = request.POST.get('url')
+        cover_image = request.FILES.get('cover_image')
+        
+        event = get_object_or_404(Event, id=event_id)
+        
+        EventGame.objects.create(
+            event=event,
+            title=title,
+            url=url,
+            cover_image=cover_image
+        )
+        return JsonResponse({'success': True})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+@staff_member_required
+@require_POST
+def api_delete_event_game(request, pk):
+    from events.models import EventGame
+    try:
+        game = get_object_or_404(EventGame, pk=pk)
+        game.delete()
+        return JsonResponse({'success': True})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+@staff_member_required
 @require_POST
 def api_toggle_jam_status(request):
     try:

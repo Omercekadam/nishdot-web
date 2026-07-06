@@ -127,3 +127,68 @@ class RaffleParticipant(models.Model):
 
     def __str__(self):
         return f"{self.user.get_full_name()} - {self.raffle.title}"
+
+class EventGame(TimeStampedModel):
+    """
+    Geçmiş Jam veya etkinliklerde üretilen oyunları sergilemek için model.
+    """
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='games', verbose_name="Etkinlik")
+    title = models.CharField(max_length=200, verbose_name="Oyun Adı")
+    url = models.URLField(max_length=500, verbose_name="Oyun Linki (Itch.io vb.)")
+    cover_image = models.ImageField(upload_to="events/games/", verbose_name="Kapak Görseli")
+
+    class Meta(TimeStampedModel.Meta):
+        verbose_name = "Etkinlik Oyunu"
+        verbose_name_plural = "Etkinlik Oyunları"
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.title} ({self.event.title})"
+
+    def save(self, *args, **kwargs):
+        from io import BytesIO
+        from PIL import Image, ImageOps
+        from django.core.files.uploadedfile import InMemoryUploadedFile
+        import sys
+        import os
+
+        # Helper for compressing images
+        def compress_image(image_field, max_width=800):
+            if not image_field:
+                return image_field
+
+            if not hasattr(image_field.file, 'file'):
+                return image_field
+
+            img = Image.open(image_field)
+            img = ImageOps.exif_transpose(img)
+            if img.mode != 'RGB':
+                img = img.convert('RGB')
+
+            if img.width > max_width:
+                output_size = (max_width, int(img.height * (max_width / img.width)))
+                img = img.resize(output_size, Image.Resampling.LANCZOS)
+
+            output = BytesIO()
+            img.save(output, format='WebP', quality=85, method=6)
+            output.seek(0)
+
+            filename = os.path.splitext(image_field.name)[0] + '.webp'
+
+            return InMemoryUploadedFile(
+                output,
+                'ImageField',
+                filename,
+                'image/webp',
+                sys.getsizeof(output),
+                None
+            )
+
+        try:
+            old_obj = EventGame.objects.get(id=self.id)
+            if old_obj.cover_image != self.cover_image:
+                self.cover_image = compress_image(self.cover_image, max_width=800)
+        except EventGame.DoesNotExist:
+            self.cover_image = compress_image(self.cover_image, max_width=800)
+
+        super().save(*args, **kwargs)

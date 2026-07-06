@@ -11,6 +11,9 @@ urlpatterns = [
     # Workspace Routes
     path('events/', views.EventBuilderView.as_view(), name='events'),
     path('api/save-event/', views.api_save_event, name='api_save_event'),
+    path('api/events/<int:pk>/games/', views.api_event_games_list, name='api_event_games_list'),
+    path('api/add-event-game/', views.api_add_event_game, name='api_add_event_game'),
+    path('api/games/<int:pk>/delete/', views.api_delete_event_game, name='api_delete_event_game'),
     path('api/toggle-jam-status/', views.api_toggle_jam_status, name='api_toggle_jam_status'),
     path('notes/', views.MeetingNotesView.as_view(), name='notes'),
     path('api/save-note/', views.api_save_note, name='api_save_note'),
