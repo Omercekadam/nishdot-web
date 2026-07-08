@@ -1,106 +1,197 @@
-# Nishdot Web Platform - Sunucu Kurulum ve Deployment Rehberi
+# Nishdot Web Platform - Tam Kapsamlı VDS Deployment Rehberi 🚀
 
-Bu döküman, projenin canlı sunucuya (VPS) yüklenmesi sırasında sıfırdan yapılacak olan kurulum adımlarını, siber güvenlik önlemlerini ve güncelleme adımlarını içerir.
+Bu doküman, projeyi bilgisayarınızdan çıkarıp bir **VDS (Sanal Sunucu)** üzerinde canlıya (Production) almak için ihtiyacınız olan **her adımı** sıfırdan, eksiksiz ve en ince ayrıntısına kadar anlatmaktadır.
 
-## 0. Alan Adı (Domain) Yönlendirmesi
-`nishdot.com.tr` alan adınızı satın aldığınız firmanın (Örn: GoDaddy, Turhost vb.) DNS ayarlarına girerek sunucunuza yönlendirmeniz gerekir:
-1. DNS Yönetimi sayfasına gidin.
-2. Yeni bir **A Kaydı (A Record)** oluşturun.
-3. İsim/Host kısmına `@` veya boş bırakın, Hedef/Değer kısmına **VPS Sunucunuzun IP Adresini** yazın.
-4. Aynı şekilde İsim/Host kısmına `www` yazarak bir A kaydı daha oluşturun ve yine sunucu IP adresini yazın.
-*(Not: DNS yönlendirmelerinin tüm dünyada aktif olması birkaç saat sürebilir.)*
+---
 
-## 1. Sunucu Hazırlığı ve Siber Güvenlik (İlk Giriş)
-Sunucuya SSH ile bağlandıktan sonra sistem paketlerini güncelleyin:
+## 🌐 1. ADIM: Domain (Alan Adı) ve VDS Eşleştirmesi
+
+Kullanıcıların `nishdot.com.tr` yazdığında sunucunuza ulaşabilmesi için domaini VDS'e bağlamanız gerekir.
+
+1. Domaini satın aldığınız firmanın (GoDaddy, Turhost, Natro vb.) paneline giriş yapın.
+2. **DNS Yönetimi** (veya Gelişmiş DNS Ayarları) sekmesine gidin.
+3. Yeni bir **A Kaydı (A Record)** oluşturun:
+   - **İsim / Host / Ad:** `@` (veya boş bırakın)
+   - **Değer / Hedef / IP Adresi:** VDS Sunucunuzun IP Adresini yazın (Örn: `192.168.1.50`)
+   - **TTL:** Varsayılan (veya 1 Saat) bırakabilirsiniz.
+4. İkinci bir **A Kaydı** daha oluşturun (www yönlendirmesi için):
+   - **İsim / Host / Ad:** `www`
+   - **Değer / Hedef:** Yine VDS Sunucunuzun IP Adresi
+   
+*Not: Bu ayarın tüm dünyaya yayılması bazen 15 dakika, bazen 24 saat sürebilir. Ancak genelde çok kısa sürer.*
+
+---
+
+## 🛡️ 2. ADIM: VDS'e İlk Giriş ve Siber Güvenlik
+
+Sunucunuzu kiraladıktan sonra size bir IP adresi ve "root" şifresi verilir. Bilgisayarınızın terminalini (CMD/PowerShell veya Mac Terminal) açın ve sunucuya bağlanın:
+
 ```bash
-sudo apt update && sudo apt upgrade -y
+ssh root@sunucu_ip_adresiniz
+```
+*(Şifrenizi yazarken ekranda karakterler görünmez, yazıp Enter'a basın.)*
+
+**Sistemi Güncelleyin:**
+```bash
+apt update && apt upgrade -y
 ```
 
-**Siber Güvenlik Önlemleri:**
-Sistemi hackerlara ve botlara karşı korumak için Güvenlik Duvarı (UFW) ve Fail2Ban kurun:
+**Güvenlik Kalkanlarını (UFW ve Fail2Ban) Kurun:**
+Sunucunuzu internetteki botlardan ve saldırılardan korumak hayati önem taşır.
 ```bash
-sudo apt install -y ufw fail2ban
-# Sadece HTTP, HTTPS ve SSH bağlantılarına izin verin
-sudo ufw allow 80
-sudo ufw allow 443
-sudo ufw allow 22
-sudo ufw enable
-sudo systemctl enable fail2ban
-sudo systemctl start fail2ban
+apt install -y ufw fail2ban
 ```
-*(Güvenlik duvarı artık gereksiz tüm portları kapattı, Fail2Ban ise şifre deneyen botları banlayacaktır.)*
-
-Gerekli olan temel web bileşenlerini kurun:
+Sadece web sitesine (80 ve 443) ve SSH bağlantısına (22) izin verip diğer tüm kapıları kapatın:
 ```bash
-sudo apt install -y python3-pip python3-venv python3-dev libpq-dev postgresql postgresql-contrib nginx curl redis-server git
+ufw allow 80
+ufw allow 443
+ufw allow 22
+ufw enable
+```
+`Y` diyerek onaylayın. Fail2Ban'i başlatın (şifre deneyen botları otomatik engeller):
+```bash
+systemctl enable fail2ban
+systemctl start fail2ban
 ```
 
-## 2. PostgreSQL Veritabanı Kurulumu
-Django'nun verilerini tutacağı canlı veritabanını oluşturun:
-```bash
-sudo -u postgres psql
+---
 
-# Çıkan ekranda şu SQL komutlarını çalıştırın (Şifreyi kendi güvenli şifrenizle değiştirin):
+## 📦 3. ADIM: Gerekli Altyapıların Kurulumu
+
+Projeyi çalıştırmak için Nginx, PostgreSQL, Redis ve Python ortamlarını sunucuya indirin:
+```bash
+apt install -y python3-pip python3-venv python3-dev libpq-dev postgresql postgresql-contrib nginx curl redis-server git
+```
+
+---
+
+## 🗄️ 4. ADIM: PostgreSQL Veritabanı Kurulumu
+
+Django projeniz canlıdayken SQLite yerine çok daha güçlü olan PostgreSQL kullanmalıdır.
+PostgreSQL paneline girin:
+```bash
+su - postgres
+psql
+```
+
+Açılan SQL konsolunda aşağıdaki komutları sırayla çalıştırın (Lütfen `guclu_bir_sifre_belirleyin` kısmına kendi güvenli şifrenizi yazın):
+```sql
 CREATE DATABASE nishdot_db;
-CREATE USER nishdot_user WITH PASSWORD 'guclu_bir_sifre';
+CREATE USER nishdot_user WITH PASSWORD 'guclu_bir_sifre_belirleyin';
 ALTER ROLE nishdot_user SET client_encoding TO 'utf8';
 ALTER ROLE nishdot_user SET default_transaction_isolation TO 'read committed';
 ALTER ROLE nishdot_user SET timezone TO 'Europe/Istanbul';
 GRANT ALL PRIVILEGES ON DATABASE nishdot_db TO nishdot_user;
 \q
 ```
-
-## 3. Redis Kurulumu (Önbellekleme İçin)
-Redis zaten yukarıdaki adımda kuruldu. Sadece çalıştığından emin olun:
+Veritabanından çıkmak için:
 ```bash
-sudo systemctl enable redis-server
-sudo systemctl start redis-server
+exit
 ```
 
-## 4. Projeyi Sunucuya Çekme
+**Redis'i (Önbellekleme İçin) Başlatın:**
+```bash
+systemctl enable redis-server
+systemctl start redis-server
+```
+
+---
+
+## 📂 5. ADIM: Projeyi Sunucuya Çekme (Gizli/Private Repo Ayarı)
+
+Web sitelerinin sunucuda tutulduğu standart klasör olan `/var/www/` dizinine gidelim:
 ```bash
 cd /var/www
-sudo mkdir nishdot-web
-sudo chown $USER:$USER nishdot-web
-git clone https://github.com/Omercekadam/nishdot-web.git /var/www/nishdot-web
+mkdir nishdot-web
+```
+
+**ÖNEMLİ: Projeniz Private (Gizli) bir repo olduğu için, sunucuyu GitHub'a tanıtmalıyız.** Bunun en güvenli ve kalıcı yolu SSH Key (Deploy Key) kullanmaktır.
+
+1. Sunucuda yeni bir SSH anahtarı oluşturun:
+```bash
+ssh-keygen -t ed25519 -C "vds-sunucu"
+```
+*(Çıkan tüm sorulara hiçbir şey yazmadan doğrudan Enter'a basarak geçin).*
+
+2. Oluşturulan anahtarı ekrana yazdırın ve kopyalayın:
+```bash
+cat ~/.ssh/id_ed25519.pub
+```
+*(Ekranda `ssh-ed25519 AAA...` ile başlayan uzun bir metin çıkacak. Hepsini kopyalayın).*
+
+3. GitHub'a gidin:
+   - Projenizin sayfasına girin.
+   - **Settings** -> sol menüden **Deploy keys** sekmesine tıklayın.
+   - **Add deploy key** butonuna basın.
+   - Title kısmına "VDS Sunucu", Key kısmına ise kopyaladığınız metni yapıştırın.
+   - *Not: Sadece çekme (pull) işlemi yapacağımız için "Allow write access" kutusunu İŞARETLEMEYİN.*
+   - "Add key" diyerek kaydedin.
+
+4. Şimdi repoyu güvenle indirebiliriz (HTTPS yerine SSH linkini kullanıyoruz):
+```bash
+git clone git@github.com:Omercekadam/nishdot-web.git /var/www/nishdot-web
 cd /var/www/nishdot-web
 ```
 
-## 5. Sanal Ortam ve Kütüphanelerin Kurulumu
+---
+
+## 🐍 6. ADIM: Python Sanal Ortamı ve Kütüphaneler
+
+Sunucuda Python paketlerinin karışmaması için sanal ortam (venv) oluşturun:
 ```bash
 python3 -m venv venv
 source venv/bin/activate
+```
+Gerekli Django kütüphanelerini yükleyin:
+```bash
 pip install -r requirements/production.txt
+pip install gunicorn psycopg2-binary
 ```
 
-## 6. Çevre Değişkenleri (.env)
-Proje kök dizininde nano ile `.env` dosyası oluşturun:
+---
+
+## 🔐 7. ADIM: .env Dosyasının Hazırlanması
+
+Güvenlik bilgilerini (Şifreler, Secret Key vb.) GitHub'a yüklemediğimiz için, sunucuda bunu elle oluşturmalıyız.
 ```bash
 nano .env
 ```
-İçine şu bilgileri girin (Domain bilginizi buraya ekleyin):
+İçerisine şu bilgileri yapıştırın (Şifrenizi ve domaininizi kendinize göre güncelleyin):
 ```env
-DJANGO_SECRET_KEY=sizin_rastgele_uretilen_guvenli_anahtariniz
+DJANGO_SECRET_KEY=buraya_rastgele_uzun_karisik_bir_sifre_yazin
 DJANGO_DEBUG=False
-DJANGO_ALLOWED_HOSTS=nishdot.com.tr,www.nishdot.com.tr,sunucu_ip_adresi
-DATABASE_URL=postgres://nishdot_user:guclu_bir_sifre@127.0.0.1:5432/nishdot_db
+DJANGO_ALLOWED_HOSTS=nishdot.com.tr,www.nishdot.com.tr,sunucu_ip_adresiniz
+DATABASE_URL=postgres://nishdot_user:guclu_bir_sifre_belirleyin@127.0.0.1:5432/nishdot_db
 REDIS_URL=redis://127.0.0.1:6379/1
 ```
+*(Kaydetmek için `CTRL+X` yapın, `Y` tuşuna basın ve `Enter`'a basın.)*
 
-## 7. Migration ve Static Dosyaları Toplama
+---
+
+## ⚙️ 8. ADIM: Veritabanını Hazırlama ve Statik Dosyalar
+
+Veritabanı tablolarını oluşturun ve CSS/JS dosyalarını tek bir klasörde toplayın:
 ```bash
 export DJANGO_SETTINGS_MODULE=nishdot.settings.production
 python manage.py migrate
 python manage.py createsuperuser
+```
+*(Superuser oluştururken sizden sitenin yönetim paneli için admin kullanıcı adı ve şifre isteyecektir.)*
+
+Şimdi statik dosyaları toplayın:
+```bash
 python manage.py collectstatic --noinput
 ```
 
-## 8. Gunicorn Service (Arka Plan Servisi)
-Gunicorn'un sunucu her açıldığında otomatik çalışması için bir servis dosyası oluşturun:
+---
+
+## 🚀 9. ADIM: Gunicorn Servisi (7/24 Çalışma)
+
+Projenin terminal kapansa bile arka planda sonsuza kadar çalışması için Gunicorn servisi oluşturmalıyız.
 ```bash
-sudo nano /etc/systemd/system/gunicorn.service
+nano /etc/systemd/system/gunicorn.service
 ```
-İçerisine şu ayarları yapıştırın:
+İçerisine yapıştırın:
 ```ini
 [Unit]
 Description=gunicorn daemon for Nishdot
@@ -111,22 +202,28 @@ User=root
 Group=www-data
 WorkingDirectory=/var/www/nishdot-web
 Environment="DJANGO_SETTINGS_MODULE=nishdot.settings.production"
-ExecStart=/var/www/nishdot-web/venv/bin/gunicorn --access-logfile - --workers 5 --bind unix:/run/gunicorn.sock nishdot.wsgi:application
+ExecStart=/var/www/nishdot-web/venv/bin/gunicorn --access-logfile - --workers 3 --bind unix:/run/gunicorn.sock nishdot.wsgi:application
 
 [Install]
 WantedBy=multi-user.target
 ```
+*(Kaydedip çıkın: CTRL+X, Y, Enter)*
+
 Servisi başlatın:
 ```bash
-sudo systemctl start gunicorn
-sudo systemctl enable gunicorn
+systemctl start gunicorn
+systemctl enable gunicorn
 ```
 
-## 9. Nginx Konfigürasyonu (Domain Ayarı)
+---
+
+## 🌍 10. ADIM: Nginx (Web Sunucusu) Konfigürasyonu
+
+Dış dünyadan 80 portuna (İnternete) gelen istekleri alıp Django (Gunicorn) sistemine iletecek köprüyü kuruyoruz.
 ```bash
-sudo nano /etc/nginx/sites-available/nishdot
+nano /etc/nginx/sites-available/nishdot
 ```
-Şu konfigürasyonu yapıştırın (`server_name` kısmında domain yazmaktadır):
+İçerisine yapıştırın (Domainleri güncelleyin):
 ```nginx
 server {
     listen 80;
@@ -134,7 +231,7 @@ server {
 
     location = /favicon.ico { access_log off; log_not_found off; }
     
-    # Statik Dosyalar (CSS, JS) ve Medya (Resimler) - 30 Gün Cache!
+    # CSS, JS ve Resim dosyalarını Nginx üzerinden çok hızlı sunuyoruz
     location /static/ {
         root /var/www/nishdot-web;
         expires 30d;
@@ -153,51 +250,70 @@ server {
     }
 }
 ```
+*(Kaydedip çıkın: CTRL+X, Y, Enter)*
 
 Nginx'i aktifleştirin ve yeniden başlatın:
 ```bash
-sudo ln -s /etc/nginx/sites-available/nishdot /etc/nginx/sites-enabled
-sudo rm /etc/nginx/sites-enabled/default
-sudo nginx -t
-sudo systemctl restart nginx
-```
-
-Sistem artık çalışmaktadır! SSL/TLS sertifikası (HTTPS) için sunucuda şu komutu çalıştırarak ücretsiz Let's Encrypt kurulumu yapabilirsiniz:
-```bash
-sudo apt install python3-certbot-nginx
-sudo certbot --nginx -d nishdot.com.tr -d www.nishdot.com.tr
+ln -s /etc/nginx/sites-available/nishdot /etc/nginx/sites-enabled
+rm /etc/nginx/sites-enabled/default
+nginx -t
+systemctl restart nginx
 ```
 
 ---
 
-## 🔄 Sistemi Güncelleme (Update Rehberi)
-Gelecekte kodda bir değişiklik yaptığınızda ve bu güncellemeyi canlı sunucuya aktarmak istediğinizde şu adımları izlemelisiniz:
+## 🔒 11. ADIM: Ücretsiz SSL Sertifikası (HTTPS)
 
-1. Sunucuya SSH ile bağlanın ve proje klasörüne gidin:
+Kullanıcıların siteye "Güvenli Değil" uyarısı olmadan girebilmesi için Let's Encrypt kuralım:
 ```bash
+apt install -y python3-certbot-nginx
+certbot --nginx -d nishdot.com.tr -d www.nishdot.com.tr
+```
+*(Size e-posta soracaktır, e-postanızı girin, şartları kabul edin (Y). Otomatik olarak Nginx ayarlarınızı güncelleyecek ve sitenizi HTTPS yapacaktır.)*
+
+**Tebrikler! Sistem şu an tamamen yayında!** 🎉
+
+---
+---
+
+## 🔄 GELECEKTE NASIL GÜNCELLEME (UPDATE) YAPACAĞIM?
+
+Sistem canlıya alındıktan haftalar veya aylar sonra bilgisayarınızda yeni bir kod yazdınız, tasarımı değiştirdiniz ve GitHub'a yüklediniz. Bunu VDS'teki canlı siteye yansıtmak için **sadece şu adımları** uygulamanız yeterlidir:
+
+**1. Sunucuya Bağlanın ve Klasöre Gidin:**
+```bash
+ssh root@sunucu_ip_adresiniz
 cd /var/www/nishdot-web
 ```
 
-2. GitHub'dan yeni kodları çekin:
+**2. Yeni Kodları GitHub'dan Çekin:**
 ```bash
 git pull origin main
 ```
 
-3. Sanal ortamı aktif edip yeni kütüphane varsa kurun:
+**3. Sanal Ortamı Aktif Edin:**
 ```bash
 source venv/bin/activate
+```
+
+**4. (Sadece Yeni Kütüphane Varsa) Kütüphaneleri Güncelleyin:**
+Eğer `requirements.txt` dosyasına yeni bir paket eklediyseniz:
+```bash
 pip install -r requirements/production.txt
 ```
 
-4. Veritabanında (Migration) veya CSS dosyalarında (Static) bir değişiklik varsa güncelleyin:
+**5. Veritabanı ve CSS/JS Güncellemesi:**
+Eğer `models.py` içinde değişiklik yaptıysanız (yeni bir tablo, sütun eklendiyse) veya Tailwind CSS derlediyseniz:
 ```bash
 export DJANGO_SETTINGS_MODULE=nishdot.settings.production
 python manage.py migrate
 python manage.py collectstatic --noinput
 ```
 
-5. Gunicorn servisini yeniden başlatarak değişikliklerin aktif olmasını sağlayın:
+**6. Son Olarak Gunicorn'u Yeniden Başlatın:**
+Yazdığınız yeni Python kodlarının algılanması için servisi yeniden başlatmak şarttır:
 ```bash
-sudo systemctl restart gunicorn
+systemctl restart gunicorn
 ```
-*(Bitti! Güncellemeleriniz anında yayına alınmıştır.)*
+
+İşte bu kadar! Siteniz yeni sürümüyle saniyeler içerisinde çalışmaya devam edecektir.
