@@ -1,50 +1,51 @@
-# Nishdot Web Platform - Beta Sürümü
+# Nishdot Web Platform - Beta+ Sürümü 🚀
 
-![Nishdot Logo](docs/design/desktop-homepage.png) *(Dijital Oyun Tasarımı Kulübü)*
+![Nishdot Logo](docs/design/desktop-homepage.png) *(Dijital Oyun Tasarımı Kulübü - Nishdot)*
 
-İstanbul Nişantaşı Üniversitesi Dijital Oyun Tasarımı Kulübü (Nishdot) için geliştirilen resmi web platformu. Bu proje, kulüp üyelerini bir araya getirmeyi, etkinlikleri duyurmayı ve özellikle Game Jam süreçlerini modern bir arayüzle otomatize etmeyi amaçlayan dinamik bir sistemdir.
+İstanbul Nişantaşı Üniversitesi Dijital Oyun Tasarımı Kulübü (Nishdot) için geliştirilen resmi web platformu. Bu proje, kulüp üyelerini bir araya getirmeyi, etkinlikleri duyurmayı ve özellikle Game Jam süreçlerini modern bir arayüzle otomatize etmeyi amaçlayan dinamik, siberpunk esintili bir yönetim sistemidir.
 
-## 🌟 Beta Sürümü Gelişmeleri (Milestone Tamamlandı)
+## 🌟 Son Gelişmeler & Özellikler (Beta+)
 
-Projenin temel mimarisinin ardından, kullanıcı deneyimini merkeze alan sistemler başarıyla sisteme entegre edildi ve platform "Beta" aşamasına ulaştı:
+Platform, kullanıcı deneyimini merkeze alan sistemlerle donatıldı ve etkinlik yönetimi yapısı kusursuz bir mimariye oturtuldu:
 
-- **Gelişmiş Kullanıcı Paneli (Dashboard):** 
-  - Üyelerin profillerini düzenleyebilecekleri, "Ad, Soyad, TC, Telefon, Portfolyo" gibi detaylı bilgilerini yönetebilecekleri yönetim paneli.
-  - Öğrencilerin yaptıkları Game Jam başvurularını listeleyebileceği, detaylarını (Salt-Okunur modda) şık bir pencerede inceleyebileceği özel arayüz.
+- **Gelişmiş Etkinlik Yönetimi (Karargah - Dashboard):** 
+  - Sadece Game Jam'leri değil; Workshop, Buluşma, Seminer ve diğer tüm etkinlikleri tek bir merkezden oluşturma ve yönetme imkanı.
+  - **Zengin Metin Editörü (Rich Text Editor):** Etkinlik açıklamalarını HTML bilmeden kalın, italik, liste ve başlık gibi formatlarla şık bir şekilde yazmayı sağlayan Quill.js entegrasyonu.
+  - **Dinamik Başvuru Kontrolü:** Başvuruları tek tuşla tüm etkinlik türleri için açıp kapatabilme (`is_applications_open` evrensel mimarisi).
+  - **Akıllı Görsel Kırpma:** Etkinlik afişlerini tam 16:9 oranında yüklerken tarayıcı üzerinde canlı kırpma (Cropper.js) özelliği.
+
+- **Kullanıcı Paneli & Profil Yönetimi:** 
+  - Üyelerin profillerini düzenleyebilecekleri, detaylı bilgilerini (TC, Telefon, Portfolyo vb.) güvenle yönetebilecekleri "Ajan" (Agent) profili stili panel.
+  - Yapılan tüm Game Jam ve etkinlik başvurularını listeleyip, takım ve katılım detaylarını (Salt-Okunur modda) inceleyebilecekleri özel arayüz.
   
 - **Duyuru Merkezi & Broadcast Sistemi (HQ):**
-  - Yönetim kurulunun (Admin/Board) etkinlikleri ve kulüp haberlerini duyurabileceği gelişmiş yayın merkezi.
-  - **Akıllı Hedef Kitle (Target Audience):** Duyuruları "Tüm Üyelere", "Sadece Yönetim Kuruluna" veya "Özel Seçilmiş Kullanıcılara" gönderebilme esnekliği.
-  - **Çift Yönlü İletişim:** Duyuruları hem kullanıcıların site içi panosuna (Dashboard) yansıtma hem de tek tuşla SMTP üzerinden e-posta olarak gönderme özelliği.
-  - **İnteraktif Bildirimler:** Üyelerin okudukları duyuruları panolarından şık bir animasyonla "gizleyebildiği" (Dismiss) kişiselleştirilmiş okuma deneyimi.
+  - Yönetim kurulunun etkinlikleri ve kulüp haberlerini duyurabileceği gelişmiş yayın merkezi.
+  - **Akıllı Hedef Kitle (Target Audience):** Duyuruları "Tüm Üyelere", "Sadece Yönetim Kuruluna" veya "Özel Seçilmiş Kullanıcılara" gönderebilme.
+  - **İnteraktif Bildirimler:** Üyelerin okudukları duyuruları panolarından şık bir animasyonla gizleyebildiği (Dismiss) kişiselleştirilmiş deneyim.
 
 - **Matchmaker (Takım Eşleştirici) Altyapısı:**
-  - Kullanıcıların "Ekip Arıyorum" veya "Ekibim Var" durumlarını takip eden arayüz bileşenleri.
-  - Yönetim tarafından bir eşleşme yapıldığında (Takım atandığında) öğrencinin panelinde şık bir bildirimle takım bilgisinin gösterilmesi.
+  - Game Jam süreçlerinde "Ekip Arıyorum" veya "Ekibim Var" algoritmalarıyla öğrencileri tek potada eriten sistem.
+  - Yönetim tarafından atanan takımların anında öğrenci paneline bildirim olarak düşmesi.
 
 - **Siberpunk & Kusursuz Tema (Design Polish):** 
-  - Tailwind CSS JIT ile tamamen milimetrik olarak hizalanmış pürüzsüz arayüz hatları. Modallar, Z-Index hiyerarşileri, karanlık tema kontrastları ve boş durum (Empty State) mesajlarıyla zenginleştirilmiş kullanıcı deneyimi.
+  - Tailwind CSS ile tamamen milimetrik olarak hizalanmış pürüzsüz arayüz hatları. 
+  - Siyah/Çinko mat arka planlar ve "Nish Pembesi" (`#eb596d`) ile neon kontrastı. 
+  - Modallar, özel kaydırma çubukları (custom scrollbar), empty state (boş durum) uyarıları ve mikro-animasyonlarla zenginleştirilmiş akıcı deneyim.
 
 ## 🚧 Sıradaki Hedefler (Optimizasyon & Deployment)
 
 - **Production Ortamına Geçiş:** Sistemin canlı sunuculara, PostgreSQL ve Nginx/Gunicorn konfigürasyonlarıyla aktarılması.
-- **Güvenlik ve Optimizasyon Testleri:** Veritabanı N+1 sorgularının detaylı analizi, önbellekleme (Caching) stratejilerinin uygulanması.
-- **Discord Entegrasyonu:** Duyuru merkezinden atılan mesajların doğrudan Discord sunucusuna da Webhook aracılığıyla iletilmesi.
+- **Güvenlik ve Performans:** Veritabanı N+1 sorgularının engellenmesi, önbellekleme (Caching) stratejilerinin uygulanması.
+- **Discord Webhook Entegrasyonu:** HQ'dan atılan duyuruların doğrudan Discord sunucusuna resmi bir duyuru olarak iletilmesi.
 
 ## 🛠 Teknoloji Yığını
 
-- **Backend:** Python 3.12+, Django 6.0.6
-- **Frontend:** Django Templates + Tailwind CSS v4 (Monolitik Mimari - SPA yok)
+- **Backend:** Python 3.12+, Django 5.x
+- **Frontend:** Django Templates + Tailwind CSS v4 (Vanilla JS ile SPA hissiyatı)
 - **Veritabanı:** SQLite (Geliştirme) / PostgreSQL (Production)
+- **Özel Eklentiler:** Quill.js (Rich Text), Cropper.js (Görsel İşleme)
 - **Ortam Yönetimi:** `django-environ` ile güvenli ortam değişkenleri
 
-## 🏗 Proje Mimarisi ("No Vibe Coding")
-
-Bu proje, **"No Vibe Coding"** manifestosu ile geliştirilmektedir.
-- Katı bir mimari disiplin izlenir (PEP 8, İngilizce isimlendirme).
-- **Split Settings:** `base.py`, `development.py`, `production.py` olarak ayrılmış ortam ayarları.
-- **N+1 Sorgu Yasağı:** View'larda her zaman `select_related` ve `prefetch_related` kullanımı zorunludur.
-- Tasarımda katı spacing kuralları, mat karanlık detaylar ve özenli UI/UX kararları esastır.
 
 ## 🚀 Kurulum (Geliştiriciler İçin)
 
@@ -67,8 +68,9 @@ pip install -r requirements/development.txt
 ```
 
 ### 4. Frontend (Tailwind CSS) Derleme
+Projeyi geliştirirken Tailwind'in anlık derlenmesi için yeni bir terminalde şu komutu çalıştırın:
 ```bash
-npx tailwindcss -i ./static/css/input.css -o ./static/css/output.css --watch
+npx @tailwindcss/cli -i ./static/css/input.css -o ./static/css/output.css --watch
 ```
 
 ### 5. Veritabanı ve Çalıştırma
