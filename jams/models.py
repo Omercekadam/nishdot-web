@@ -18,7 +18,6 @@ class GameJam(TimeStampedModel):
     )
     application_deadline  = models.DateTimeField(verbose_name="Başvuru Bitiş Tarihi")
     max_team_size         = models.PositiveSmallIntegerField(default=5, verbose_name="Maksimum Takım Boyutu")
-    is_applications_open  = models.BooleanField(default=False, verbose_name="Başvurular Açık Mı?")
 
     # Her jam'de değişebilecek roller — JSON formatında
     # Örnek: ["Developer", "3D Artist", "2D Artist", "Game Designer", "Sound Designer"]

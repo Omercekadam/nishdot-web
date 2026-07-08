@@ -53,13 +53,11 @@
                         <span class="block mt-1">Tarih: {{ event.start_date|date:"d M Y" }}</span>
                     </div>
                     <div class="flex gap-2">
-                        {% if event.event_type == 'game_jam' and event.jam %}
-                        <button onclick="toggleJamStatus({{ event.jam.id }}, this)" class="p-2 {% if event.jam.is_applications_open %}bg-green-500/10 text-green-400 hover:bg-green-500{% else %}bg-red-500/10 text-red-400 hover:bg-red-500{% endif %} rounded-xl hover:text-white transition-colors" title="Başvuruları Aç/Kapat">
+                        <button onclick="toggleJamStatus({{ event.id }}, this)" class="p-2 {% if event.is_applications_open %}bg-green-500/10 text-green-400 hover:bg-green-500{% else %}bg-red-500/10 text-red-400 hover:bg-red-500{% endif %} rounded-xl hover:text-white transition-colors" title="Başvuruları Aç/Kapat">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
                             </svg>
                         </button>
-                        {% endif %}
                         <button onclick="openGamesModal({{ event.id }}, '{{ event.title|escapejs }}')" class="p-2 bg-indigo-500/10 text-indigo-400 rounded-xl hover:bg-indigo-500 hover:text-white transition-colors" title="Oyunları Yönet">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
@@ -163,11 +161,11 @@
                             <label class="block text-sm font-medium text-brand-pink mb-2">Açık Roller (Virgülle ayırın)</label>
                             <input type="text" id="evRoles" value="Developer, 3D Artist, 2D Artist, Game Designer, Sound Designer" class="w-full bg-zinc-950 border border-zinc-800 text-white rounded-xl px-4 py-3 focus:outline-none focus:border-brand-pink transition-all">
                         </div>
+                    </div> <!-- /jamFieldsWrapper -->
 
-                        <div class="col-span-full flex items-center mt-2">
-                            <input type="checkbox" id="evStatus" checked class="w-5 h-5 rounded bg-zinc-950 border-zinc-800 text-brand-pink focus:ring-brand-pink cursor-pointer">
-                            <label for="evStatus" class="ml-3 text-sm font-medium text-zinc-300 cursor-pointer">Başvurular Açık Olarak Başlat</label>
-                        </div>
+                    <div class="col-span-full flex items-center mt-2">
+                        <input type="checkbox" id="evStatus" checked class="w-5 h-5 rounded bg-zinc-950 border-zinc-800 text-brand-pink focus:ring-brand-pink cursor-pointer">
+                        <label for="evStatus" class="ml-3 text-sm font-medium text-zinc-300 cursor-pointer">Başvurular Açık Olarak Başlat (Tüm Etkinlikler İçin)</label>
                     </div>
 
                     <!-- Açıklama -->
@@ -198,10 +196,10 @@
          data-start="{{ event.start_date|date:'Y-m-d\TH:i' }}"
          data-end="{{ event.end_date|date:'Y-m-d\TH:i' }}"
          data-location="{{ event.location }}"
+         data-isopen="{{ event.is_applications_open|yesno:'true,false' }}"
          {% if event.jam %}
          data-deadline="{{ event.jam.application_deadline|date:'Y-m-d\TH:i' }}"
          data-teamsize="{{ event.jam.max_team_size }}"
-         data-isopen="{{ event.jam.is_applications_open|yesno:'true,false' }}"
          data-roles="{{ event.jam.available_roles|join:', ' }}"
          {% endif %}>
     </div>
@@ -246,12 +244,12 @@
                 document.getElementById('evStart').value = dataDiv.getAttribute('data-start');
                 document.getElementById('evEnd').value = dataDiv.getAttribute('data-end');
                 document.getElementById('evLocation').value = dataDiv.getAttribute('data-location');
+                document.getElementById('evStatus').checked = dataDiv.getAttribute('data-isopen') === 'true';
                 
                 if (dataDiv.getAttribute('data-type') === 'game_jam') {
                     document.getElementById('evDeadline').value = dataDiv.getAttribute('data-deadline');
                     document.getElementById('evTeamSize').value = dataDiv.getAttribute('data-teamsize');
                     document.getElementById('evRoles').value = dataDiv.getAttribute('data-roles');
-                    document.getElementById('evStatus').checked = dataDiv.getAttribute('data-isopen') === 'true';
                 }
             }
         }
@@ -306,11 +304,12 @@
         formData.append('location', document.getElementById('evLocation').value);
         formData.append('description', document.getElementById('evDescription').value);
         
+        formData.append('is_applications_open', document.getElementById('evStatus').checked);
+        
         if (document.getElementById('evType').value === 'game_jam') {
             formData.append('application_deadline', document.getElementById('evDeadline').value);
             formData.append('max_team_size', document.getElementById('evTeamSize').value);
             formData.append('available_roles', document.getElementById('evRoles').value);
-            formData.append('is_applications_open', document.getElementById('evStatus').checked);
         }
 
         // Eğer kırpıcı aktifse kırpılmış görseli gönder ve orijinali de ekle
@@ -333,7 +332,7 @@
         }
     });
 
-    async function toggleJamStatus(jamId, btnElement) {
+    async function toggleJamStatus(eventId, btnElement) {
         const originalHtml = btnElement.innerHTML;
         btnElement.innerHTML = '<svg class="animate-spin h-5 w-5 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>';
         btnElement.disabled = true;
@@ -345,7 +344,7 @@
                     "Content-Type": "application/json",
                     "X-CSRFToken": "{{ csrf_token }}"
                 },
-                body: JSON.stringify({ jam_id: jamId })
+                body: JSON.stringify({ event_id: eventId })
             });
 
             const result = await res.json();

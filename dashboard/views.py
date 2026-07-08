@@ -63,6 +63,7 @@ def api_save_event(request):
                 event.end_date = end_date
                 event.location = location
                 event.event_type = event_type
+                event.is_applications_open = is_open
                 if cover_image:
                     event.cover_image = cover_image
                 if thumbnail:
@@ -75,14 +76,12 @@ def api_save_event(request):
                         jam.application_deadline = deadline
                         jam.max_team_size = max_team
                         jam.available_roles = roles
-                        jam.is_applications_open = is_open
                         jam.save()
                     else:
                         GameJam.objects.create(
                             event=event,
                             application_deadline=deadline,
                             max_team_size=max_team,
-                            is_applications_open=is_open,
                             available_roles=roles
                         )
             else:
@@ -94,7 +93,8 @@ def api_save_event(request):
                     status=Event.Status.PUBLISHED,
                     start_date=start_date,
                     end_date=end_date,
-                    location=location
+                    location=location,
+                    is_applications_open=is_open
                 )
                 if cover_image:
                     event.cover_image = cover_image
@@ -108,7 +108,6 @@ def api_save_event(request):
                         event=event,
                         application_deadline=deadline,
                         max_team_size=max_team,
-                        is_applications_open=is_open,
                         available_roles=roles
                     )
             
@@ -168,15 +167,23 @@ def api_delete_event_game(request, pk):
 @staff_member_required
 @require_POST
 def api_toggle_jam_status(request):
+    from events.models import Event
     try:
         data = json.loads(request.body)
-        jam_id = data.get('jam_id')
+        event_id = data.get('event_id')
         
-        jam = get_object_or_404(GameJam, id=jam_id)
-        jam.is_applications_open = not jam.is_applications_open
-        jam.save()
+        if event_id:
+            event = get_object_or_404(Event, id=event_id)
+        else:
+            # Fallback for old requests passing jam_id
+            jam_id = data.get('jam_id')
+            jam = get_object_or_404(GameJam, id=jam_id)
+            event = jam.event
+            
+        event.is_applications_open = not event.is_applications_open
+        event.save()
         
-        return JsonResponse({'success': True, 'is_open': jam.is_applications_open})
+        return JsonResponse({'success': True, 'is_open': event.is_applications_open})
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=400)
 

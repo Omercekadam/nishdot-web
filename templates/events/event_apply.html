@@ -16,7 +16,8 @@
             <p class="text-zinc-400 text-lg">{{ event.title }} etkinliği için kayıt adımlarını tamamla.</p>
         </div>
 
-        <!-- İlerleme Çubuğu (Progress Bar) -->
+        <!-- İlerleme Çubuğu (Progress Bar) (Sadece Game Jam) -->
+        {% if event.event_type == 'game_jam' %}
         <div class="flex justify-between items-center mb-12 max-w-2xl mx-auto w-full">
             
             <!-- Adım 1 -->
@@ -46,6 +47,7 @@
                 </div>
             </div>
         </div>
+        {% endif %}
 
         <!-- Form Konteynırı -->
         <div class="w-full max-w-4xl mx-auto p-10 bg-zinc-800 rounded-2xl border border-white/5">
@@ -70,6 +72,7 @@
                 <form id="apply-form" method="POST" action="" class="progressive-form">
                     {% csrf_token %}
                 
+                {% if event.event_type == 'game_jam' %}
                 <!-- ADIM 1: Kişisel Bilgiler -->
                 <div id="step-1" class="form-step animate-fade-in block">
                     <h2 class="text-2xl font-semibold text-zinc-100 mb-6 flex items-center gap-3">
@@ -262,6 +265,86 @@
                     </div>
                 </div>
 
+                {% else %}
+                <!-- DİĞER ETKİNLİKLER İÇİN HIZLI FORM -->
+                <div class="form-step animate-fade-in block">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-gray-300 mb-4">Nişantaşı Üniversitesi öğrencisi misiniz? *</label>
+                            <div class="flex gap-4">
+                                <label class="cursor-pointer flex-1">
+                                    <input type="radio" name="is_nisantasi_student" value="yes" class="peer sr-only" required onchange="toggleTckn(false)">
+                                    <div class="p-4 rounded-xl border border-zinc-700 bg-zinc-800/50 hover:border-brand-pink/50 peer-checked:border-brand-pink peer-checked:bg-brand-pink/10 transition-all text-center">
+                                        <span class="block text-zinc-300 font-medium peer-checked:text-brand-pink">Evet, öğrenciyim</span>
+                                    </div>
+                                </label>
+                                <label class="cursor-pointer flex-1">
+                                    <input type="radio" name="is_nisantasi_student" value="no" class="peer sr-only" required onchange="toggleTckn(true)">
+                                    <div class="p-4 rounded-xl border border-zinc-700 bg-zinc-800/50 hover:border-brand-pink/50 peer-checked:border-brand-pink peer-checked:bg-brand-pink/10 transition-all text-center">
+                                        <span class="block text-zinc-300 font-medium peer-checked:text-brand-pink">Hayır, dışarıdan geliyorum</span>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div id="tckn-container" class="md:col-span-2 hidden">
+                            <label class="block text-sm font-medium text-gray-300 mb-2">T.C. Kimlik Numarası <span class="text-xs text-zinc-500 font-normal">(Kampüse misafir girişi için güvenlik amaçlı zorunludur)</span> *</label>
+                            <input type="text" name="national_id" id="national_id_input" pattern="\d{11}" maxlength="11" class="form-input" placeholder="11 haneli T.C. Kimlik No">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Ad Soyad *</label>
+                            <input type="text" name="full_name" required class="form-input" placeholder="Ad Soyad" value="{% if user.is_authenticated %}{{ user.first_name }} {{ user.last_name }}{% endif %}">
+                        </div>
+                        <div>
+                            <label for="email" class="block text-sm font-medium text-gray-300 mb-2">E-Posta Adresi *</label>
+                            <input type="email" name="email" id="email" required class="form-input" placeholder="ornek@email.com" value="{% if user.is_authenticated %}{{ user.email }}{% endif %}">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Üniversite *</label>
+                            <input type="text" name="university" required class="form-input" placeholder="Okuduğunuz Üniversite" value="{% if user.is_authenticated %}{{ user.university|default:'' }}{% endif %}">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Bölüm *</label>
+                            <input type="text" name="department" required class="form-input" placeholder="Bölümünüz" value="{% if user.is_authenticated %}{{ user.department|default:'' }}{% endif %}">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Sınıf *</label>
+                            <select name="grade" required class="form-input">
+                                <option value="" disabled selected>Seçiniz</option>
+                                <option value="Hazırlık">Hazırlık</option>
+                                <option value="1. Sınıf">1. Sınıf</option>
+                                <option value="2. Sınıf">2. Sınıf</option>
+                                <option value="3. Sınıf">3. Sınıf</option>
+                                <option value="4. Sınıf">4. Sınıf</option>
+                                <option value="Mezun">Mezun</option>
+                                <option value="Diğer">Diğer</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-8 pt-8 border-t border-zinc-700/50">
+                        <!-- KVKK Onayı (Aydınlatma Metni - Zorunlu) -->
+                        <div class="p-6 border border-zinc-700/50 bg-zinc-900/50 rounded-xl">
+                            <label class="flex items-start gap-4 cursor-pointer">
+                                <div class="mt-1">
+                                    <input type="checkbox" name="kvkk_accepted" required class="w-5 h-5 rounded border-zinc-600 bg-zinc-800 text-brand-pink focus:ring-brand-pink/50 focus:ring-offset-zinc-900">
+                                </div>
+                                <span class="text-sm text-zinc-400 leading-relaxed">
+                                    6698 sayılı Kişisel Verilerin Korunması Kanunu (KVKK) kapsamında, paylaştığım kişisel verilerimin Nişantaşı Üniversitesi Dijital Oyun Tasarımı Kulübü tarafından işlenmesine dair <a href="/kvkk/" target="_blank" class="text-brand-pink hover:underline">Aydınlatma Metni</a>'ni okudum ve anladım. *
+                                </span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="mt-8 flex justify-end">
+                        <button type="submit" class="btn-primary w-full md:w-auto px-10 py-3 shadow-[0_0_20px_rgba(235,89,109,0.4)] hover:shadow-[0_0_35px_rgba(235,89,109,0.8)]">
+                            Kaydı Tamamla
+                        </button>
+                    </div>
+                </div>
+                {% endif %}
+
             </form>
             {% endif %}
         </div>
@@ -271,6 +354,19 @@
 
 {% block extra_scripts %}
 <script>
+    function toggleTckn(show) {
+        const tcknInput = document.getElementById('national_id_input');
+        const container = document.getElementById('tckn-container');
+        if (show) {
+            container.classList.remove('hidden');
+            tcknInput.setAttribute('required', 'required');
+        } else {
+            container.classList.add('hidden');
+            tcknInput.removeAttribute('required');
+            tcknInput.value = '';
+        }
+    }
+
     function toggleTeamName(show) {
         const teamInput = document.getElementById('team_name');
         const container = document.getElementById('team-name-container');

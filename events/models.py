@@ -34,6 +34,7 @@ class Event(TimeStampedModel):
 
     cover_image = models.ImageField(upload_to="events/covers/", blank=True, verbose_name="Kapak Görseli")
     thumbnail   = models.ImageField(upload_to="events/thumbnails/", blank=True, verbose_name="Liste Görseli (Kırpılmış)")
+    is_applications_open = models.BooleanField(default=True, verbose_name="Başvurular Açık Mı?")
 
     class Meta(TimeStampedModel.Meta):
         verbose_name = "Etkinlik"
@@ -192,3 +193,27 @@ class EventGame(TimeStampedModel):
             self.cover_image = compress_image(self.cover_image, max_width=800)
 
         super().save(*args, **kwargs)
+
+class EventApplication(TimeStampedModel):
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="applications")
+    applicant = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name="event_applications",
+    )
+    full_name = models.CharField(max_length=200, verbose_name="Ad Soyad")
+    email = models.EmailField(verbose_name="E-posta")
+    university = models.CharField(max_length=200, verbose_name="Üniversite")
+    department = models.CharField(max_length=200, verbose_name="Bölüm")
+    grade = models.CharField(max_length=50, verbose_name="Sınıf")
+    is_nisantasi_student = models.BooleanField(default=True, verbose_name="Nişantaşı Öğrencisi mi?")
+    national_id = models.CharField(max_length=255, blank=True, verbose_name="T.C. Kimlik Numarası")
+    national_id_hash = models.CharField(max_length=64, blank=True, verbose_name="T.C. Kimlik Hash")
+    
+    class Meta(TimeStampedModel.Meta):
+        verbose_name = "Etkinlik Başvurusu"
+        verbose_name_plural = "Etkinlik Başvuruları"
+
+    def __str__(self):
+        return f"{self.full_name} - {self.event.title}"

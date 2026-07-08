@@ -14,8 +14,8 @@ class SuggestedTeamInline(admin.TabularInline):
 
 @admin.register(GameJam)
 class GameJamAdmin(admin.ModelAdmin):
-    list_display = ("event", "application_deadline", "is_applications_open", "max_team_size")
-    list_filter = ("is_applications_open",)
+    list_display = ("event", "application_deadline", "max_team_size")
+    list_filter = ("event__status",)
     search_fields = ("event__title",)
     inlines = [SuggestedTeamInline]
 

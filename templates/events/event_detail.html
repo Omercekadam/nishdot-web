@@ -36,12 +36,12 @@
                             {{ event.get_event_type_display }}
                         </span>
                         
-                        {% if event.status == 'published' %}
+                        {% if event.is_applications_open %}
                         <span class="px-3 py-1 bg-green-500/10 text-green-400 text-xs font-bold rounded-full border border-green-500/20 uppercase inline-flex items-center">
                             <span class="w-2 h-2 rounded-full bg-green-400 mr-2 animate-pulse"></span>
                             YAYINDA
                         </span>
-                        {% elif event.status == 'completed' %}
+                        {% else %}
                         <span class="px-3 py-1 bg-zinc-500/10 text-zinc-400 text-xs font-bold rounded-full border border-zinc-500/20 uppercase inline-flex items-center">
                             TAMAMLANDI
                         </span>
@@ -106,13 +106,13 @@
 
                 <!-- Aksiyon Alanı -->
                 <div class="mt-4 flex gap-4 items-center">
-                    {% if event.status == 'completed' %}
-                    <button disabled class="bg-zinc-800 text-zinc-500 cursor-not-allowed inline-flex items-center justify-center px-10 py-3 text-lg font-bold rounded-xl border border-zinc-700">
-                        Etkinlik Tamamlandı
-                    </button>
-                    {% elif event.event_type == 'game_jam' and event.jam and not event.jam.is_applications_open %}
+                    {% if not event.is_applications_open %}
                     <button disabled class="bg-zinc-800 text-zinc-500 cursor-not-allowed inline-flex items-center justify-center px-10 py-3 text-lg font-bold rounded-xl border border-zinc-700">
                         Başvurular Kapalı
+                    </button>
+                    {% elif event.status == 'completed' %}
+                    <button disabled class="bg-zinc-800 text-zinc-500 cursor-not-allowed inline-flex items-center justify-center px-10 py-3 text-lg font-bold rounded-xl border border-zinc-700">
+                        Etkinlik Tamamlandı
                     </button>
                     {% elif event.status == 'published' %}
                     <a href="{% url 'events:apply' event.slug %}" class="btn-primary inline-flex items-center justify-center px-10 py-3 text-lg font-bold">
@@ -132,7 +132,7 @@
         <div class="mt-16 max-w-4xl">
             <h2 class="text-2xl font-bold text-white mb-6">Etkinlik Hakkında</h2>
             <div class="text-gray-300 text-lg leading-relaxed">
-                {{ event.description|safe }}
+                {{ event.description|linebreaksbr|safe }}
             </div>
         </div>
 
