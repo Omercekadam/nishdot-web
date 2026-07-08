@@ -160,7 +160,7 @@
     <div class="max-w-7xl mx-auto mt-12 relative z-10">
         <h2 class="text-2xl font-bold text-white mb-6">Profil Bilgilerim</h2>
         <div class="bg-zinc-800/30 p-8 rounded-2xl border border-white/5 shadow-[0_8px_30px_rgb(0,0,0,0.5)] backdrop-blur-md">
-            <form method="POST" action="{% url 'users:dashboard' %}" class="space-y-6">
+            <form method="POST" action="{% url 'users:dashboard' %}" class="space-y-6 progressive-form">
                 {% csrf_token %}
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
