@@ -4,6 +4,32 @@
 <!-- Cropper.js -->
 <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
+
+<!-- Quill.js for Rich Text Editing -->
+<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+<script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+<style>
+.ql-toolbar.ql-snow {
+    background: #18181b; border-color: #27272a !important; border-top-left-radius: 0.75rem; border-top-right-radius: 0.75rem;
+}
+.ql-container.ql-snow {
+    background: #09090b; border-color: #27272a !important; border-bottom-left-radius: 0.75rem; border-bottom-right-radius: 0.75rem;
+    color: white; font-size: 1rem; font-family: inherit; min-height: 200px;
+}
+.ql-snow .ql-stroke { stroke: #a1a1aa !important; }
+.ql-snow .ql-fill { fill: #a1a1aa !important; }
+.ql-snow .ql-picker-label { color: #a1a1aa !important; }
+.ql-snow .ql-picker-options { background-color: #18181b !important; border-color: #27272a !important; }
+.ql-snow.ql-toolbar button:hover .ql-stroke, .ql-snow.ql-toolbar button.ql-active .ql-stroke, .ql-snow.ql-toolbar .ql-picker-label:hover .ql-stroke, .ql-snow.ql-toolbar .ql-picker-label.ql-active .ql-stroke, .ql-snow.ql-toolbar .ql-picker-item:hover .ql-stroke, .ql-snow.ql-toolbar .ql-picker-item.ql-selected .ql-stroke, .ql-snow.ql-toolbar button:hover .ql-stroke-miter, .ql-snow.ql-toolbar button.ql-active .ql-stroke-miter, .ql-snow.ql-toolbar .ql-picker-label:hover .ql-stroke-miter, .ql-snow.ql-toolbar .ql-picker-label.ql-active .ql-stroke-miter, .ql-snow.ql-toolbar .ql-picker-item:hover .ql-stroke-miter, .ql-snow.ql-toolbar .ql-picker-item.ql-selected .ql-stroke-miter {
+    stroke: #eb596d !important;
+}
+.ql-snow.ql-toolbar button:hover .ql-fill, .ql-snow.ql-toolbar button.ql-active .ql-fill, .ql-snow.ql-toolbar .ql-picker-label:hover .ql-fill, .ql-snow.ql-toolbar .ql-picker-label.ql-active .ql-fill, .ql-snow.ql-toolbar .ql-picker-item:hover .ql-fill, .ql-snow.ql-toolbar .ql-picker-item.ql-selected .ql-fill, .ql-snow.ql-toolbar button:hover .ql-stroke.ql-fill, .ql-snow.ql-toolbar button.ql-active .ql-stroke.ql-fill, .ql-snow.ql-toolbar .ql-picker-label:hover .ql-stroke.ql-fill, .ql-snow.ql-toolbar .ql-picker-label.ql-active .ql-stroke.ql-fill, .ql-snow.ql-toolbar .ql-picker-item:hover .ql-stroke.ql-fill, .ql-snow.ql-toolbar .ql-picker-item.ql-selected .ql-stroke.ql-fill {
+    fill: #eb596d !important;
+}
+.ql-snow.ql-toolbar .ql-picker-item.ql-selected, .ql-snow.ql-toolbar .ql-picker-item:hover, .ql-snow.ql-toolbar .ql-picker-label.ql-active, .ql-snow.ql-toolbar .ql-picker-label:hover, .ql-snow.ql-toolbar button.ql-active, .ql-snow.ql-toolbar button:focus, .ql-snow.ql-toolbar button:hover {
+    color: #eb596d !important;
+}
+</style>
 {% endblock %}
 
 {% block dashboard_content %}
@@ -44,7 +70,7 @@
                         {{ event.get_event_type_display }}
                     </span>
                 </div>
-                <p class="text-sm text-zinc-400 line-clamp-2 mb-4">{{ event.description }}</p>
+                <p class="text-sm text-zinc-400 line-clamp-2 mb-4">{{ event.description|striptags }}</p>
                 <div class="mt-auto pt-4 border-t border-zinc-800 text-sm text-zinc-500 flex justify-between items-center">
                     <div>
                         {% if event.event_type == 'game_jam' and event.jam %}
@@ -169,13 +195,13 @@
                     </div>
 
                     <!-- Açıklama -->
-                    <div class="col-span-full">
+                    <div class="col-span-full mb-6">
                         <label class="block text-sm font-medium text-zinc-300 mb-2">Etkinlik Açıklaması</label>
-                        <textarea id="evDescription" rows="4" class="w-full bg-zinc-950 border border-zinc-800 text-white rounded-xl px-4 py-3 focus:outline-none focus:border-brand-pink transition-all"></textarea>
+                        <div id="evDescriptionEditor"></div>
                     </div>
                 </div>
 
-                <div class="flex justify-end pt-4 border-t border-zinc-800">
+                <div class="flex justify-end pt-6 mt-6 border-t border-zinc-800">
                     <button type="submit" id="btnSubmitEvent" class="bg-brand-pink hover:bg-brand-pink/90 text-white font-semibold py-3 px-6 rounded-xl transition-all shadow-[0_4px_14px_rgba(235,89,109,0.39)]">
                         Kaydet
                     </button>
@@ -208,6 +234,20 @@
 
 <script>
     let cropper = null;
+    let quill = new Quill('#evDescriptionEditor', {
+        theme: 'snow',
+        placeholder: 'Etkinlik hakkında detaylı bilgi yazın...',
+        modules: {
+            toolbar: [
+                ['bold', 'italic', 'underline', 'strike'],        // toggled buttons
+                ['blockquote', 'code-block'],
+                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+                [{ 'color': [] }, { 'background': [] }],          // dropdown with defaults from theme
+                ['clean']                                         // remove formatting button
+            ]
+        }
+    });
 
     function toggleJamFields() {
         const type = document.getElementById('evType').value;
@@ -240,7 +280,13 @@
                 document.getElementById('evId').value = dataDiv.getAttribute('data-id');
                 document.getElementById('evType').value = dataDiv.getAttribute('data-type');
                 document.getElementById('evTitle').value = dataDiv.getAttribute('data-title');
-                document.getElementById('evDescription').value = dataDiv.getAttribute('data-description');
+                
+                let desc = dataDiv.getAttribute('data-description');
+                if (desc && !desc.includes('<p>') && !desc.includes('<br>')) {
+                    desc = desc.replace(/\n/g, '<br>');
+                }
+                quill.root.innerHTML = desc || '';
+                
                 document.getElementById('evStart').value = dataDiv.getAttribute('data-start');
                 document.getElementById('evEnd').value = dataDiv.getAttribute('data-end');
                 document.getElementById('evLocation').value = dataDiv.getAttribute('data-location');
@@ -261,6 +307,7 @@
     function closeEventModal() {
         document.getElementById('createEventModal').classList.add('hidden');
         if(cropper) { cropper.destroy(); cropper = null; }
+        quill.root.innerHTML = '';
     }
 
     // Görüntü Yükleme ve Cropper Başlatma
@@ -302,7 +349,10 @@
         formData.append('start_date', document.getElementById('evStart').value);
         formData.append('end_date', document.getElementById('evEnd').value);
         formData.append('location', document.getElementById('evLocation').value);
-        formData.append('description', document.getElementById('evDescription').value);
+        
+        let descHtml = quill.root.innerHTML;
+        if (descHtml === '<p><br></p>') descHtml = '';
+        formData.append('description', descHtml);
         
         formData.append('is_applications_open', document.getElementById('evStatus').checked);
         
