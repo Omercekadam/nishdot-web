@@ -1,10 +1,10 @@
-# Nishdot Web Platform - Beta+ Sürümü 🚀
+# Nishdot Web Platform - Beta+ Sürümü 
 
 ![Nishdot Logo](docs/design/desktop-homepage.png) *(Dijital Oyun Tasarımı Kulübü - Nishdot)*
 
 İstanbul Nişantaşı Üniversitesi Dijital Oyun Tasarımı Kulübü (Nishdot) için geliştirilen resmi web platformu. Bu proje, kulüp üyelerini bir araya getirmeyi, etkinlikleri duyurmayı ve özellikle Game Jam süreçlerini modern bir arayüzle otomatize etmeyi amaçlayan dinamik, siberpunk esintili bir yönetim sistemidir.
 
-## 🌟 Son Gelişmeler & Özellikler (Beta+)
+##  Son Gelişmeler & Özellikler (Beta+)
 
 Platform, kullanıcı deneyimini merkeze alan sistemlerle donatıldı ve etkinlik yönetimi yapısı kusursuz bir mimariye oturtuldu:
 
@@ -32,13 +32,13 @@ Platform, kullanıcı deneyimini merkeze alan sistemlerle donatıldı ve etkinli
   - Siyah/Çinko mat arka planlar ve "Nish Pembesi" (`#eb596d`) ile neon kontrastı. 
   - Modallar, özel kaydırma çubukları (custom scrollbar), empty state (boş durum) uyarıları ve mikro-animasyonlarla zenginleştirilmiş akıcı deneyim.
 
-## 🚧 Sıradaki Hedefler (Optimizasyon & Deployment)
+##  Sıradaki Hedefler (Optimizasyon & Deployment)
 
 - **Production Ortamına Geçiş:** Sistemin canlı sunuculara, PostgreSQL ve Nginx/Gunicorn konfigürasyonlarıyla aktarılması.
 - **Güvenlik ve Performans:** Veritabanı N+1 sorgularının engellenmesi, önbellekleme (Caching) stratejilerinin uygulanması.
 - **Discord Webhook Entegrasyonu:** HQ'dan atılan duyuruların doğrudan Discord sunucusuna resmi bir duyuru olarak iletilmesi.
 
-## 🛠 Teknoloji Yığını
+##  Teknoloji Yığını
 
 - **Backend:** Python 3.12+, Django 5.x
 - **Frontend:** Django Templates + Tailwind CSS v4 (Vanilla JS ile SPA hissiyatı)
@@ -47,7 +47,7 @@ Platform, kullanıcı deneyimini merkeze alan sistemlerle donatıldı ve etkinli
 - **Ortam Yönetimi:** `django-environ` ile güvenli ortam değişkenleri
 
 
-## 🚀 Kurulum (Geliştiriciler İçin)
+##  Kurulum (Geliştiriciler İçin)
 
 ### 1. Repoyu Klonlayın
 ```bash
