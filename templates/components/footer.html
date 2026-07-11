@@ -11,8 +11,17 @@
             made by cek
         </p>
 
+        <!-- Hukuki Linkler -->
+        <div class="flex gap-4 mt-2 text-zinc-500 text-xs">
+            <a href="{% url 'pages:legal_document' 'kvkk' %}" class="hover:text-brand-pink transition-colors">KVKK Aydınlatma Metni</a>
+            <span>|</span>
+            <a href="{% url 'pages:legal_document' 'gizlilik' %}" class="hover:text-brand-pink transition-colors">Gizlilik Politikası</a>
+            <span>|</span>
+            <a href="{% url 'pages:legal_document' 'kullanici-sozlesmesi' %}" class="hover:text-brand-pink transition-colors">Kullanıcı Sözleşmesi</a>
+        </div>
+
         <!-- Copyright -->
-        <p class="text-zinc-600 text-xs">
+        <p class="text-zinc-600 text-xs mt-2">
             © {% now "Y" %} Nishdot
         </p>
     </div>
