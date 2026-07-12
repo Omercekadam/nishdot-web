@@ -34,7 +34,7 @@
                     </svg>
                     CSV İndir
                 </button>
-                <button id="btn-bulk-email" class="bg-brand-pink text-white px-5 py-2 rounded-xl font-medium hover:bg-opacity-90 transition-colors flex items-center gap-2 shadow-[0_0_15px_rgba(235,89,109,0.3)]">
+                <button id="btn-bulk-email" data-jam-id="{{ jam.id }}" class="bg-brand-pink text-white px-5 py-2 rounded-xl font-medium hover:bg-opacity-90 transition-colors flex items-center gap-2 shadow-[0_0_15px_rgba(235,89,109,0.3)]">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                     </svg>
@@ -43,6 +43,43 @@
             </div>
             {% endif %}
         </div>
+
+        <!-- Toplu Mail Popup Modal -->
+        <div id="bulkEmailModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60 backdrop-blur-sm">
+            <div class="bg-zinc-900 border border-zinc-700 rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl">
+                <h3 class="text-xl font-bold text-white mb-2">Toplu Onay Mailleri</h3>
+                <p class="text-zinc-400 text-sm mb-6">Onaylanan adaylara gönderilecek maile eklenecek WhatsApp topluluk davet linkini girin.</p>
+                
+                <label class="block text-sm font-medium text-zinc-300 mb-2">WhatsApp Topluluk Davet Linki</label>
+                <input type="url" id="whatsappLinkInput" placeholder="https://chat.whatsapp.com/..." class="w-full bg-zinc-800 border border-zinc-600 text-white rounded-xl px-4 py-3 mb-6 focus:outline-none focus:border-brand-pink transition-colors placeholder-zinc-500">
+                
+                <div class="flex gap-3 justify-end">
+                    <button id="bulkEmailCancel" class="px-5 py-2.5 rounded-xl border border-zinc-600 text-zinc-300 hover:bg-zinc-800 transition-colors font-medium">İptal</button>
+                    <button id="bulkEmailNext" class="px-5 py-2.5 rounded-xl bg-brand-pink text-white font-medium hover:bg-opacity-90 transition-colors">Devam Et</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Onay Modal -->
+        <div id="bulkEmailConfirmModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60 backdrop-blur-sm">
+            <div class="bg-zinc-900 border border-zinc-700 rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-12 h-12 rounded-full bg-yellow-500/20 flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-white">Emin misiniz?</h3>
+                </div>
+                <p class="text-zinc-400 text-sm mb-6" id="bulkEmailSummary">Bu işlem geri alınamaz.</p>
+                
+                <div class="flex gap-3 justify-end">
+                    <button id="confirmCancel" class="px-5 py-2.5 rounded-xl border border-zinc-600 text-zinc-300 hover:bg-zinc-800 transition-colors font-medium">Vazgeç</button>
+                    <button id="confirmSend" class="px-5 py-2.5 rounded-xl bg-green-600 text-white font-medium hover:bg-green-700 transition-colors">Gönder</button>
+                </div>
+            </div>
+        </div>
+
 
         {% if jam %}
         <!-- Real-time Stats Bar -->
@@ -524,5 +561,98 @@
     applyRoleColors();
     parsePortfolios();
     updateStickyStats();
+
+    // =============================================
+    // Toplu Onay Mailleri
+    // =============================================
+    const bulkEmailBtn = document.getElementById('btn-bulk-email');
+    const bulkEmailModal = document.getElementById('bulkEmailModal');
+    const bulkEmailConfirmModal = document.getElementById('bulkEmailConfirmModal');
+    const whatsappInput = document.getElementById('whatsappLinkInput');
+    const bulkEmailSummary = document.getElementById('bulkEmailSummary');
+
+    let savedWhatsappLink = '';
+
+    function showModal(modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    }
+    function hideModal(modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
+
+    if (bulkEmailBtn) {
+        // Adım 1: WhatsApp Link Popup
+        bulkEmailBtn.addEventListener('click', () => {
+            whatsappInput.value = '';
+            showModal(bulkEmailModal);
+            whatsappInput.focus();
+        });
+
+        // İptal
+        document.getElementById('bulkEmailCancel').addEventListener('click', () => {
+            hideModal(bulkEmailModal);
+        });
+
+        // Adım 2: Devam Et → Onay Popup
+        document.getElementById('bulkEmailNext').addEventListener('click', () => {
+            const link = whatsappInput.value.trim();
+            if (!link) {
+                whatsappInput.style.borderColor = '#ef4444';
+                whatsappInput.setAttribute('placeholder', 'Bu alan zorunludur!');
+                return;
+            }
+            savedWhatsappLink = link;
+            hideModal(bulkEmailModal);
+
+            // Onay metnini ayarla
+            const approvedRows = document.querySelectorAll('tr[data-status="approved"]').length;
+            const rejectedRows = document.querySelectorAll('tr[data-status="rejected"]').length;
+            bulkEmailSummary.innerHTML = `<strong class="text-green-400">${approvedRows}</strong> onaylanan ve <strong class="text-red-400">${rejectedRows}</strong> reddedilen adaya toplu mail gönderilecek. Bu işlem geri alınamaz.`;
+
+            showModal(bulkEmailConfirmModal);
+        });
+
+        // Vazgeç
+        document.getElementById('confirmCancel').addEventListener('click', () => {
+            hideModal(bulkEmailConfirmModal);
+        });
+
+        // Adım 3: Gönder
+        document.getElementById('confirmSend').addEventListener('click', async () => {
+            const sendBtn = document.getElementById('confirmSend');
+            sendBtn.disabled = true;
+            sendBtn.textContent = 'Gönderiliyor...';
+
+            try {
+                const response = await fetch('{% url "dashboard:api_send_bulk_emails" %}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({
+                        jam_id: bulkEmailBtn.getAttribute('data-jam-id'),
+                        whatsapp_link: savedWhatsappLink
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    hideModal(bulkEmailConfirmModal);
+                    alert(`Toplam ${result.total} mail gönderimi başlatıldı!\n\n✅ Onay maili: ${result.approved_count} kişi\n❌ Red maili: ${result.rejected_count} kişi\n\nMailler arka planda sırayla gönderiliyor.`);
+                } else {
+                    alert('Hata: ' + result.error);
+                }
+            } catch (error) {
+                alert('Bağlantı hatası: ' + error.message);
+            } finally {
+                sendBtn.disabled = false;
+                sendBtn.textContent = 'Gönder';
+            }
+        });
+    }
 </script>
 {% endblock %}

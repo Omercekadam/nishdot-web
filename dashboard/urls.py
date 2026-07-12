@@ -7,6 +7,7 @@ urlpatterns = [
     path("", views.DashboardView.as_view(), name="index"),
     path("api/update-status/", views.update_application_status, name="api_update_status"),
     path("api/export-csv/", views.export_applications_csv, name="api_export_csv"),
+    path("api/send-bulk-emails/", views.api_send_bulk_emails, name="api_send_bulk_emails"),
     
     # Workspace Routes
     path('events/', views.EventBuilderView.as_view(), name='events'),

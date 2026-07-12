@@ -694,6 +694,98 @@ def api_dismiss_announcement(request, announcement_id):
         return JsonResponse({"status": "error", "message": str(e)}, status=500)
 
 @staff_member_required
+@require_POST
+def api_send_bulk_emails(request):
+    """Toplu onay/red mailleri gönderir. Spam'e düşmemek için araya gecikme koyar."""
+    import time
+    import threading
+    from django.core.mail import EmailMultiAlternatives
+    from django.template.loader import render_to_string
+    from django.utils.html import strip_tags
+    from django.conf import settings as django_settings
+
+    try:
+        data = json.loads(request.body)
+        jam_id = data.get('jam_id')
+        whatsapp_link = data.get('whatsapp_link', '')
+
+        if not jam_id:
+            return JsonResponse({'success': False, 'error': 'Jam ID gerekli.'}, status=400)
+        if not whatsapp_link:
+            return JsonResponse({'success': False, 'error': 'WhatsApp davet linki gerekli.'}, status=400)
+
+        jam = get_object_or_404(GameJam, id=jam_id)
+        jam_title = jam.event.title
+
+        approved_apps = jam.applications.filter(status=JamApplication.ApplicationStatus.APPROVED)
+        rejected_apps = jam.applications.filter(status=JamApplication.ApplicationStatus.REJECTED)
+
+        approved_count = approved_apps.count()
+        rejected_count = rejected_apps.count()
+
+        if approved_count == 0 and rejected_count == 0:
+            return JsonResponse({'success': False, 'error': 'Gönderilecek onaylanmış veya reddedilmiş başvuru bulunamadı.'}, status=400)
+
+        # Gönderilecek mail listesini hazırla
+        emails_to_send = []
+
+        for app in approved_apps:
+            html_content = render_to_string('emails/jam_approved.html', {
+                'full_name': app.full_name,
+                'jam_title': jam_title,
+                'whatsapp_link': whatsapp_link,
+            })
+            emails_to_send.append({
+                'subject': f'Başvurunuz Onaylandı — {jam_title}',
+                'html': html_content,
+                'to': app.email,
+            })
+
+        for app in rejected_apps:
+            html_content = render_to_string('emails/jam_rejected.html', {
+                'full_name': app.full_name,
+                'jam_title': jam_title,
+            })
+            emails_to_send.append({
+                'subject': f'Başvuru Sonucunuz — {jam_title}',
+                'html': html_content,
+                'to': app.email,
+            })
+
+        # Asenkron gönderim — her mail arasında 1.5 saniye bekle
+        def send_emails_async(email_list):
+            for i, email_data in enumerate(email_list):
+                try:
+                    text_content = strip_tags(email_data['html'])
+                    msg = EmailMultiAlternatives(
+                        subject=email_data['subject'],
+                        body=text_content,
+                        from_email=f"Nishdot Game Jam <{django_settings.EMAIL_HOST_USER}>",
+                        to=[email_data['to']],
+                    )
+                    msg.attach_alternative(email_data['html'], "text/html")
+                    msg.send(fail_silently=False)
+                except Exception as e:
+                    print(f"[BULK MAIL HATA] {email_data['to']}: {e}")
+
+                # Spam'e düşmemek için bekleme (son mailden sonra bekleme)
+                if i < len(email_list) - 1:
+                    time.sleep(1.5)
+
+        thread = threading.Thread(target=send_emails_async, args=(emails_to_send,))
+        thread.daemon = True
+        thread.start()
+
+        return JsonResponse({
+            'success': True,
+            'approved_count': approved_count,
+            'rejected_count': rejected_count,
+            'total': approved_count + rejected_count,
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+@staff_member_required
 def export_applications_csv(request):
     jam_id = request.GET.get('jam')
     if jam_id:
