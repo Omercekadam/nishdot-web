@@ -111,12 +111,12 @@ class UserLoginForm(AuthenticationForm):
 class UserProfileUpdateForm(forms.ModelForm):
     class Meta:
         model = User
-        fields = ['first_name', 'last_name', 'phone_number', 'national_id', 'birth_date', 'university', 'department', 'portfolio_url']
+        fields = ['first_name', 'last_name', 'phone_number', 'birth_date', 'university', 'department', 'portfolio_url']
         widgets = {
             'first_name': forms.TextInput(attrs={'class': 'form-input', 'placeholder': 'Ad'}),
             'last_name': forms.TextInput(attrs={'class': 'form-input', 'placeholder': 'Soyad'}),
             'phone_number': forms.TextInput(attrs={'class': 'form-input', 'placeholder': '05XX XXX XX XX'}),
-            'national_id': forms.TextInput(attrs={'class': 'form-input', 'placeholder': '11 Haneli T.C. Kimlik'}),
+
             'birth_date': forms.DateInput(attrs={'class': 'form-input', 'type': 'date'}),
             'university': forms.TextInput(attrs={'class': 'form-input', 'placeholder': 'Örn: İstanbul Nişantaşı Üniversitesi'}),
             'department': forms.TextInput(attrs={'class': 'form-input', 'placeholder': 'Örn: Dijital Oyun Tasarımı'}),
