@@ -1024,6 +1024,14 @@ def api_storage_delete(request):
         
     if os.path.exists(full_path):
         os.remove(full_path)
+        
+        # Clean up related database records if their file was deleted
+        from events.models import EventImage, Game
+        # file_path might be 'event_gallery/1/file.jpg', replace backslashes
+        db_path = file_path.replace('\\', '/')
+        EventImage.objects.filter(image=db_path).delete()
+        Game.objects.filter(cover_image=db_path).update(cover_image='')
+        
         return JsonResponse({'success': True})
     return JsonResponse({'success': False, 'error': 'Dosya bulunamadi'})
 
@@ -1065,10 +1073,15 @@ def api_delete_event_image(request, pk):
 @staff_member_required
 def api_event_gallery(request, pk):
     from events.models import Event
+    import os
     event = get_object_or_404(Event, pk=pk)
     
     images = []
     for img in event.gallery_images.all():
+        if img.image and not img.image.storage.exists(img.image.name):
+            img.delete()
+            continue
+            
         images.append({
             'id': img.id,
             'url': img.image.url

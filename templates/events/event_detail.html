@@ -177,8 +177,8 @@
             </h2>
             <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4" id="eventGalleryGrid">
                 {% for img in event.gallery_images.all %}
-                <div class="aspect-square bg-zinc-800 rounded-xl overflow-hidden cursor-pointer relative group {% if forloop.counter > 5 %}hidden gallery-extra-item{% endif %}" onclick="openImageLightbox('{{ img.image.url }}')">
-                    <img src="{{ img.image.url }}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" loading="lazy">
+                <div class="aspect-square bg-zinc-800 rounded-xl overflow-hidden cursor-pointer relative group {% if forloop.counter > 5 %}hidden gallery-extra-item{% endif %}" onclick="openImageLightbox('{{ img.image.url }}')" id="gallery-img-{{ img.id }}">
+                    <img src="{{ img.image.url }}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" loading="lazy" onerror="document.getElementById('gallery-img-{{ img.id }}').style.display='none'">
                     <div class="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                         <i class="fas fa-expand text-white text-2xl drop-shadow-md"></i>
                     </div>
