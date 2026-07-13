@@ -148,8 +148,8 @@
             
             if (elapsed < duration) {
                 // Rastgele isim göster
-                const randomName = participants[Math.floor(Math.random() * participants.length)];
-                nameDisplay.innerText = randomName;
+                const randomParticipant = participants[Math.floor(Math.random() * participants.length)];
+                nameDisplay.innerText = randomParticipant.name || "Bilinmiyor";
                 
                 // Yavaşlama efekti (exponential delay)
                 let progress = elapsed / duration;
