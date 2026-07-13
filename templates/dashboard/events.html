@@ -662,9 +662,9 @@
 
             listEl.innerHTML = data.images.map(img => `
                 <div class="relative group rounded-xl overflow-hidden bg-zinc-800 aspect-square border border-zinc-700/50">
-                    <img src="\${img.url}" class="w-full h-full object-cover">
+                    <img src="${img.url}" class="w-full h-full object-cover">
                     <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <button onclick="deleteGalleryImage(\${img.id})" class="text-red-500 hover:text-red-400 p-2 bg-red-500/10 rounded-lg">
+                        <button onclick="deleteGalleryImage(${img.id})" class="text-red-500 hover:text-red-400 p-2 bg-red-500/10 rounded-lg">
                             <i class="fas fa-trash-alt"></i> Sil
                         </button>
                     </div>
