@@ -891,10 +891,10 @@ class RaffleQRView(StaffRequiredMixin, DetailView):
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        # Construct full URL for QR code
-        context['join_url'] = self.request.build_absolute_uri(
-            f"/events/raffle/join/{self.object.secret_id}/"
-        )
+        # Nginx/Proxy arkasında request.get_host() 127.0.0.1 dönebildiği için
+        # telefonların kamerası "localhost/127.0.0.1" linklerini güvenlik sebebiyle
+        # sessizce yok sayar (tepki vermez). Bu yüzden canlı domaini zorunlu kılıyoruz:
+        context['join_url'] = f"https://nishdot.com.tr/events/raffle/join/{self.object.secret_id}/"
         return context
 
 class RaffleDrawView(StaffRequiredMixin, DetailView):
