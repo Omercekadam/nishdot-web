@@ -1065,7 +1065,10 @@ def api_delete_event_image(request, pk):
     image_id = data.get('image_id')
     
     image = get_object_or_404(EventImage, pk=image_id, event_id=pk)
-    image.image.delete()
+    
+    if image.image and image.image.storage.exists(image.image.name):
+        image.image.delete()
+        
     image.delete()
     
     return JsonResponse({'success': True})
