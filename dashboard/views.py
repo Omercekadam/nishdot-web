@@ -25,7 +25,7 @@ class EventBuilderView(StaffRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        # Bütün etkinlikleri (Jam, Workshop, Meetup vb.) getir
+        # BÃ¼tÃ¼n etkinlikleri (Jam, Workshop, Meetup vb.) getir
         context['events'] = Event.objects.prefetch_related('jam').all().order_by('-start_date')
         return context
 
@@ -40,7 +40,7 @@ def api_save_event(request):
         description = data.get('description', '')
         start_date = data.get('start_date')
         end_date = data.get('end_date')
-        location = data.get('location', 'Belirtilmemiş')
+        location = data.get('location', 'BelirtilmemiÅ')
         event_type = data.get('event_type', Event.EventType.GAME_JAM)
         
         # Jam Specific (Only valid if event_type is GAME_JAM)
@@ -383,7 +383,7 @@ def api_save_asset(request):
             try:
                 amount = float(amount)
             except ValueError:
-                return JsonResponse({'success': False, 'error': 'Geçersiz tutar.'}, status=400)
+                return JsonResponse({'success': False, 'error': 'GeÃ§ersiz tutar.'}, status=400)
         else:
             amount = None
             
@@ -464,7 +464,7 @@ class MembersDirectoryView(StaffRequiredMixin, TemplateView):
 @require_POST
 def api_update_user_profile(request):
     if not request.user.is_superuser:
-        return JsonResponse({'success': False, 'error': 'Bu işlem için yetkiniz yok.'}, status=403)
+        return JsonResponse({'success': False, 'error': 'Bu iÅlem iÃ§in yetkiniz yok.'}, status=403)
         
     try:
         data = json.loads(request.body)
@@ -526,7 +526,7 @@ def send_broadcast_email_async(subject, message, recipient_list, smtp_account='s
                     </div>
                     <br><br>
                     <hr style="border: 0; border-top: 1px solid #eee;">
-                    <p style="font-size: 12px; color: #999; text-align: center; margin-bottom: 0;">Bu e-posta İstanbul Nişantaşı Üniversitesi Dijital Oyun Tasarımı Kulübü (Nishdot) tarafından gönderilmiştir.</p>
+                    <p style="font-size: 12px; color: #999; text-align: center; margin-bottom: 0;">Bu e-posta Ä°stanbul NiÅantaÅÄ± Ãniversitesi Dijital Oyun TasarÄ±mÄ± KulÃ¼bÃ¼ (Nishdot) tarafÄ±ndan gÃ¶nderilmiÅtir.</p>
                 </div>
             </div>
             """
@@ -541,7 +541,7 @@ def send_broadcast_email_async(subject, message, recipient_list, smtp_account='s
             email.attach_alternative(html_content, "text/html")
             email.send()
         except Exception as e:
-            print(f"Mail gönderme hatası: {e}")
+            print(f"Mail gÃ¶nderme hatasÄ±: {e}")
             
     thread = threading.Thread(target=send)
     thread.start()
@@ -565,19 +565,19 @@ def api_create_broadcast(request):
         content = data.get('content')
         publish_site = data.get('publish_site', False)
         send_email = data.get('send_email', False)
-        # send_discord = data.get('send_discord', False) # Şimdilik devre dışı
+        # send_discord = data.get('send_discord', False) # Åimdilik devre dÄ±ÅÄ±
         smtp_account = data.get('smtp_account', 'smtp1')
         target_audience = data.get('target_audience', 'all')
         
         if not title or not content:
-            return JsonResponse({'success': False, 'error': 'Başlık ve içerik zorunludur.'}, status=400)
+            return JsonResponse({'success': False, 'error': 'BaÅlÄ±k ve iÃ§erik zorunludur.'}, status=400)
             
         announcement = Announcement.objects.create(
             title=title,
             content=content,
             published_to_site=publish_site,
             sent_via_email=send_email,
-            published_to_discord=False, # Şimdilik False
+            published_to_discord=False, # Åimdilik False
             target_audience=target_audience,
             author=request.user
         )
@@ -634,13 +634,13 @@ class DashboardView(StaffRequiredMixin, TemplateView):
         if current_jam:
             applications = current_jam.applications.all()
             
-            # İstatistikler
+            # Ä°statistikler
             total_apps = applications.count()
             solo_apps = applications.filter(team_status=JamApplication.TeamStatus.SOLO).count()
             looking_team = applications.filter(team_status=JamApplication.TeamStatus.LOOKING).count()
             has_team = applications.filter(team_status=JamApplication.TeamStatus.HAS_TEAM).count()
             
-            # Rol bazlı istatistik
+            # Rol bazlÄ± istatistik
             role_stats = {}
             for app in applications:
                 role = app.jam_role
@@ -676,7 +676,7 @@ def update_application_status(request):
             application.status = new_status
             application.save()
             return JsonResponse({'success': True})
-        return JsonResponse({'success': False, 'error': 'Geçersiz durum.'}, status=400)
+        return JsonResponse({'success': False, 'error': 'GeÃ§ersiz durum.'}, status=400)
     except Exception as e:
         return JsonResponse({"status": "error", "message": str(e)}, status=500)
 
@@ -689,14 +689,14 @@ def api_dismiss_announcement(request, announcement_id):
         announcement.dismissed_by.add(request.user)
         return JsonResponse({"status": "success", "message": "Duyuru gizlendi."})
     except Announcement.DoesNotExist:
-        return JsonResponse({"status": "error", "message": "Duyuru bulunamadı."}, status=404)
+        return JsonResponse({"status": "error", "message": "Duyuru bulunamadÄ±."}, status=404)
     except Exception as e:
         return JsonResponse({"status": "error", "message": str(e)}, status=500)
 
 @staff_member_required
 @require_POST
 def api_send_bulk_emails(request):
-    """Toplu onay/red mailleri gönderir. Spam'e düşmemek için araya gecikme koyar."""
+    """Toplu onay/red mailleri gÃ¶nderir. Spam'e dÃ¼Åmemek iÃ§in araya gecikme koyar."""
     import time
     import threading
     from django.core.mail import EmailMultiAlternatives
@@ -724,9 +724,9 @@ def api_send_bulk_emails(request):
         rejected_count = rejected_apps.count()
 
         if approved_count == 0 and rejected_count == 0:
-            return JsonResponse({'success': False, 'error': 'Gönderilecek onaylanmış veya reddedilmiş başvuru bulunamadı.'}, status=400)
+            return JsonResponse({'success': False, 'error': 'GÃ¶nderilecek onaylanmÄ±Å veya reddedilmiÅ baÅvuru bulunamadÄ±.'}, status=400)
 
-        # Gönderilecek mail listesini hazırla
+        # GÃ¶nderilecek mail listesini hazÄ±rla
         emails_to_send = []
 
         for app in approved_apps:
@@ -736,7 +736,7 @@ def api_send_bulk_emails(request):
                 'whatsapp_link': whatsapp_link,
             })
             emails_to_send.append({
-                'subject': f'Başvurunuz Onaylandı — {jam_title}',
+                'subject': f'BaÅvurunuz OnaylandÄ± â {jam_title}',
                 'html': html_content,
                 'to': app.email,
             })
@@ -747,12 +747,12 @@ def api_send_bulk_emails(request):
                 'jam_title': jam_title,
             })
             emails_to_send.append({
-                'subject': f'Başvuru Sonucunuz — {jam_title}',
+                'subject': f'BaÅvuru Sonucunuz â {jam_title}',
                 'html': html_content,
                 'to': app.email,
             })
 
-        # Asenkron gönderim — her mail arasında 1.5 saniye bekle
+        # Asenkron gÃ¶nderim â her mail arasÄ±nda 1.5 saniye bekle
         def send_emails_async(email_list):
             for i, email_data in enumerate(email_list):
                 try:
@@ -768,7 +768,7 @@ def api_send_bulk_emails(request):
                 except Exception as e:
                     print(f"[BULK MAIL HATA] {email_data['to']}: {e}")
 
-                # Spam'e düşmemek için bekleme (son mailden sonra bekleme)
+                # Spam'e dÃ¼Åmemek iÃ§in bekleme (son mailden sonra bekleme)
                 if i < len(email_list) - 1:
                     time.sleep(1.5)
 
@@ -794,7 +794,7 @@ def export_applications_csv(request):
         current_jam = GameJam.objects.order_by("-created_at").first()
         
     if not current_jam:
-        return HttpResponse("Etkinlik bulunamadı.", status=404)
+        return HttpResponse("Etkinlik bulunamadÄ±.", status=404)
         
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = f'attachment; filename="jam_applications_{current_jam.id}.csv"'
@@ -802,9 +802,9 @@ def export_applications_csv(request):
     # BOM for Excel utf-8 recognition
     response.write('\ufeff'.encode('utf8'))
     
-    # Türkçe Excel sistemleri varsayılan olarak noktalı virgül (;) ile ayırır
+    # TÃ¼rkÃ§e Excel sistemleri varsayÄ±lan olarak noktalÄ± virgÃ¼l (;) ile ayÄ±rÄ±r
     writer = csv.writer(response, delimiter=';')
-    writer.writerow(['Ad Soyad', 'E-Posta', 'Telefon', 'TC Kimlik', 'Üniversite', 'Bölüm', 'Sınıf', 'Rol', 'Deneyim', 'Takım Durumu', 'Takım Adı', 'Durum', 'Başvuru Tarihi'])
+    writer.writerow(['Ad Soyad', 'E-Posta', 'Telefon', 'TC Kimlik', 'Ãniversite', 'BÃ¶lÃ¼m', 'SÄ±nÄ±f', 'Rol', 'Deneyim', 'TakÄ±m Durumu', 'TakÄ±m AdÄ±', 'Durum', 'BaÅvuru Tarihi'])
     
     applications = current_jam.applications.all()
     
@@ -891,9 +891,9 @@ class RaffleQRView(StaffRequiredMixin, DetailView):
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        # Nginx/Proxy arkasında request.get_host() 127.0.0.1 dönebildiği için
-        # telefonların kamerası "localhost/127.0.0.1" linklerini güvenlik sebebiyle
-        # sessizce yok sayar (tepki vermez). Bu yüzden canlı domaini zorunlu kılıyoruz:
+        # Nginx/Proxy arkasÄ±nda request.get_host() 127.0.0.1 dÃ¶nebildiÄi iÃ§in
+        # telefonlarÄ±n kamerasÄ± "localhost/127.0.0.1" linklerini gÃ¼venlik sebebiyle
+        # sessizce yok sayar (tepki vermez). Bu yÃ¼zden canlÄ± domaini zorunlu kÄ±lÄ±yoruz:
         context['join_url'] = f"https://nishdot.com.tr/events/raffle/join/{self.object.secret_id}/"
         return context
 
@@ -942,7 +942,7 @@ def api_raffle_pick_winner(request, pk):
         
     participants = list(raffle.participants.all())
     if not participants:
-        return JsonResponse({'success': False, 'error': 'Henüz katılımcı yok.'})
+        return JsonResponse({'success': False, 'error': 'HenÃ¼z katÄ±lÄ±mcÄ± yok.'})
         
     winner = random.choice(participants)
     return JsonResponse({
@@ -986,7 +986,7 @@ class StorageManagerView(SuperuserRequiredMixin, TemplateView):
                     
                     folder_name = os.path.relpath(root, media_root).replace('\\', '/')
                     if folder_name == '.':
-                        folder_name = 'K�k Dizin'
+                        folder_name = 'Kök Dizin'
                         
                     file_list.append({
                         'name': file,
@@ -1035,7 +1035,7 @@ def api_upload_event_image(request, pk):
     
     images = request.FILES.getlist('images')
     if not images:
-        return JsonResponse({'success': False, 'error': 'G�rsel y�klenmedi'})
+        return JsonResponse({'success': False, 'error': 'Görsel yüklenmedi'})
         
     uploaded_images = []
     for image in images:
@@ -1063,7 +1063,6 @@ def api_delete_event_image(request, pk):
     return JsonResponse({'success': True})
 
 @staff_member_required
-@require_GET
 def api_event_gallery(request, pk):
     from events.models import Event
     event = get_object_or_404(Event, pk=pk)
