@@ -429,16 +429,23 @@
                 body: formData
             });
 
-            const result = await res.json();
-            if(result.success) {
-                window.location.reload();
-            } else {
-                alert("Hata: " + result.error);
+            const text = await res.text();
+            try {
+                const result = JSON.parse(text);
+                if(result.success) {
+                    window.location.reload();
+                } else {
+                    alert("Hata: " + result.error);
+                    btn.innerText = originalText;
+                    btn.disabled = false;
+                }
+            } catch (e) {
+                alert("Sunucu Beklenmeyen Yanıt Döndü (Kod: " + res.status + "):\n" + text.substring(0, 150) + "...\nLütfen oturum sürenizi kontrol edin.");
                 btn.innerText = originalText;
                 btn.disabled = false;
             }
         } catch (error) {
-            alert("Bağlantı hatası.");
+            alert("Ağ Hatası:\n" + error.message);
             btn.innerText = originalText;
             btn.disabled = false;
         }
