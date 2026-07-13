@@ -14,13 +14,7 @@
                 <p class="text-zinc-400">Nishdot etkinlik başvurularını ve takım eşleşmelerini buradan takip edebilirsin.</p>
             </div>
             
-            {% if user.is_staff or user.is_superuser %}
-            <div>
-                <a href="{% url 'admin:index' %}" class="btn-outline px-6 py-2">
-                    Yönetim Paneline Git
-                </a>
-            </div>
-            {% endif %}
+
         </div>
 
         {% if messages %}
