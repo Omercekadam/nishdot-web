@@ -85,6 +85,13 @@
                         Doğrula ve Giriş Yap
                     </button>
                 </div>
+
+                <div class="text-center mt-4">
+                    <button type="button" id="btn-resend-otp" class="text-sm text-zinc-400 hover:text-brand-pink transition-colors">
+                        Kodu tekrar gönder
+                    </button>
+                    <p id="resend-message" class="text-xs text-green-400 hidden mt-2"></p>
+                </div>
             </form>
         </div>
 
@@ -199,6 +206,72 @@ document.addEventListener('DOMContentLoaded', function() {
             btnVerify.innerHTML = 'Doğrula ve Giriş Yap';
         }
     });
+
+    // Tekrar Kod Gönderimi
+    const btnResendOtp = document.getElementById('btn-resend-otp');
+    const resendMessage = document.getElementById('resend-message');
+    
+    if (btnResendOtp) {
+        btnResendOtp.addEventListener('click', async function() {
+            if (!registeredEmail) return;
+            
+            btnResendOtp.disabled = true;
+            btnResendOtp.textContent = "Gönderiliyor...";
+            resendMessage.classList.add('hidden');
+            
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            
+            try {
+                const response = await fetch('{% url "users:api_resend_otp" %}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    },
+                    body: JSON.stringify({ email: registeredEmail })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    resendMessage.textContent = "Kod başarıyla tekrar gönderildi!";
+                    resendMessage.classList.remove('hidden', 'text-red-400');
+                    resendMessage.classList.add('text-green-400');
+                    
+                    // 60 saniye bekleme süresi
+                    let timeLeft = 60;
+                    btnResendOtp.classList.remove('hover:text-brand-pink', 'cursor-pointer');
+                    btnResendOtp.classList.add('opacity-50', 'cursor-not-allowed');
+                    
+                    const countdown = setInterval(() => {
+                        btnResendOtp.textContent = `${timeLeft} saniye sonra tekrar isteyebilirsiniz`;
+                        timeLeft--;
+                        
+                        if (timeLeft < 0) {
+                            clearInterval(countdown);
+                            btnResendOtp.disabled = false;
+                            btnResendOtp.textContent = "Kodu tekrar gönder";
+                            btnResendOtp.classList.add('hover:text-brand-pink', 'cursor-pointer');
+                            btnResendOtp.classList.remove('opacity-50', 'cursor-not-allowed');
+                            resendMessage.classList.add('hidden');
+                        }
+                    }, 1000);
+                } else {
+                    resendMessage.textContent = result.error || "Gönderim başarısız.";
+                    resendMessage.classList.remove('hidden', 'text-green-400');
+                    resendMessage.classList.add('text-red-400');
+                    btnResendOtp.disabled = false;
+                    btnResendOtp.textContent = "Kodu tekrar gönder";
+                }
+            } catch (error) {
+                resendMessage.textContent = "Bağlantı hatası oluştu.";
+                resendMessage.classList.remove('hidden', 'text-green-400');
+                resendMessage.classList.add('text-red-400');
+                btnResendOtp.disabled = false;
+                btnResendOtp.textContent = "Kodu tekrar gönder";
+            }
+        });
+    }
 });
 </script>
 {% endblock %}

@@ -102,6 +102,53 @@ def verify_user(email, code):
     except User.DoesNotExist:
         return False, "Kullanıcı bulunamadı.", None
 
+@sync_to_async
+def refresh_user_otp(email):
+    import random
+    from django.utils import timezone
+    from datetime import timedelta
+    try:
+        user = User.objects.get(email=email)
+        if user.is_verified:
+            return None, "Kullanıcı zaten doğrulanmış."
+        
+        # Yeni OTP oluştur
+        otp = str(random.randint(100000, 999999))
+        expires = timezone.now() + timedelta(minutes=15)
+        
+        user.verification_code = otp
+        user.code_expires_at = expires
+        user.save()
+        return user, otp
+    except User.DoesNotExist:
+        return None, "Kullanıcı bulunamadı."
+
+async def resend_otp_api_view(request):
+    import json
+    from django.http import JsonResponse
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Yalnızca POST istekleri kabul edilir.'}, status=405)
+    
+    try:
+        data = json.loads(request.body)
+        email = data.get('email')
+        if not email:
+            return JsonResponse({'error': 'E-posta adresi gerekli.'}, status=400)
+            
+        user, otp_or_error = await refresh_user_otp(email)
+        if not user:
+            return JsonResponse({'error': otp_or_error}, status=400)
+            
+        # Asenkron olarak maili gönder
+        await send_otp_email(user.email, otp_or_error, user.first_name)
+        
+        return JsonResponse({'success': True, 'message': 'Yeni doğrulama kodu gönderildi.'})
+        
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Geçersiz JSON verisi.'}, status=400)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
 async def verify_otp_api_view(request):
     if request.method != 'POST':
         return JsonResponse({'error': 'Yalnızca POST istekleri kabul edilir.'}, status=405)
