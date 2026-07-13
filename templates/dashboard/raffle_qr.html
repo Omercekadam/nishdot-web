@@ -44,7 +44,7 @@
             <div class="absolute -inset-1 bg-gradient-to-br from-brand-pink to-purple-500 rounded-[2.2rem] opacity-30 blur-lg -z-10 animate-pulse"></div>
             
             <div class="aspect-square bg-white rounded-2xl flex items-center justify-center p-4 relative" id="qrcode">
-                <!-- QR kod buraya çizilecek -->
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=400x400&data={{ join_url|urlencode }}&margin=0" alt="QR Kod" class="w-full h-full object-contain rounded-lg">
             </div>
             
             <div class="mt-6 text-center">
@@ -61,25 +61,7 @@
     </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" integrity="sha512-CNgIRec0enTMOyae0Bsw01+1E+H7zY51E9o6A/k1aMhwOovwI2O2DkItJ2G5mS1ZofSjLqI1S88nQYv8yM3wTw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script>
-    // QR Code Oluştur
-    const joinUrl = "{{ join_url }}";
-    const qrcodeElement = document.getElementById("qrcode");
-    
-    // Boyutu container'a göre ayarla (Eğer render edilmediyse min 250px yap)
-    let size = qrcodeElement.offsetWidth ? qrcodeElement.offsetWidth - 32 : 250;
-    size = Math.max(200, Math.min(size, 400));
-    
-    new QRCode(qrcodeElement, {
-        text: joinUrl,
-        width: size,
-        height: size,
-        colorDark : "#000000",
-        colorLight : "#ffffff",
-        correctLevel : QRCode.CorrectLevel.H
-    });
-
     // Katılımcı sayısını anlık güncelle
     async function updateCount() {
         try {
