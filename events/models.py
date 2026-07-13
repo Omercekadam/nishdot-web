@@ -217,3 +217,74 @@ class EventApplication(TimeStampedModel):
 
     def __str__(self):
         return f"{self.full_name} - {self.event.title}"
+
+class EventImage(TimeStampedModel):
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="gallery_images")
+    image = models.ImageField(upload_to="events/gallery/", verbose_name="Görsel")
+    caption = models.CharField(max_length=255, blank=True, verbose_name="Açıklama")
+    
+    class Meta(TimeStampedModel.Meta):
+        verbose_name = "Etkinlik Görseli"
+        verbose_name_plural = "Etkinlik Görselleri"
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.event.title} - {self.id}"
+
+    def save(self, *args, **kwargs):
+        from io import BytesIO
+        from PIL import Image, ImageOps
+        from django.core.files.uploadedfile import InMemoryUploadedFile
+        import sys
+        import os
+
+        def compress_image(image_field, max_width=1920):
+            if not image_field:
+                return image_field
+
+            if not hasattr(image_field.file, 'file'):
+                return image_field
+
+            ext = os.path.splitext(image_field.name)[1].lower()
+            if ext not in ['.jpg', '.jpeg', '.png', '.webp']:
+                return image_field
+
+            try:
+                img = Image.open(image_field)
+                img = ImageOps.exif_transpose(img)
+                if img.mode in ('RGBA', 'P', 'LA'):
+                    bg = Image.new('RGB', img.size, (255, 255, 255))
+                    bg.paste(img, mask=img.split()[-1] if img.mode != 'P' else None)
+                    img = bg
+                elif img.mode != 'RGB':
+                    img = img.convert('RGB')
+                
+                if img.width > max_width:
+                    wpercent = (max_width / float(img.width))
+                    hsize = int((float(img.height) * float(wpercent)))
+                    img = img.resize((max_width, hsize), Image.Resampling.LANCZOS)
+                
+                output = BytesIO()
+                img.save(output, format='JPEG', quality=80, optimize=True)
+                output.seek(0)
+                
+                new_filename = f"{os.path.splitext(os.path.basename(image_field.name))[0]}.jpg"
+                return InMemoryUploadedFile(
+                    output, 'ImageField', new_filename,
+                    'image/jpeg', sys.getsizeof(output), None
+                )
+            except Exception as e:
+                print("EventImage Image compression failed:", e)
+                return image_field
+
+        try:
+            if self.pk:
+                old_obj = EventImage.objects.get(pk=self.pk)
+                if old_obj.image != self.image:
+                    self.image = compress_image(self.image)
+            else:
+                self.image = compress_image(self.image)
+        except Exception:
+            self.image = compress_image(self.image)
+
+        super().save(*args, **kwargs)

@@ -169,6 +169,55 @@
             </div>
         </div>
 
+        {% if event.gallery_images.exists %}
+        <!-- Etkinlik Galerisi -->
+        <div class="mt-20">
+            <h2 class="text-3xl font-black text-white uppercase tracking-tighter mb-8 border-l-4 border-brand-pink pl-4">
+                ETKİNLİK GALERİSİ
+            </h2>
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4" id="eventGalleryGrid">
+                {% for img in event.gallery_images.all %}
+                <div class="aspect-square bg-zinc-800 rounded-xl overflow-hidden cursor-pointer relative group {% if forloop.counter > 5 %}hidden gallery-extra-item{% endif %}" onclick="openImageLightbox('{{ img.image.url }}')">
+                    <img src="{{ img.image.url }}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" loading="lazy">
+                    <div class="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <i class="fas fa-expand text-white text-2xl drop-shadow-md"></i>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% if event.gallery_images.count > 5 %}
+            <div class="text-center mt-8">
+                <button id="showAllGalleryBtn" onclick="showAllGallery()" class="px-8 py-3 bg-zinc-800 hover:bg-zinc-700 text-white font-bold rounded-xl transition-colors">
+                    Tüm Fotoğrafları Görüntüle ({{ event.gallery_images.count }})
+                </button>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Lightbox -->
+        <div id="imageLightbox" class="fixed inset-0 z-[100] hidden flex items-center justify-center bg-black/95 p-4 md:p-12">
+            <button onclick="closeImageLightbox()" class="absolute top-6 right-6 text-white/50 hover:text-white z-10 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+            <img id="lightboxImg" src="" class="max-w-full max-h-full object-contain rounded-lg shadow-2xl">
+        </div>
+        
+        <script>
+            function openImageLightbox(url) {
+                document.getElementById('lightboxImg').src = url;
+                document.getElementById('imageLightbox').classList.remove('hidden');
+            }
+            function closeImageLightbox() {
+                document.getElementById('imageLightbox').classList.add('hidden');
+                document.getElementById('lightboxImg').src = '';
+            }
+            function showAllGallery() {
+                document.querySelectorAll('.gallery-extra-item').forEach(el => el.classList.remove('hidden'));
+                document.getElementById('showAllGalleryBtn').parentElement.remove();
+            }
+        </script>
+        {% endif %}
+
         {% if event.games.exists %}
         <!-- Etkinlik Oyunları -->
         <div class="mt-20">

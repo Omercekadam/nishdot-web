@@ -1,0 +1,190 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block title %}Medya ve Alan Yönetimi - Nishdot{% endblock %}
+
+{% block dashboard_content %}
+<div class="space-y-6">
+    <div class="flex justify-between items-center">
+        <div>
+            <h1 class="text-2xl font-bold text-white">Alan Yönetimi <span class="text-brand-pink text-sm ml-2">Süper Yönetici</span></h1>
+            <p class="text-zinc-400 text-sm mt-1">Sunucu üzerindeki tüm yüklenmiş dosyalar ve boyutları</p>
+        </div>
+        <div class="flex items-center gap-4">
+            <div class="bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-2 flex items-center gap-3">
+                <i class="fas fa-hdd text-zinc-500"></i>
+                <div>
+                    <p class="text-[10px] uppercase tracking-wider text-zinc-500 font-bold">Toplam Boyut</p>
+                    <p class="text-white font-bold">{{ total_size_mb }} MB</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtreleme Alanı -->
+    <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 flex gap-4">
+        <div class="flex-1 relative">
+            <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500"></i>
+            <input type="text" id="searchInput" placeholder="Dosya adı veya klasör ara..." class="w-full bg-zinc-950 border border-zinc-800 text-white rounded-xl py-3 pl-12 pr-4 focus:outline-none focus:border-brand-pink transition-colors">
+        </div>
+        <select id="folderFilter" class="bg-zinc-950 border border-zinc-800 text-white rounded-xl py-3 px-4 focus:outline-none focus:border-brand-pink transition-colors">
+            <option value="">Tüm Klasörler</option>
+            <!-- JavaScript ile doldurulacak -->
+        </select>
+    </div>
+
+    <!-- Dosya Listesi -->
+    <div class="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse" id="filesTable">
+                <thead>
+                    <tr class="border-b border-zinc-800 bg-zinc-950/50">
+                        <th class="p-4 text-xs uppercase tracking-wider text-zinc-500 font-bold">Önizleme</th>
+                        <th class="p-4 text-xs uppercase tracking-wider text-zinc-500 font-bold cursor-pointer" onclick="sortTable(1)">Dosya Adı <i class="fas fa-sort ml-1"></i></th>
+                        <th class="p-4 text-xs uppercase tracking-wider text-zinc-500 font-bold cursor-pointer" onclick="sortTable(2)">Klasör <i class="fas fa-sort ml-1"></i></th>
+                        <th class="p-4 text-xs uppercase tracking-wider text-zinc-500 font-bold cursor-pointer" onclick="sortTable(3)">Boyut <i class="fas fa-sort ml-1"></i></th>
+                        <th class="p-4 text-xs uppercase tracking-wider text-zinc-500 font-bold text-right">İşlem</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-zinc-800/50 text-sm">
+                    {% for file in file_list %}
+                    <tr class="hover:bg-zinc-800/20 transition-colors file-row">
+                        <td class="p-4 w-16">
+                            {% if '.jpg' in file.name|lower or '.png' in file.name|lower or '.webp' in file.name|lower or '.jpeg' in file.name|lower %}
+                            <div class="w-10 h-10 rounded-lg bg-zinc-950 border border-zinc-800 overflow-hidden flex items-center justify-center">
+                                <img src="/media/{{ file.path }}" alt="{{ file.name }}" class="w-full h-full object-cover" loading="lazy">
+                            </div>
+                            {% else %}
+                            <div class="w-10 h-10 rounded-lg bg-zinc-950 border border-zinc-800 flex items-center justify-center text-zinc-500">
+                                <i class="fas fa-file-alt"></i>
+                            </div>
+                            {% endif %}
+                        </td>
+                        <td class="p-4 font-medium text-white file-name">{{ file.name }}</td>
+                        <td class="p-4 text-zinc-400 file-folder">{{ file.directory }}</td>
+                        <td class="p-4 text-zinc-400 file-size" data-size="{{ file.size }}">{{ file.size_mb }} MB</td>
+                        <td class="p-4 text-right">
+                            <button onclick="deleteFile('{{ file.path }}', this)" class="w-8 h-8 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-colors flex items-center justify-center" title="Kalıcı Olarak Sil">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="p-8 text-center text-zinc-500">Sunucuda yüklü medya dosyası bulunamadı.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Klasörleri benzersiz (unique) olarak bulup select kutusuna ekleme
+    document.addEventListener("DOMContentLoaded", () => {
+        const folders = new Set();
+        document.querySelectorAll('.file-folder').forEach(td => folders.add(td.textContent));
+        
+        const select = document.getElementById('folderFilter');
+        Array.from(folders).sort().forEach(folder => {
+            const option = document.createElement('option');
+            option.value = folder;
+            option.textContent = folder;
+            select.appendChild(option);
+        });
+    });
+
+    // Arama ve Filtreleme
+    const searchInput = document.getElementById('searchInput');
+    const folderFilter = document.getElementById('folderFilter');
+    const rows = document.querySelectorAll('.file-row');
+
+    function filterRows() {
+        const term = searchInput.value.toLowerCase();
+        const folder = folderFilter.value;
+
+        rows.forEach(row => {
+            const name = row.querySelector('.file-name').textContent.toLowerCase();
+            const rFolder = row.querySelector('.file-folder').textContent;
+            
+            const matchName = name.includes(term) || rFolder.toLowerCase().includes(term);
+            const matchFolder = folder === "" || rFolder === folder;
+
+            if(matchName && matchFolder) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+
+    searchInput.addEventListener('input', filterRows);
+    folderFilter.addEventListener('change', filterRows);
+
+    // Sıralama fonksiyonu
+    let sortAsc = false;
+    function sortTable(colIndex) {
+        const table = document.getElementById("filesTable");
+        const tbody = table.querySelector("tbody");
+        const rowsArray = Array.from(tbody.querySelectorAll(".file-row"));
+        
+        sortAsc = !sortAsc;
+        
+        rowsArray.sort((a, b) => {
+            let valA, valB;
+            
+            if (colIndex === 3) {
+                valA = parseFloat(a.querySelector("td:nth-child(" + (colIndex + 1) + ")").getAttribute('data-size'));
+                valB = parseFloat(b.querySelector("td:nth-child(" + (colIndex + 1) + ")").getAttribute('data-size'));
+            } else {
+                valA = a.querySelector("td:nth-child(" + (colIndex + 1) + ")").textContent.trim();
+                valB = b.querySelector("td:nth-child(" + (colIndex + 1) + ")").textContent.trim();
+            }
+            
+            if(valA < valB) return sortAsc ? -1 : 1;
+            if(valA > valB) return sortAsc ? 1 : -1;
+            return 0;
+        });
+        
+        rowsArray.forEach(row => tbody.appendChild(row));
+    }
+
+    // Dosya Silme İşlemi
+    async function deleteFile(path, btnElement) {
+        if(!confirm("Bu dosyayı KALICI olarak sunucudan silmek istediğinize emin misiniz? Bu işlem geri alınamaz ve dosyaya bağlı veritabanı kayıtlarını bozabilir!")) {
+            return;
+        }
+
+        const originalHtml = btnElement.innerHTML;
+        btnElement.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        btnElement.disabled = true;
+
+        try {
+            const res = await fetch("{% url 'dashboard:api_storage_delete' %}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": "{{ csrf_token }}"
+                },
+                body: JSON.stringify({ path: path })
+            });
+
+            const result = await res.json();
+            if(result.success) {
+                const tr = btnElement.closest('tr');
+                tr.style.opacity = '0';
+                setTimeout(() => tr.remove(), 300);
+            } else {
+                alert("Hata: " + result.error);
+                btnElement.innerHTML = originalHtml;
+                btnElement.disabled = false;
+            }
+        } catch(error) {
+            alert("Bağlantı hatası: " + error.message);
+            btnElement.innerHTML = originalHtml;
+            btnElement.disabled = false;
+        }
+    }
+</script>
+{% endblock %}

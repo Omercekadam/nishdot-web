@@ -43,4 +43,11 @@ urlpatterns = [
     path('api/raffles/<int:pk>/remove-participant/', views.api_raffle_remove_participant, name='api_raffle_remove_participant'),
     path('api/raffles/<int:pk>/pick-winner/', views.api_raffle_pick_winner, name='api_raffle_pick_winner'),
     path('api/raffles/<int:pk>/toggle/', views.api_raffle_toggle, name='api_raffle_toggle'),
+
+    path('storage/', views.StorageManagerView.as_view(), name='storage_manager'),
+    path('api/storage/delete/', views.api_storage_delete, name='api_storage_delete'),
+
+    path('api/events/<int:pk>/upload-images/', views.api_upload_event_image, name='api_upload_event_image'),
+    path('api/events/<int:pk>/delete-image/', views.api_delete_event_image, name='api_delete_event_image'),
+    path('api/events/<int:pk>/gallery/', views.api_event_gallery, name='api_event_gallery'),
 ]

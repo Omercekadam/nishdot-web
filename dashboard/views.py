@@ -958,3 +958,121 @@ def api_raffle_toggle(request, pk):
     raffle.is_active = data.get('is_active', False)
     raffle.save()
     return JsonResponse({'success': True})
+
+class SuperuserRequiredMixin(UserPassesTestMixin):
+    def test_func(self):
+        return self.request.user.is_authenticated and self.request.user.is_superuser
+
+class StorageManagerView(SuperuserRequiredMixin, TemplateView):
+    template_name = "dashboard/storage_manager.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        import os
+        from django.conf import settings
+        
+        media_root = settings.MEDIA_ROOT
+        
+        file_list = []
+        total_size = 0
+        
+        if os.path.exists(media_root):
+            for root, dirs, files in os.walk(media_root):
+                for file in files:
+                    file_path = os.path.join(root, file)
+                    size = os.path.getsize(file_path)
+                    total_size += size
+                    rel_path = os.path.relpath(file_path, media_root)
+                    
+                    folder_name = os.path.relpath(root, media_root).replace('\\', '/')
+                    if folder_name == '.':
+                        folder_name = 'Kök Dizin'
+                        
+                    file_list.append({
+                        'name': file,
+                        'path': rel_path.replace('\\', '/'),
+                        'size': size,
+                        'size_mb': round(size / (1024*1024), 2),
+                        'directory': folder_name
+                    })
+                    
+        file_list.sort(key=lambda x: x['size'], reverse=True)
+        
+        context['file_list'] = file_list
+        context['total_size_mb'] = round(total_size / (1024*1024), 2)
+        return context
+
+@login_required
+@require_POST
+def api_storage_delete(request):
+    import json
+    import os
+    from django.conf import settings
+    
+    if not request.user.is_superuser:
+        return JsonResponse({'success': False, 'error': 'Yetkisiz erisim'}, status=403)
+        
+    data = json.loads(request.body)
+    file_path = data.get('path')
+    if not file_path:
+        return JsonResponse({'success': False, 'error': 'Dosya yolu eksik'})
+        
+    full_path = os.path.abspath(os.path.join(settings.MEDIA_ROOT, file_path))
+    
+    if not full_path.startswith(os.path.abspath(settings.MEDIA_ROOT)):
+        return JsonResponse({'success': False, 'error': 'Gecersiz yol'})
+        
+    if os.path.exists(full_path):
+        os.remove(full_path)
+        return JsonResponse({'success': True})
+    return JsonResponse({'success': False, 'error': 'Dosya bulunamadi'})
+
+@staff_member_required
+@require_POST
+def api_upload_event_image(request, pk):
+    from events.models import Event, EventImage
+    event = get_object_or_404(Event, pk=pk)
+    
+    images = request.FILES.getlist('images')
+    if not images:
+        return JsonResponse({'success': False, 'error': 'Görsel yüklenmedi'})
+        
+    uploaded_images = []
+    for image in images:
+        event_image = EventImage.objects.create(event=event, image=image)
+        uploaded_images.append({
+            'id': event_image.id,
+            'url': event_image.image.url
+        })
+        
+    return JsonResponse({'success': True, 'images': uploaded_images})
+
+@staff_member_required
+@require_POST
+def api_delete_event_image(request, pk):
+    from events.models import EventImage
+    import json
+    
+    data = json.loads(request.body)
+    image_id = data.get('image_id')
+    
+    image = get_object_or_404(EventImage, pk=image_id, event_id=pk)
+    image.image.delete()
+    image.delete()
+    
+    return JsonResponse({'success': True})
+
+@staff_member_required
+@require_GET
+def api_event_gallery(request, pk):
+    from events.models import Event
+    event = get_object_or_404(Event, pk=pk)
+    
+    images = []
+    for img in event.gallery_images.all():
+        images.append({
+            'id': img.id,
+            'url': img.image.url
+        })
+        
+    return JsonResponse({'success': True, 'images': images})
