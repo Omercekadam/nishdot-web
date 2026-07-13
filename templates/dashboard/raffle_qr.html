@@ -61,14 +61,15 @@
     </div>
 </div>
 
-<script src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" integrity="sha512-CNgIRec0enTMOyae0Bsw01+1E+H7zY51E9o6A/k1aMhwOovwI2O2DkItJ2G5mS1ZofSjLqI1S88nQYv8yM3wTw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script>
     // QR Code Oluştur
     const joinUrl = "{{ join_url }}";
     const qrcodeElement = document.getElementById("qrcode");
     
-    // Boyutu container'a göre ayarla
-    const size = Math.min(qrcodeElement.offsetWidth - 32, 400);
+    // Boyutu container'a göre ayarla (Eğer render edilmediyse min 250px yap)
+    let size = qrcodeElement.offsetWidth ? qrcodeElement.offsetWidth - 32 : 250;
+    size = Math.max(200, Math.min(size, 400));
     
     new QRCode(qrcodeElement, {
         text: joinUrl,
