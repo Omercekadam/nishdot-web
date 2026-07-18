@@ -1,97 +1,100 @@
-# Nishdot Web Platform - v1.0 (Production)
+# Nishdot Web Platform - Project Documentation
 
-![Nishdot Logo](docs/design/desktop-homepage.png) *(Dijital Oyun Tasarımı Kulübü - Nishdot)*
+This document is the absolute source of truth for the Nishdot Web Platform. It details the architecture, apps, models, frontend stack, deployment configurations, and all technical decisions. This file is designed to provide 100% context to developers and AI assistants (like Claude Code) onboarding to the project.
 
-İstanbul Nişantaşı Üniversitesi Dijital Oyun Tasarımı Kulübü (Nishdot) için geliştirilen resmi web platformu. Bu proje, kulüp üyelerini bir araya getirmeyi, etkinlikleri duyurmayı ve özellikle Game Jam süreçlerini modern bir arayüzle otomatize etmeyi amaçlayan dinamik, siberpunk esintili bir yönetim sistemidir.
+## 1. Project Overview & Architecture
+- **Framework:** Django 6.0+ (Python)
+- **Frontend Stack:** Tailwind CSS 3.4 (via postcss/autoprefixer), Vanilla JS, Django Templates
+- **Database:** SQLite (development), PostgreSQL (production)
+- **Caching & Sessions:** Redis (production) via `django-redis`
+- **Deployment:** Nginx + Gunicorn on Ubuntu VDS
+- **Environment Management:** `django-environ` reading from `.env`
 
-Proje geliştirme süreci başarıyla tamamlanmış ve canlı sunucularda (Ubuntu VDS, Nginx, Gunicorn) yayına alınmıştır.
+## 2. Directory Structure & Root Configs
+- **`nishdot/`**: Main configuration package. Uses a split settings approach:
+  - `settings/base.py`: Common settings.
+  - `settings/development.py`: Local settings (SQLite, Debug Toolbar).
+  - `settings/production.py`: VDS settings (PostgreSQL, Redis, Security Headers).
+- **`core/`**: Abstract base models and core utilities.
+- **`users/`**: Custom user model and authentication (OTP-based email verification).
+- **`events/`**: Event management (Game Jams, Workshops, Meetups). Gallery, applications, raffles.
+- **`jams/`**: Game Jam specific logic extending Events.
+- **`pages/`**: Static pages (Home) and Legal Documents. Contact form logic.
+- **`dashboard/`**: Staff/Board member management panel (`/management/`).
+- **`templates/`**: Global templates using Tailwind classes.
+- **`static/`**: Global static assets (`css/input.css` compiles to `css/output.css`).
 
-## 🚀 Öne Çıkan Özellikler
+## 3. Django Applications & Models Detail
 
-Platform, kullanıcı deneyimini merkeze alan sistemlerle donatıldı ve etkinlik yönetimi yapısı kusursuz bir mimariye oturtuldu:
+### 3.1 `core` App
+- **Models:** 
+  - `TimeStampedModel`: Abstract base class adding `created_at` and `updated_at` to all inheriting models.
 
-- **Gelişmiş Etkinlik Yönetimi (Karargah - Dashboard):**
-  - Sadece Game Jam'leri değil; Workshop, Buluşma, Seminer ve diğer tüm etkinlikleri tek bir merkezden oluşturma ve yönetme imkanı.
-  - **Zengin Metin Editörü (Rich Text Editor):** Etkinlik açıklamalarını HTML bilmeden kalın, italik, liste ve başlık gibi formatlarla şık bir şekilde yazmayı sağlayan Quill.js entegrasyonu.
-  - **Dinamik Başvuru Kontrolü:** Başvuruları tek tuşla tüm etkinlik türleri için açıp kapatabilme (`is_applications_open` evrensel mimarisi).
-  - **Akıllı Görsel Kırpma:** Etkinlik afişlerini tam 16:9 oranında yüklerken tarayıcı üzerinde canlı kırpma (Cropper.js) özelliği.
+### 3.2 `users` App
+- **Models:** 
+  - `CustomUser`: Extends `AbstractUser`. Uses `email` as unique identifier. Has Roles (`MEMBER`, `BOARD`, `ADMIN`). Includes profile data (University, Department, Portfolio, Phone, National ID) and OTP fields (`is_verified`, `verification_code`, `code_expires_at`).
+- **Auth Flow:** Registration requires Name, Surname, Email, Password. An OTP is sent asynchronously (using `asgiref.sync.sync_to_async`). Login requires a verified email.
+- **Forms:** `UserRegisterForm`, `UserLoginForm`, `UserProfileUpdateForm`.
 
-- **Otomatize Edilmiş Başvuru ve Mail Sistemi (Yeni):**
-  - Game Jam ve etkinlik başvurularını paneller üzerinden "Onaylandı" veya "Reddedildi" olarak işaretleme.
-  - **Toplu Mail Gönderimi:** Yönetici panelinden tek tıkla onaylanan ve reddedilen kullanıcılara asenkron olarak (spam'e düşmeyi engelleyecek gecikmelerle) mail gönderimi.
-  - Onay maillerine dinamik olarak WhatsApp Topluluk katılım linki ve sosyal medya hesaplarını dahil etme.
+### 3.3 `events` App
+- **Models:**
+  - `Event`: Base model for all activities. Types: Game Jam, Workshop, Meetup, Talk, Other. Contains dates, locations, cover image, and thumbnail (auto-compressed to WebP in `save()` method).
+  - `EventApplication`: Applications for non-Jam events. Includes KVKK checks and National ID hashing for security.
+  - `Raffle` & `RaffleParticipant`: For live event giveaways. Participants scan a QR code to join dynamically.
+  - `EventImage`: Photo gallery for events. Auto-compresses to JPEG on save.
+  - `EventGame`: Games produced in past events/jams.
 
-- **Kullanıcı Paneli & Profil Yönetimi:**
-  - Üyelerin profillerini düzenleyebilecekleri, detaylı bilgilerini (TC, Telefon, Portfolyo vb. sadece gerekli durumlarda) güvenle yönetebilecekleri "Ajan" (Agent) profili stili panel.
-  - Yapılan tüm Game Jam ve etkinlik başvurularını listeleyip, takım ve katılım detaylarını (Salt-Okunur modda) inceleyebilecekleri özel arayüz.
-  
-- **Duyuru Merkezi & Broadcast Sistemi (HQ):**
-  - Yönetim kurulunun etkinlikleri ve kulüp haberlerini duyurabileceği gelişmiş yayın merkezi.
-  - **Akıllı Hedef Kitle (Target Audience):** Duyuruları "Tüm Üyelere", "Sadece Yönetim Kuruluna" veya "Özel Seçilmiş Kullanıcılara" gönderebilme.
-  - **İnteraktif Bildirimler:** Üyelerin okudukları duyuruları panolarından şık bir animasyonla gizleyebildiği (Dismiss) kişiselleştirilmiş deneyim.
+### 3.4 `jams` App
+- **Models:**
+  - `GameJam`: OneToOne linked to `Event`. Adds deadline, max team size, available roles, and custom questions.
+  - `JamApplication`: Complex application form. Includes team status (Solo, Has Team, Looking), role, experience level.
+  - `SuggestedTeam`: Matchmaking feature allowing board members to group solo participants into teams.
+- **Security Detail:** National IDs (T.C. Kimlik) are hashed for uniqueness checks, and securely encrypted using `cryptography.fernet` (AES-256) for storage.
 
-- **Güvenlik ve Performans (Production Ready):**
-  - **Redis Tabanlı Rate Limiting:** Login ve kayıt formlarında brute-force saldırılarına karşı `django-ratelimit` ve Redis entegrasyonu.
-  - Nginx Reverse Proxy üzerinden gerçek istemci IP (X-Real-IP) takibi ile güvenli loglama ve kısıtlama.
-  - Güvenli parola yapılandırmaları, ortam değişkenleri (`.env`) izolasyonu ve `DEBUG=False` mimarisi.
+### 3.5 `pages` App
+- **Models:**
+  - `LegalDocument`: Dynamic legal pages (slug based, e.g., KVKK, Privacy Policy).
+- **Views/APIs:** `HomePageView`, `contact_api_view` (Async email sending with rate limiting).
 
-- **Siberpunk & Kusursuz Tema (Design Polish):**
-  - Tailwind CSS ile tamamen milimetrik olarak hizalanmış pürüzsüz arayüz hatları.
-  - Siyah/Çinko mat arka planlar ve "Nish Pembesi" (`#eb596d`) ile neon kontrastı.
-  - Modallar, özel kaydırma çubukları (custom scrollbar), empty state (boş durum) uyarıları ve mikro-animasyonlarla zenginleştirilmiş akıcı deneyim.
+### 3.6 `dashboard` App
+The nerve center for admins/board members (`/management/`).
+- **Models:** 
+  - `MeetingNote`: Internal club meeting notes.
+  - `BoardTask`: Kanban board tasks (Admin, Event, Design, Tech, Social).
+  - `ClubAsset`: Finance/Equipment tracking.
+  - `Announcement`: Site/Discord/Email notifications.
+  - `SecurityLog`: Logs rate limit breaches (Spam/Brute Force).
+- **Features:** 
+  - Event Builder, Kanban Drag & Drop, Member Directory, Storage Manager.
+  - **Storage Manager:** Allows admins to physically delete files from the server. Automatically cleans up orphaned DB records (Self-Healing).
 
-## 💻 Teknoloji Yığını
+## 4. Frontend & Styling (Tailwind CSS)
+- **Setup:** Defined in `package.json`. Compiles using `npx tailwindcss -i ./static/css/input.css -o ./static/css/output.css --watch`.
+- **JS Strategy:** Mostly Vanilla JS directly in HTML templates (`<script>` tags) using the `fetch` API to communicate with Django JSON endpoints.
+- **Components:** Reusable UI pieces found in `templates/components/` (navbar, footer).
 
-- **Backend:** Python 3.12+, Django 5.x
-- **Frontend:** Django Templates + Tailwind CSS v4 (Vanilla JS ile SPA hissiyatı)
-- **Veritabanı:** SQLite (Geliştirme) / PostgreSQL (Production)
-- **Önbellek & Güvenlik:** Redis (Rate Limiting & Caching)
-- **Sunucu & Deployment:** Ubuntu VDS, Nginx, Gunicorn, systemd
-- **Özel Eklentiler:** Quill.js (Rich Text), Cropper.js (Görsel İşleme)
-- **Ortam Yönetimi:** `django-environ` ile güvenli ortam değişkenleri
+## 5. Security & Rate Limiting
+- **Rate Limiting:** `django-ratelimit` protects sensitive endpoints: Login, Register, Contact, and Event Applications.
+- **SecurityLog:** Automatically logs rate limit breaches. Board members can review these in the Dashboard.
+- **Data Protection:** 
+  - Passwords hashed by Django.
+  - Sensitive PII (National IDs) encrypted via Fernet (AES-256) derived from Django `SECRET_KEY`.
 
+## 6. Self-Healing Storage
+- Event galleries (`EventImage`) and Game cover images have auto-cleanup logic.
+- If a physical file is deleted via the Dashboard Storage Manager (`api_storage_delete`), related DB records are automatically deleted.
+- Viewing a gallery via API (`api_event_gallery`) checks if files exist on disk, and auto-deletes orphaned DB records. Frontend templates also contain `onerror` fallbacks to hide broken images.
 
-## 🛠️ Kurulum (Geliştiriciler İçin)
-
-### 1. Repoyu Klonlayın
-```bash
-git clone https://github.com/Omercekadam/nishdot-web.git
-cd nishdot-web
+## 7. Environment Variables (.env)
+Required variables for the project:
+```env
+DJANGO_SECRET_KEY=your-secret-key
+DJANGO_DEBUG=True/False
+DJANGO_SETTINGS_MODULE=nishdot.settings.development # or production
+DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,yourdomain.com
+DATABASE_URL=sqlite:///db.sqlite3 # or postgres url
+SMTP_SERVER=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USERNAME=your-email
+SMTP_PASSWORD=your-app-password
 ```
-
-### 2. Sanal Ortam (Virtual Environment)
-```bash
-python -m venv venv
-# Windows: venv\Scripts\activate
-# macOS/Linux: source venv/bin/activate
-```
-
-### 3. Bağımlılıkları Yükleyin
-```bash
-pip install -r requirements/development.txt
-```
-*(Geliştirme süreci bittiği için `requirements.txt` dosyasını ana dizinden de kurabilirsiniz, projenin klasör yapısına göre uygun olanı seçiniz.)*
-
-### 4. Frontend (Tailwind CSS) Derleme
-Projeyi geliştirirken Tailwind'in anlık derlenmesi için yeni bir terminalde şu komutu çalıştırın:
-```bash
-npx @tailwindcss/cli -i ./static/css/input.css -o ./static/css/output.css --watch
-```
-
-### 5. Ortam Değişkenleri (Environment Variables)
-Ana dizindeki `.env.example` dosyasının kopyasını oluşturup adını `.env` yapın ve içindeki bilgileri doldurun:
-```bash
-cp .env.example .env
-```
-Geliştirme için `DJANGO_SETTINGS_MODULE=nishdot.settings.development` kullanıldığından emin olun.
-
-### 6. Veritabanı ve Çalıştırma
-```bash
-python manage.py migrate
-python manage.py createsuperuser
-python manage.py runserver
-```
-
----
-
-*Made with ❤️ by Nishdot Web Team.*

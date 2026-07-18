@@ -50,9 +50,19 @@
                     <div class="flex items-center gap-2">
                         <span class="text-[10px] uppercase font-bold text-zinc-500">Yazar:</span>
                         <div class="h-6 w-6 rounded-full bg-zinc-800 flex items-center justify-center text-[10px] font-bold text-brand-pink border border-brand-pink/20">
-                            {{ note.author.first_name|default:note.author.username|make_list|first|upper }}
+                            {% if note.author %}
+                                {{ note.author.first_name|default:note.author.username|make_list|first|upper }}
+                            {% else %}
+                                S
+                            {% endif %}
                         </div>
-                        <span class="text-xs text-zinc-400">{{ note.author.first_name|default:note.author.username }}</span>
+                        <span class="text-xs text-zinc-400">
+                            {% if note.author %}
+                                {{ note.author.first_name|default:note.author.username }}
+                            {% else %}
+                                Silinmiş Kullanıcı
+                            {% endif %}
+                        </span>
                     </div>
                     {% if note.attendees.exists %}
                     <div class="flex items-center gap-2 mt-1">
