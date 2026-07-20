@@ -110,6 +110,15 @@ STORAGES = {
 }
 
 # ==============================================================================
+# Rate Limiting
+# ==============================================================================
+
+# Nginx arkasında REMOTE_ADDR proxy'nin kendi IP'sini gösterir.
+# django-ratelimit gerçek istemci IP'sini bu header'dan okur.
+# Nginx tarafında "proxy_set_header X-Real-IP $remote_addr;" tanımlı olmalıdır.
+RATELIMIT_IP_META_KEY = "HTTP_X_REAL_IP"
+
+# ==============================================================================
 # Email
 # ==============================================================================
 
