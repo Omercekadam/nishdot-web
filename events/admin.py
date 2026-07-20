@@ -4,8 +4,9 @@ from .models import Event, Raffle, RaffleParticipant, EventGame, EventApplicatio
 
 @admin.register(Event)
 class EventAdmin(admin.ModelAdmin):
-    list_display = ("title", "event_type", "status", "is_applications_open", "start_date", "end_date")
-    list_filter = ("event_type", "status", "is_applications_open")
+    list_display = ("title", "event_type", "status", "is_pinned", "is_applications_open", "start_date", "end_date")
+    list_editable = ("is_pinned",)
+    list_filter = ("event_type", "status", "is_pinned", "is_applications_open")
     search_fields = ("title", "description", "location")
     prepopulated_fields = {"slug": ("title",)}
     date_hierarchy = "start_date"
@@ -15,6 +16,7 @@ class EventAdmin(admin.ModelAdmin):
 class RaffleParticipantInline(admin.TabularInline):
     model = RaffleParticipant
     extra = 0
+    fields = ("user", "guest_name", "joined_at")
     readonly_fields = ("user", "joined_at")
 
 

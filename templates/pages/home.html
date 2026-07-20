@@ -141,7 +141,14 @@
             <div class="event-card group relative {% if forloop.counter > 3 %}hidden extra-event{% endif %}">
                 <!-- Top Gradient Border -->
                 <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-brand-pink to-brand-pink/20"></div>
-                
+
+                {% if event.is_pinned %}
+                <div class="absolute top-3 right-3 z-10 flex items-center gap-1 bg-brand-pink text-white text-xs font-bold px-2.5 py-1 rounded-full shadow-lg" title="Sabitlenmiş Etkinlik">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="inline-block w-[1em] h-[1em] align-middle shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                    Sabitlendi
+                </div>
+                {% endif %}
+
                 <!-- Image Area -->
                 <div class="h-48 bg-zinc-800 flex items-center justify-center overflow-hidden border-b border-zinc-700/50">
                     {% if event.thumbnail %}

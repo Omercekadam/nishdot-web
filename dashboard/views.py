@@ -213,8 +213,25 @@ def api_toggle_jam_status(request):
             
         event.is_applications_open = not event.is_applications_open
         event.save()
-        
+
         return JsonResponse({'success': True, 'is_open': event.is_applications_open})
+    except Exception:
+        logger.exception("Dashboard API hatası")
+        return JsonResponse({'success': False, 'error': GENERIC_API_ERROR}, status=400)
+
+@staff_member_required
+@require_POST
+def api_toggle_event_pin(request):
+    from events.models import Event
+    try:
+        data = json.loads(request.body)
+        event_id = data.get('event_id')
+        event = get_object_or_404(Event, id=event_id)
+
+        event.is_pinned = not event.is_pinned
+        event.save()
+
+        return JsonResponse({'success': True, 'is_pinned': event.is_pinned})
     except Exception:
         logger.exception("Dashboard API hatası")
         return JsonResponse({'success': False, 'error': GENERIC_API_ERROR}, status=400)
@@ -966,22 +983,33 @@ class RaffleDrawView(StaffRequiredMixin, DetailView):
 @staff_member_required
 def api_raffle_participants(request, pk):
     raffle = get_object_or_404(Raffle, pk=pk)
-    participants = list(raffle.participants.values('id', 'user__first_name', 'user__last_name', 'user__username'))
-    
-    formatted_participants = []
-    for p in participants:
-        name = f"{p['user__first_name']} {p['user__last_name']}".strip()
-        if not name:
-            name = p['user__username']
-        formatted_participants.append({
-            'id': p['id'],
-            'name': name
-        })
-        
+    participants = raffle.participants.select_related('user').all()
+
+    formatted_participants = [
+        {'id': p.id, 'name': p.display_name}
+        for p in participants
+    ]
+
     return JsonResponse({
         'count': len(formatted_participants),
         'participants': formatted_participants
     })
+
+@staff_member_required
+@require_POST
+def api_raffle_add_participant(request, pk):
+    raffle = get_object_or_404(Raffle, pk=pk)
+    try:
+        data = json.loads(request.body)
+        name = (data.get('name') or '').strip()
+        if not name:
+            return JsonResponse({'success': False, 'error': 'İsim boş olamaz.'}, status=400)
+
+        participant = RaffleParticipant.objects.create(raffle=raffle, guest_name=name)
+        return JsonResponse({'success': True, 'id': participant.id, 'name': participant.display_name})
+    except Exception:
+        logger.exception("Dashboard API hatası")
+        return JsonResponse({'success': False, 'error': GENERIC_API_ERROR}, status=400)
 
 @staff_member_required
 @require_POST
@@ -1009,7 +1037,7 @@ def api_raffle_pick_winner(request, pk):
     winner = random.choice(participants)
     return JsonResponse({
         'success': True,
-        'winner': winner.user.get_full_name() or winner.user.username
+        'winner': winner.display_name
     })
 
 @staff_member_required

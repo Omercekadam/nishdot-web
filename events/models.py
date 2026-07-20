@@ -45,6 +45,7 @@ class Event(TimeStampedModel):
     cover_image = models.ImageField(upload_to="events/covers/", blank=True, verbose_name="Kapak Görseli")
     thumbnail   = models.ImageField(upload_to="events/thumbnails/", blank=True, verbose_name="Liste Görseli (Kırpılmış)")
     is_applications_open = models.BooleanField(default=True, verbose_name="Başvurular Açık Mı?")
+    is_pinned   = models.BooleanField(default=False, db_index=True, verbose_name="Ana Sayfada Sabitle")
 
     class Meta(TimeStampedModel.Meta):
         verbose_name = "Etkinlik"
@@ -128,16 +129,31 @@ class Raffle(TimeStampedModel):
 
 class RaffleParticipant(models.Model):
     raffle = models.ForeignKey(Raffle, on_delete=models.CASCADE, related_name='participants')
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='raffle_participations')
+    # Kayıtlı kullanıcılar QR ile katılır; boş bırakılırsa yönetici tarafından
+    # elle eklenmiş bir misafir katılımcı olduğu anlamına gelir (bkz. guest_name).
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+        null=True, blank=True, related_name='raffle_participations',
+    )
+    guest_name = models.CharField(max_length=200, blank=True, verbose_name="Misafir Adı")
     joined_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         verbose_name = "Çekiliş Katılımcısı"
         verbose_name_plural = "Çekiliş Katılımcıları"
-        unique_together = ('raffle', 'user') # Bir kişi aynı çekilişe sadece bir kez katılabilir
+        # Bir kullanıcı aynı çekilişe sadece bir kez katılabilir. user=NULL olan
+        # misafir kayıtları PostgreSQL'de bu kısıtta her zaman farklı sayılır,
+        # yani birden fazla misafir aynı çekilişe elle eklenebilir.
+        unique_together = ('raffle', 'user')
 
     def __str__(self):
-        return f"{self.user.get_full_name()} - {self.raffle.title}"
+        return f"{self.display_name} - {self.raffle.title}"
+
+    @property
+    def display_name(self):
+        if self.user_id:
+            return self.user.get_full_name() or self.user.username
+        return self.guest_name or "İsimsiz Misafir"
 
 class EventGame(TimeStampedModel):
     """

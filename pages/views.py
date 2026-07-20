@@ -7,7 +7,7 @@ class HomePageView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['events'] = Event.objects.filter(status__in=['published', 'completed']).order_by('-start_date')
+        context['events'] = Event.objects.filter(status__in=['published', 'completed']).order_by('-is_pinned', '-start_date')
         return context
 
 class LegalDocumentDetailView(DetailView):

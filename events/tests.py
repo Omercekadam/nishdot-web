@@ -1,6 +1,7 @@
 """
 Etkinlik / çekiliş / kişisel veri güvenlik testleri.
 """
+import json
 from datetime import timedelta
 
 from django.test import TestCase
@@ -96,3 +97,104 @@ class NationalIdEncryptionTests(TestCase):
                 university="X", department="Y", grade="1",
                 is_nisantasi_student=False, national_id="123",  # geçersiz
             )
+
+
+class PinnedEventOrderingTests(TestCase):
+    """Ana sayfada sabitlenmiş etkinlikler tarihten bağımsız en üstte gösterilmeli."""
+
+    def test_pinned_event_comes_first_even_if_older(self):
+        from pages.views import HomePageView
+
+        make_event(Event.Status.PUBLISHED, slug="yeni-etkinlik")  # daha yeni start_date (varsayılan: şimdi)
+        old = Event.objects.create(
+            title="Eski Sabitlenmiş", slug="eski-sabitlenmis",
+            description="x", event_type=Event.EventType.WORKSHOP,
+            status=Event.Status.PUBLISHED,
+            start_date=timezone.now() - timedelta(days=30),
+            end_date=timezone.now() - timedelta(days=30) + timedelta(hours=2),
+            location="Kampüs", is_pinned=True,
+        )
+
+        events = list(HomePageView().get_context_data()['events'])
+        self.assertEqual(events[0].id, old.id)
+
+
+class DashboardPinToggleTests(TestCase):
+    def setUp(self):
+        self.event = make_event(Event.Status.PUBLISHED, slug="pin-testi")
+        self.staff = User.objects.create_user(
+            username="staff2", email="staff2@example.com", password="x", is_staff=True
+        )
+        self.url = reverse("dashboard:api_toggle_event_pin")
+
+    def test_staff_can_toggle_pin(self):
+        self.client.force_login(self.staff)
+        resp = self.client.post(
+            self.url,
+            data=json.dumps({"event_id": self.event.id}),
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 200)
+        self.event.refresh_from_db()
+        self.assertTrue(self.event.is_pinned)
+
+    def test_non_staff_cannot_toggle_pin(self):
+        resp = self.client.post(
+            self.url,
+            data=json.dumps({"event_id": self.event.id}),
+            content_type="application/json",
+        )
+        self.assertNotEqual(resp.status_code, 200)
+        self.event.refresh_from_db()
+        self.assertFalse(self.event.is_pinned)
+
+
+class ManualRaffleParticipantTests(TestCase):
+    """Yönetici QR çekilişine elle (hesabı olmayan) misafir ekleyebilmeli."""
+
+    def setUp(self):
+        self.event = make_event(Event.Status.PUBLISHED, slug="misafir-cekilis")
+        self.raffle = Raffle.objects.create(event=self.event, title="Çekiliş", is_active=True)
+        self.staff = User.objects.create_user(
+            username="staff3", email="staff3@example.com", password="x", is_staff=True
+        )
+        self.add_url = reverse("dashboard:api_raffle_add_participant", kwargs={"pk": self.raffle.id})
+
+    def test_add_guest_participant(self):
+        self.client.force_login(self.staff)
+        resp = self.client.post(
+            self.add_url,
+            data=json.dumps({"name": "Misafir Ahmet"}),
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 200)
+        participant = RaffleParticipant.objects.get(raffle=self.raffle)
+        self.assertIsNone(participant.user)
+        self.assertEqual(participant.display_name, "Misafir Ahmet")
+
+    def test_multiple_guests_allowed(self):
+        """user=NULL olan iki misafir kaydı unique_together('raffle','user')'a takılmamalı."""
+        self.client.force_login(self.staff)
+        self.client.post(self.add_url, data=json.dumps({"name": "Misafir 1"}), content_type="application/json")
+        resp2 = self.client.post(self.add_url, data=json.dumps({"name": "Misafir 2"}), content_type="application/json")
+        self.assertEqual(resp2.status_code, 200)
+        self.assertEqual(RaffleParticipant.objects.filter(raffle=self.raffle).count(), 2)
+
+    def test_empty_name_rejected(self):
+        self.client.force_login(self.staff)
+        resp = self.client.post(
+            self.add_url,
+            data=json.dumps({"name": "   "}),
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 400)
+        self.assertEqual(RaffleParticipant.objects.filter(raffle=self.raffle).count(), 0)
+
+    def test_pick_winner_shows_guest_name(self):
+        RaffleParticipant.objects.create(raffle=self.raffle, guest_name="Tek Misafir")
+        self.client.force_login(self.staff)
+        resp = self.client.post(
+            reverse("dashboard:api_raffle_pick_winner", kwargs={"pk": self.raffle.id})
+        )
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(json.loads(resp.content)["winner"], "Tek Misafir")
