@@ -41,8 +41,21 @@ DATABASES["default"]["CONN_MAX_AGE"] = 600  # 10 dakika connection pooling
 # Security
 # ==============================================================================
 
+# SSL Nginx'te sonlanır; Gunicorn'a unix soketten düz HTTP gelir.
+# Bu başlık olmadan request.is_secure() False döner ve SECURE_SSL_REDIRECT
+# sonsuz yönlendirme döngüsüne girer. Nginx tarafında mutlaka
+# "proxy_set_header X-Forwarded-Proto $scheme;" tanımlı olmalıdır.
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
 # HTTPS zorunluluğu — HTTP isteklerini otomatik yönlendirir.
 SECURE_SSL_REDIRECT = True
+
+# Django 4+ HTTPS POST'larda Origin başlığını bu listeyle doğrular.
+# Tanımlı olmazsa proxy arkasında CSRF reddi yaşanabilir.
+CSRF_TRUSTED_ORIGINS = env.list(
+    "DJANGO_CSRF_TRUSTED_ORIGINS",
+    default=["https://nishdot.com.tr", "https://www.nishdot.com.tr"],
+)
 
 # Cookie'ler sadece HTTPS üzerinden gönderilir.
 # Bu olmadan session hijacking mümkün olur.
@@ -83,6 +96,18 @@ SESSION_CACHE_ALIAS = "default"
 # collectstatic komutu tüm statik dosyaları bu dizine toplar.
 # Nginx bu dizini doğrudan sunar — Django'ya hiç uğramaz.
 STATIC_ROOT = BASE_DIR / "staticfiles"
+
+# Cache-busting: collectstatic her dosyaya içerik hash'i ekler
+# (output.css → output.a1b2c3.css). Nginx'in 30 günlük cache'i olsa bile
+# her deploy'da kullanıcılar yeni CSS/JS'i anında alır.
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.ManifestStaticFilesStorage",
+    },
+}
 
 # ==============================================================================
 # Email

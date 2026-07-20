@@ -2,10 +2,8 @@ from django.utils.decorators import method_decorator
 from django_ratelimit.decorators import ratelimit
 from dashboard.models import SecurityLog
 from django.shortcuts import render, redirect
-from django.contrib.auth import login, authenticate
 from django.contrib.auth.views import LoginView
-from django.views.generic import CreateView, TemplateView
-from django.urls import reverse_lazy
+from django.views.generic import TemplateView
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -15,32 +13,28 @@ from jams.models import JamApplication
 
 User = get_user_model()
 
-@method_decorator(ratelimit(key='ip', rate='3/h', block=False), name='post')
-class UserRegisterView(CreateView):
+class UserRegisterView(TemplateView):
+    """
+    Kayıt sayfasını render eder. Sayfadaki form, JS ile OTP'li API akışına
+    (users:api_register + users:api_verify) gönderim yapar.
+
+    GÜVENLİK: Bu view POST kabul ETMEZ. Eski CreateView halinde doğrudan
+    form POST'u, OTP doğrulaması olmadan kullanıcı oluşturup login ediyordu
+    (e-posta doğrulama bypass'ı). TemplateView POST'a otomatik olarak
+    405 Method Not Allowed döndürür.
+    """
     template_name = "users/register.html"
-    form_class = UserRegisterForm
-    success_url = reverse_lazy("users:dashboard")
 
     def get(self, request, *args, **kwargs):
         if request.user.is_authenticated:
             return redirect("users:dashboard")
         return super().get(request, *args, **kwargs)
 
-
-    def post(self, request, *args, **kwargs):
-        if getattr(request, 'limited', False):
-            SecurityLog.objects.create(
-                ip_address=request.META.get('REMOTE_ADDR', ''),
-                action=SecurityLog.ActionType.REGISTER_SPAM,
-                user_agent=request.META.get('HTTP_USER_AGENT', '')
-            )
-            return render(request, 'pages/429.html', {'message': 'Kısa sürede çok fazla istek gönderdiniz. Lütfen 1 saat sonra tekrar deneyiniz.'}, status=429)
-        return super().post(request, *args, **kwargs)
-    def form_valid(self, form):
-        user = form.save()
-        login(self.request, user)
-        messages.success(self.request, f"Aramıza hoş geldin, {user.first_name}!")
-        return redirect(self.success_url)
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Şablon, alanları (widget class'ları ile) form üzerinden render ediyor.
+        context['form'] = UserRegisterForm()
+        return context
 
 @method_decorator(ratelimit(key='ip', rate='5/5m', block=False), name='post')
 class UserLoginView(LoginView):

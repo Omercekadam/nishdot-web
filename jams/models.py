@@ -1,14 +1,13 @@
 from django.db import models
 from django.conf import settings
 from core.models import TimeStampedModel
-import hashlib
-import base64
-from cryptography.fernet import Fernet
-
-def get_fernet():
-    # Django Secret Key'den 32 bytelık güvenli bir AES-256 anahtarı türet
-    key = hashlib.sha256(settings.SECRET_KEY.encode('utf-8')).digest()
-    return Fernet(base64.urlsafe_b64encode(key))
+from core.crypto import (
+    encrypt_value,
+    decrypt_value,
+    hash_national_id,
+    is_encrypted,
+    is_valid_national_id,
+)
 class GameJam(TimeStampedModel):
     event = models.OneToOneField(
         "events.Event",
@@ -130,23 +129,20 @@ class JamApplication(TimeStampedModel):
         return f"{self.full_name} - {self.jam.event.title}"
 
     def save(self, *args, **kwargs):
-        if self.national_id and len(self.national_id) == 11 and not self.national_id.startswith('gAAAAA'):
-            # T.C. Kimlik numarasının benzersizliğini veritabanında kontrol edebilmek için
-            # şifrelemeden bağımsız bir hash (özet) alıyoruz.
-            self.national_id_hash = hashlib.sha256(self.national_id.encode('utf-8')).hexdigest()
-            # Gerçek T.C. Kimlik Numarasını AES ile şifreliyoruz.
-            fernet = get_fernet()
-            self.national_id = fernet.encrypt(self.national_id.encode('utf-8')).decode('utf-8')
+        if self.national_id and not is_encrypted(self.national_id):
+            if not is_valid_national_id(self.national_id):
+                # Biçimsiz bir değer asla düz metin olarak veritabanına yazılmamalı.
+                raise ValueError("Geçersiz T.C. Kimlik Numarası biçimi.")
+            # Tekillik kontrolü için şifrelemeden bağımsız HMAC özeti.
+            self.national_id_hash = hash_national_id(self.national_id)
+            self.national_id = encrypt_value(self.national_id)
         super().save(*args, **kwargs)
 
     @property
     def decrypted_national_id(self):
         if not self.national_id:
             return ""
-        if self.national_id.startswith('gAAAAA'):
-            try:
-                fernet = get_fernet()
-                return fernet.decrypt(self.national_id.encode('utf-8')).decode('utf-8')
-            except:
-                return "ŞİFRE ÇÖZÜLEMEDİ"
-        return self.national_id
+        try:
+            return decrypt_value(self.national_id)
+        except Exception:
+            return "ŞİFRE ÇÖZÜLEMEDİ"

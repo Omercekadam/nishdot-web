@@ -7,7 +7,7 @@
 <div class="fixed inset-0 bg-zinc-950 z-[100] flex flex-col items-center justify-center overflow-hidden font-sans">
     <!-- Kapat -->
     <a href="{% url 'dashboard:raffles' %}" class="absolute top-6 left-6 text-zinc-400 hover:text-white transition-colors z-[110] flex items-center gap-2">
-        <i class="fas fa-arrow-left"></i> Yönetime Dön
+        <svg xmlns="http://www.w3.org/2000/svg" class="inline-block w-[1em] h-[1em] align-middle shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"/></svg> Yönetime Dön
     </a>
 
     <!-- Arka plan efektleri -->
@@ -38,7 +38,7 @@
         <!-- Butonlar -->
         <div class="flex gap-4">
             <button id="drawBtn" class="bg-brand-pink hover:bg-opacity-90 text-white font-black text-lg md:text-2xl px-8 md:px-12 py-4 md:py-5 rounded-2xl shadow-[0_0_40px_rgba(235,89,109,0.4)] hover:shadow-[0_0_60px_rgba(235,89,109,0.6)] hover:scale-105 transition-all focus:outline-none">
-                <i class="fas fa-play mr-2"></i> ÇEKİLİŞİ BAŞLAT
+                <svg xmlns="http://www.w3.org/2000/svg" class="inline-block w-[1em] h-[1em] align-middle shrink-0 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z"/></svg> ÇEKİLİŞİ BAŞLAT
             </button>
             <button id="resetBtn" class="hidden bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-base md:text-lg px-6 md:px-8 py-4 md:py-5 rounded-2xl transition-all focus:outline-none">
                 Yeni Kura
@@ -52,7 +52,7 @@
     <canvas id="confetti" class="absolute inset-0 pointer-events-none w-full h-full z-50"></canvas>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js" integrity="sha384-HAH79XdRvHr6axVGh4xQWVCp14kcd32bNk4Xu0sHDHtFQ42n6BAM8ykvB47dGz6D" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script>
     const csrfToken = '{{ csrf_token }}';
     const participantsUrl = "{% url 'dashboard:api_raffle_participants' raffle.id %}";

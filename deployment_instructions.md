@@ -145,8 +145,10 @@ source venv/bin/activate
 Gerekli Django kütüphanelerini yükleyin:
 ```bash
 pip install -r requirements/production.txt
-pip install gunicorn psycopg2-binary
 ```
+> Not: `gunicorn` ve `psycopg[binary]` (PostgreSQL sürücüsü, psycopg **v3**) zaten
+> `requirements/production.txt` içinde tanımlıdır — ayrıca yüklemeye gerek yoktur.
+> (Eski talimatlardaki `psycopg2-binary` YANLIŞTIR, kullanmayın.)
 
 ---
 
@@ -156,15 +158,51 @@ Güvenlik bilgilerini (Şifreler, Secret Key vb.) GitHub'a yüklemediğimiz içi
 ```bash
 nano .env
 ```
+Önce **FERNET_KEY** (kişisel veri şifreleme anahtarı) üretin ve kopyalayın:
+```bash
+python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+```
+
 İçerisine şu bilgileri yapıştırın (Şifrenizi ve domaininizi kendinize göre güncelleyin):
 ```env
 DJANGO_SECRET_KEY=buraya_rastgele_uzun_karisik_bir_sifre_yazin
+FERNET_KEY=yukarida_urettiginiz_fernet_anahtari
 DJANGO_DEBUG=False
+DJANGO_SETTINGS_MODULE=nishdot.settings.production
 DJANGO_ALLOWED_HOSTS=nishdot.com.tr,www.nishdot.com.tr,sunucu_ip_adresiniz
+DJANGO_CSRF_TRUSTED_ORIGINS=https://nishdot.com.tr,https://www.nishdot.com.tr
 DATABASE_URL=postgres://nishdot_user:guclu_bir_sifre_belirleyin@127.0.0.1:5432/nishdot_db
 REDIS_URL=redis://127.0.0.1:6379/1
+
+# SMTP Hesap 1 (Doğrulama mailleri)
+SMTP_SERVER=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USERNAME=dogrulama_mailiniz@gmail.com
+SMTP_PASSWORD=google_uygulama_sifresi
+
+# SMTP Hesap 2 (Game Jam / İletişim)
+SMTP2_SERVER=smtp.gmail.com
+SMTP2_PORT=587
+SMTP2_USERNAME=ikinci_mailiniz@gmail.com
+SMTP2_PASSWORD=google_uygulama_sifresi
 ```
 *(Kaydetmek için `CTRL+X` yapın, `Y` tuşuna basın ve `Enter`'a basın.)*
+
+Dosyayı yalnızca sahibinin okuyabilmesi için izinlerini kısıtlayın:
+```bash
+chmod 600 .env
+```
+
+> ⚠️ **FERNET_KEY hakkında kritik uyarı:** Bu anahtar, kayıtlı T.C. Kimlik
+> numaralarının şifresini çözmek için gereklidir. **Bir kez belirledikten sonra
+> DEĞİŞTİRMEYİN** — değişirse tüm şifreli kayıtlar okunamaz hale gelir. Zorunlu
+> bir rotasyon gerekirse, önce eski anahtarla çözüp yenisiyle şifreleyen bir veri
+> migration'ı yazılmalıdır.
+>
+> **Mevcut canlı sistemde ilk kez FERNET_KEY ekliyorsanız:** SECRET_KEY'i bu
+> adımda DEĞİŞTİRMEYİN. Önce kodu deploy edip `migrate` çalıştırın (bu, eski
+> SECRET_KEY türevli anahtarla şifrelenmiş verileri yeni FERNET_KEY'e taşır),
+> ANCAK ondan SONRA SECRET_KEY'i yenileyin.
 
 ---
 
@@ -191,6 +229,14 @@ Projenin terminal kapansa bile arka planda sonsuza kadar çalışması için Gun
 ```bash
 nano /etc/systemd/system/gunicorn.service
 ```
+Önce web uygulamasını çalıştıracak **ayrıcalıksız bir kullanıcı** oluşturun.
+Uygulama `root` olarak çalışmamalı — bir güvenlik açığı istismar edilirse
+saldırgan doğrudan tüm sunucuya root erişimi kazanır:
+```bash
+adduser --system --group --no-create-home nishdot
+chown -R nishdot:www-data /var/www/nishdot-web
+```
+
 İçerisine yapıştırın:
 ```ini
 [Unit]
@@ -198,7 +244,7 @@ Description=gunicorn daemon for Nishdot
 After=network.target
 
 [Service]
-User=root
+User=nishdot
 Group=www-data
 WorkingDirectory=/var/www/nishdot-web
 Environment="DJANGO_SETTINGS_MODULE=nishdot.settings.production"
@@ -208,6 +254,9 @@ ExecStart=/var/www/nishdot-web/venv/bin/gunicorn --access-logfile - --workers 3 
 WantedBy=multi-user.target
 ```
 *(Kaydedip çıkın: CTRL+X, Y, Enter)*
+
+> Not: `nishdot` kullanıcısının `.env` dosyasını okuyabildiğinden emin olun
+> (`chown nishdot:www-data .env` yeterlidir; izin `chmod 600` kalabilir).
 
 Servisi başlatın:
 ```bash
@@ -246,10 +295,16 @@ server {
 
     location / {
         include proxy_params;
+        # Django'nun HTTPS'i doğru algılaması için ŞART (SECURE_PROXY_SSL_HEADER).
+        # Bu başlık olmadan sonsuz yönlendirme (redirect loop) yaşanır.
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Host $host;
         proxy_pass http://unix:/run/gunicorn.sock;
     }
 }
 ```
+> Not: Ubuntu'nun varsayılan `proxy_params` dosyası genelde `X-Forwarded-Proto`
+> başlığını zaten içerir; yukarıda açıkça belirtmek her durumda güvenlidir.
 *(Kaydedip çıkın: CTRL+X, Y, Enter)*
 
 Nginx'i aktifleştirin ve yeniden başlatın:
@@ -317,3 +372,43 @@ systemctl restart gunicorn
 ```
 
 İşte bu kadar! Siteniz yeni sürümüyle saniyeler içerisinde çalışmaya devam edecektir.
+
+---
+
+## ⚠️ BU GÜVENLİK GÜNCELLEMESİNİ İLK KEZ DEPLOY EDERKEN (tek seferlik)
+
+Bu sürümde bağımlılık, ayar ve şifreleme değişiklikleri var. Sunucuda **sırayla**:
+
+```bash
+cd /var/www/nishdot-web
+git pull origin main
+source venv/bin/activate
+
+# 1) Yeni bağımlılıklar (nh3, cryptography)
+pip install -r requirements/production.txt
+
+# 2) .env'e FERNET_KEY ve (varsa) DJANGO_CSRF_TRUSTED_ORIGINS ekleyin
+python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+nano .env          # FERNET_KEY=... satırını ekleyin
+chmod 600 .env
+
+# 3) Migrasyonlar — bu adım mevcut T.C. Kimlik verilerini yeni anahtara taşır
+export DJANGO_SETTINGS_MODULE=nishdot.settings.production
+python manage.py migrate
+python manage.py collectstatic --noinput
+
+# 4) Nginx'e X-Forwarded-Proto başlığını ekleyip (10. ADIM) test edin
+nginx -t && systemctl reload nginx
+
+# 5) Gunicorn'u ayrıcalıksız kullanıcıya taşıyın (9. ADIM) ve yeniden başlatın
+systemctl daemon-reload
+systemctl restart gunicorn
+
+# 6) HER ŞEY ÇALIŞTIKTAN SONRA sırları yenileyin:
+#    - DJANGO_SECRET_KEY (dikkat: tüm oturumlar kapanır)
+#    - İki Gmail uygulama şifresi (Google Hesabı > Uygulama Şifreleri)
+#    Ardından: systemctl restart gunicorn
+```
+
+> Dağıtımdan önce güvenlik ayarlarını doğrulamak için:
+> `python manage.py check --deploy` çalıştırın (0 uyarı beklenir).

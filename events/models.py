@@ -1,8 +1,18 @@
+import logging
 import uuid
 from django.db import models
 from django.conf import settings
 
 from core.models import TimeStampedModel
+from core.crypto import (
+    encrypt_value,
+    decrypt_value,
+    hash_national_id,
+    is_encrypted,
+    is_valid_national_id,
+)
+
+logger = logging.getLogger(__name__)
 
 
 class Event(TimeStampedModel):
@@ -82,7 +92,7 @@ class Event(TimeStampedModel):
                 'ImageField',
                 filename,
                 'image/webp',
-                sys.getsizeof(output),
+                output.getbuffer().nbytes,
                 None
             )
 
@@ -181,7 +191,7 @@ class EventGame(TimeStampedModel):
                 'ImageField',
                 filename,
                 'image/webp',
-                sys.getsizeof(output),
+                output.getbuffer().nbytes,
                 None
             )
 
@@ -217,6 +227,25 @@ class EventApplication(TimeStampedModel):
 
     def __str__(self):
         return f"{self.full_name} - {self.event.title}"
+
+    def save(self, *args, **kwargs):
+        # T.C. Kimlik Numarası KVKK gereği asla düz metin saklanmaz —
+        # JamApplication ile aynı şifreleme uygulanır.
+        if self.national_id and not is_encrypted(self.national_id):
+            if not is_valid_national_id(self.national_id):
+                raise ValueError("Geçersiz T.C. Kimlik Numarası biçimi.")
+            self.national_id_hash = hash_national_id(self.national_id)
+            self.national_id = encrypt_value(self.national_id)
+        super().save(*args, **kwargs)
+
+    @property
+    def decrypted_national_id(self):
+        if not self.national_id:
+            return ""
+        try:
+            return decrypt_value(self.national_id)
+        except Exception:
+            return "ŞİFRE ÇÖZÜLEMEDİ"
 
 class EventImage(TimeStampedModel):
     event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="gallery_images")
@@ -271,10 +300,10 @@ class EventImage(TimeStampedModel):
                 new_filename = f"{os.path.splitext(os.path.basename(image_field.name))[0]}.jpg"
                 return InMemoryUploadedFile(
                     output, 'ImageField', new_filename,
-                    'image/jpeg', sys.getsizeof(output), None
+                    'image/jpeg', output.getbuffer().nbytes, None
                 )
-            except Exception as e:
-                print("EventImage Image compression failed:", e)
+            except Exception:
+                logger.exception("EventImage görsel sıkıştırma başarısız oldu")
                 return image_field
 
         try:

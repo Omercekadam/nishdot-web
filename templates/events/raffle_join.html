@@ -12,7 +12,29 @@
     </div>
 
     <div class="max-w-md w-full space-y-8 relative z-10 text-center">
-        {% if status == "closed" %}
+        {% if status == "confirm" %}
+        <div class="bg-zinc-900/80 backdrop-blur-xl p-8 rounded-3xl border border-brand-pink/30 shadow-[0_0_50px_rgba(235,89,109,0.15)]">
+            <div class="w-24 h-24 mx-auto bg-brand-pink/20 rounded-full flex items-center justify-center mb-6">
+                <span class="text-5xl">🎟️</span>
+            </div>
+            <h2 class="text-3xl font-black text-white mb-2">{{ raffle.title }}</h2>
+            <p class="text-zinc-400 mb-6">Çekilişe katılmak üzeresin. Aşağıdaki butona basarak adını çekiliş listesine yazdırabilirsin.</p>
+
+            <div class="bg-zinc-950/50 rounded-xl p-4 mb-6">
+                <p class="text-xs text-zinc-500 uppercase tracking-wider mb-1">Katılımcı</p>
+                <p class="text-white font-bold">{{ request.user.get_full_name|default:request.user.username }}</p>
+            </div>
+
+            <form method="post" class="progressive-form">
+                {% csrf_token %}
+                <button type="submit" class="inline-block w-full bg-brand-pink text-white font-bold py-3 px-4 rounded-xl hover:bg-opacity-90 transition-all shadow-[0_0_20px_rgba(235,89,109,0.3)] hover:shadow-[0_0_30px_rgba(235,89,109,0.5)]">
+                    Çekilişe Katıl
+                </button>
+            </form>
+            <a href="{% url 'pages:home' %}" class="mt-4 inline-block w-full bg-zinc-800 text-white font-bold py-3 px-4 rounded-xl hover:bg-zinc-700 transition-colors">Vazgeç</a>
+        </div>
+
+        {% elif status == "closed" %}
         <div class="bg-zinc-900/80 backdrop-blur-xl p-8 rounded-3xl border border-zinc-800/50 shadow-2xl">
             <div class="w-20 h-20 mx-auto bg-zinc-800 rounded-full flex items-center justify-center mb-6">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -60,7 +82,7 @@
 </div>
 
 {% if status == "success" %}
-<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js" integrity="sha384-HAH79XdRvHr6axVGh4xQWVCp14kcd32bNk4Xu0sHDHtFQ42n6BAM8ykvB47dGz6D" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         var duration = 3 * 1000;

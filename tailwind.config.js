@@ -6,6 +6,8 @@ module.exports = {
     "./users/**/*.html",
     "./events/**/*.html",
     "./jams/**/*.html",
+    "./dashboard/**/*.html",
+    "./core/**/*.html",
   ],
   theme: {
     extend: {

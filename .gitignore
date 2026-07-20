@@ -45,9 +45,16 @@ Thumbs.db
 Desktop.ini
 ehthumbs.db
 
-# ----------------------------- Node (Tailwind CSS — ileride eklenecek) --------
+# ----------------------------- Node (Tailwind CSS) ----------------------------
 node_modules/
-package-lock.json
+# package-lock.json COMMIT edilir — tekrarlanabilir (reproducible) build için.
+
+# ----------------------------- Büyük Orijinal Görseller -----------------------
+# Web'de yalnızca .webp sürümleri kullanılır. Yüksek çözünürlüklü orijinaller
+# repo'yu şişiriyordu (~200 MB) — takipten çıkarıldı, lokalde kalır.
+static/images/hero/*.JPG
+static/images/hero/*.jpg
+static/images/nishyearafis.png
 
 # ----------------------------- Misc -------------------------------------------
 *.bak

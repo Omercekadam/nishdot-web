@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block title %}Sayfa Bulunamadı (404){% endblock %}
+
+{% block content %}
+<section class="min-h-[80vh] flex items-center justify-center py-20 px-4">
+    <div class="max-w-md w-full bg-zinc-800/80 backdrop-blur-md rounded-3xl p-8 shadow-2xl border border-zinc-700/50 text-center relative overflow-hidden">
+        <div class="absolute -top-20 -right-20 w-40 h-40 bg-brand-pink/20 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div class="w-20 h-20 bg-brand-pink/10 rounded-full flex items-center justify-center mx-auto mb-6">
+            <svg class="w-10 h-10 text-brand-pink" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+        </div>
+
+        <h1 class="text-5xl font-black text-white mb-2">404</h1>
+        <p class="text-xl font-bold text-zinc-200 mb-4">Sayfa Bulunamadı</p>
+        <p class="text-zinc-400 mb-8">Aradığınız sayfa taşınmış, silinmiş ya da hiç var olmamış olabilir.</p>
+
+        <a href="{% url 'pages:home' %}" class="btn-primary w-full group relative overflow-hidden">
+            <span class="relative z-10">Ana Sayfaya Dön</span>
+            <div class="absolute inset-0 bg-white/20 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+        </a>
+    </div>
+</section>
+{% endblock %}

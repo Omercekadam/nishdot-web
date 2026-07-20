@@ -2,9 +2,18 @@
 # Base Requirements — Tüm ortamlarda ortak bağımlılıklar
 # ==============================================================================
 
-Django>=6.0
+# Django 6.0.x'e sabitlendi — yeni bir major sürüme (6.1+) otomatik atlamak
+# production'da beklenmedik kırılmalara yol açabilir.
+Django>=6.0,<6.1
 django-environ>=0.12,<1.0
 Pillow>=11.0,<12.0
-django-cryptography>=1.1
-python-decouple
+
+# Hassas kişisel verilerin (T.C. Kimlik No) Fernet ile şifrelenmesi.
+# (django-cryptography kaldırıldı — kullanılmıyordu ve yeni Django major'larına
+#  karşı bakımı zayıf. Kod doğrudan cryptography.fernet kullanıyor.)
+cryptography>=43.0
+
+# Quill'den gelen zengin metin HTML'inin sunucu tarafı sanitizasyonu (XSS).
+nh3>=0.2,<1.0
+
 django-ratelimit>=4.1.0

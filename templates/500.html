@@ -1,0 +1,54 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sunucu Hatası (500) | Nishdot</title>
+    <link rel="icon" type="image/png" href="{% static 'images/favicon.png' %}">
+    {# 500 sayfası request context'i OLMADAN render edilir — bu yüzden base.html'i #}
+    {# genişletmez ve navbar/footer include ETMEZ (zincirleme hatayı önlemek için). #}
+    <style>
+        :root { color-scheme: dark; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+            background: #18181b; color: #f4f4f5;
+            min-height: 100vh; display: flex; align-items: center; justify-content: center;
+            padding: 1rem; text-align: center;
+        }
+        .card {
+            max-width: 28rem; width: 100%;
+            background: rgba(39,39,42,.8); border: 1px solid rgba(63,63,70,.5);
+            border-radius: 1.5rem; padding: 2.5rem 2rem;
+        }
+        .icon {
+            width: 5rem; height: 5rem; margin: 0 auto 1.5rem;
+            background: rgba(235,89,109,.1); border-radius: 9999px;
+            display: flex; align-items: center; justify-content: center;
+        }
+        h1 { font-size: 3rem; font-weight: 900; margin-bottom: .5rem; }
+        .sub { font-size: 1.125rem; font-weight: 700; color: #e4e4e7; margin-bottom: 1rem; }
+        p { color: #a1a1aa; margin-bottom: 2rem; line-height: 1.6; }
+        a.btn {
+            display: inline-block; width: 100%;
+            background: #eb596d; color: #fff; font-weight: 700;
+            padding: .75rem 1rem; border-radius: .75rem; text-decoration: none;
+        }
+        a.btn:hover { background: #d94459; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="icon">
+            <svg width="40" height="40" fill="none" stroke="#eb596d" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+        </div>
+        <h1>500</h1>
+        <p class="sub">Sunucu Hatası</p>
+        <p>Beklenmeyen bir hata oluştu. Ekibimiz bilgilendirildi. Lütfen birazdan tekrar deneyin.</p>
+        <a class="btn" href="/">Ana Sayfaya Dön</a>
+    </div>
+</body>
+</html>

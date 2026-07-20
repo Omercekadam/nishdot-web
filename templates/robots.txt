@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+
+# Yönetim ve kimlik doğrulama alanları taranmasın
+Disallow: /management/
+Disallow: /yonetim/
+Disallow: /auth/
+
+Sitemap: https://nishdot.com.tr/sitemap.xml

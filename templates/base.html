@@ -7,7 +7,24 @@
     <meta name="description" content="{% block meta_description %}İstanbul Nişantaşı Üniversitesi Dijital Oyun Tasarımı Kulübü{% endblock %}">
 
     <title>{% block title %}Home{% endblock %} | Nishdot</title>
-    
+
+    <link rel="canonical" href="{% block canonical_url %}{{ request.build_absolute_uri }}{% endblock %}">
+
+    <!-- OpenGraph (Discord / WhatsApp / LinkedIn önizleme kartları) -->
+    <meta property="og:site_name" content="Nishdot">
+    <meta property="og:locale" content="tr_TR">
+    <meta property="og:type" content="{% block og_type %}website{% endblock %}">
+    <meta property="og:title" content="{% block og_title %}{% block title_og %}Nishdot{% endblock %}{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}İstanbul Nişantaşı Üniversitesi Dijital Oyun Tasarımı Kulübü{% endblock %}">
+    <meta property="og:url" content="{{ request.build_absolute_uri }}">
+    <meta property="og:image" content="{% block og_image %}{{ request.scheme }}://{{ request.get_host }}{% static 'images/nishdotlogolightpng.png' %}{% endblock %}">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{% block twitter_title %}Nishdot{% endblock %}">
+    <meta name="twitter:description" content="{% block twitter_description %}İstanbul Nişantaşı Üniversitesi Dijital Oyun Tasarımı Kulübü{% endblock %}">
+    <meta name="twitter:image" content="{% block twitter_image %}{{ request.scheme }}://{{ request.get_host }}{% static 'images/nishdotlogolightpng.png' %}{% endblock %}">
+
     <!-- Favicon (Sekme İkonu) -->
     <link rel="icon" type="image/png" href="{% static 'images/favicon.png' %}">
 

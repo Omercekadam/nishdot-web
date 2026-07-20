@@ -48,6 +48,10 @@ environ.Env.read_env(BASE_DIR / ".env")
 
 SECRET_KEY = env("DJANGO_SECRET_KEY")
 
+# Kişisel veri (T.C. Kimlik No) şifreleme anahtarı — SECRET_KEY'den BAĞIMSIZ.
+# Böylece SECRET_KEY rotasyonu şifreli verileri bozmaz. Bkz: core/crypto.py
+FERNET_KEY = env("FERNET_KEY", default="")
+
 ALLOWED_HOSTS = env("DJANGO_ALLOWED_HOSTS")
 
 ROOT_URLCONF = "nishdot.urls"
@@ -67,6 +71,7 @@ DJANGO_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django.contrib.sitemaps",
 ]
 
 THIRD_PARTY_APPS = []
@@ -157,6 +162,48 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = env("SMTP_USERNAME", default="")
 EMAIL_HOST_PASSWORD = env("SMTP_PASSWORD", default="")
 DEFAULT_FROM_EMAIL = f"Nishdot <{EMAIL_HOST_USER}>"
+
+# İkinci SMTP hesabı (Game Jam / İletişim formu geri bildirimleri).
+# Tüm ortam değişkeni okumaları settings üzerinden yapılır — kod içinde
+# os.getenv / decouple KULLANILMAZ (tek konfigürasyon mekanizması).
+EMAIL2_HOST = env("SMTP2_SERVER", default="smtp.gmail.com")
+EMAIL2_PORT = env("SMTP2_PORT", default=587, cast=int)
+EMAIL2_HOST_USER = env("SMTP2_USERNAME", default="")
+EMAIL2_HOST_PASSWORD = env("SMTP2_PASSWORD", default="")
+
+# ==============================================================================
+# Logging
+# ==============================================================================
+
+# Console handler: development'ta terminale, production'da Gunicorn üzerinden
+# systemd journal'a (journalctl -u gunicorn) yazar. print() KULLANILMAZ.
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "verbose": {
+            "format": "[{asctime}] {levelname} {name}: {message}",
+            "style": "{",
+        },
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "verbose",
+        },
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": "INFO",
+    },
+    "loggers": {
+        "django": {
+            "handlers": ["console"],
+            "level": "INFO",
+            "propagate": False,
+        },
+    },
+}
 
 # ==============================================================================
 # Internationalization & Localization
