@@ -439,6 +439,19 @@ Kritik davranışları koruyan **27 otomatik test** mevcut:
 
 ---
 
+## Lisans
+
+Bu projenin telif hakkı **Ömer Soysal**'a aittir, tüm hakları saklıdır.
+İstanbul Nişantaşı Üniversitesi Dijital Oyun Tasarımı Kulübü'ne (Nishdot)
+yazılımı kendi faaliyetlerinde kullanma hakkı süresiz ve bedelsiz olarak
+verilmiştir.
+
+Depo yalnızca **inceleme ve referans** amacıyla herkese açıktır; kodun
+kopyalanması, dağıtılması veya başka projelerde kullanılması yazılı izne
+tabidir. Ayrıntılar: [`LICENSE`](LICENSE)
+
+---
+
 ## Proje Hakkında
 
 Nishdot Web Platform, kulübün gerçek operasyonel ihtiyaçlarından doğdu ve

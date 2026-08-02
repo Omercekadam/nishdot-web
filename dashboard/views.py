@@ -624,6 +624,9 @@ class BroadcastCenterView(StaffRequiredMixin, TemplateView):
         context['announcements'] = Announcement.objects.all().order_by('-created_at')
         User = get_user_model()
         context['all_users'] = User.objects.filter(is_active=True).order_by('first_name', 'username')
+        # Gönderici adresleri .env'den okunur — şablona sabit yazılmaz (depo herkese açık).
+        context['smtp1_email'] = django_settings.EMAIL_HOST_USER
+        context['smtp2_email'] = django_settings.EMAIL2_HOST_USER
         return context
 
 @staff_member_required

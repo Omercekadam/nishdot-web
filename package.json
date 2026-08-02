@@ -1,6 +1,7 @@
 {
   "name": "nishdot-web",
   "version": "1.0.0",
+  "private": true,
   "description": "İstanbul Nişantaşı Üniversitesi Dijital Oyun Tasarımı Kulübü (Nishdot) web platformu — Tailwind CSS derleme araçları.",
   "main": "postcss.config.js",
   "directories": {
@@ -15,8 +16,8 @@
     "url": "git+https://github.com/Omercekadam/nishdot-web.git"
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "Ömer Soysal",
+  "license": "UNLICENSED",
   "type": "commonjs",
   "bugs": {
     "url": "https://github.com/Omercekadam/nishdot-web/issues"
