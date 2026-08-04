@@ -74,14 +74,14 @@ kapsamında aşağıdaki verileriniz toplanmaktadır:</p>
       <td>T.C. Kimlik Numarası</td>
       <td>Kampüs güvenlik giriş listelerinin hazırlanması</td>
       <td>md. 5/2-f (Meşru menfaat)</td>
-      <td>Etkinlik bitiminden itibaren <strong>6 ay</strong></td>
+      <td>Etkinlik bitiminden itibaren <strong>1 yıl</strong></td>
     </tr>
     <tr>
       <td><strong>İletişim Bilgileri</strong></td>
       <td>E-posta, Telefon No</td>
       <td>Etkinlik süreçlerinde iletişim ve duyuru</td>
       <td>md. 5/2-f (Meşru menfaat)</td>
-      <td>Üyelik süresince; silme talebinde <strong>30 gün</strong></td>
+      <td>Etkinlik bitiminden itibaren <strong>1 yıl</strong>; üyelik varsa üyelik süresince</td>
     </tr>
     <tr>
       <td><strong>Eğitim Bilgileri</strong></td>
@@ -103,6 +103,10 @@ kapsamında aşağıdaki verileriniz toplanmaktadır:</p>
 <p>T.C. Kimlik Numarası yalnızca kampüs güvenliği giriş listelerinin hazırlanması
 amacıyla talep edilmekte, bu amaç dışında kullanılmamaktadır. Söz konusu veri
 sistemimizde <strong>şifrelenerek</strong> saklanır ve yukarıdaki süre sonunda silinir.</p>
+
+<p>Saklama süreleri dolan kayıtlar düzenli aralıklarla çalıştırılan otomatik bir
+silme işlemiyle sistemden kaldırılır. Sağlık verileri, amacı etkinlik süresiyle
+sınırlı olduğundan diğer verilerden ayrı olarak ve daha kısa sürede silinir.</p>
 
 <h3>3. Kişisel Verilerin Aktarılması</h3>
 <p>Toplanan kişisel verileriniz ticari hiçbir amaçla üçüncü şahıslara
@@ -139,24 +143,24 @@ toplanmaktadır.</p>
 
 <h3>5. KVKK Madde 11 Kapsamındaki Haklarınız</h3>
 <p>KVKK'nın 11. maddesi uyarınca aşağıdaki haklara sahipsiniz:</p>
-<ol>
-  <li>Kişisel verilerinizin işlenip işlenmediğini <strong>öğrenme</strong>,</li>
-  <li>Kişisel verileriniz işlenmişse buna ilişkin <strong>bilgi talep etme</strong>,</li>
-  <li>Kişisel verilerinizin işlenme amacını ve bunların amacına uygun kullanılıp
-      kullanılmadığını <strong>öğrenme</strong>,</li>
-  <li>Yurt içinde veya yurt dışında kişisel verilerinizin aktarıldığı
+<ul>
+  <li><strong>a)</strong> Kişisel verilerinizin işlenip işlenmediğini <strong>öğrenme</strong>,</li>
+  <li><strong>b)</strong> Kişisel verileriniz işlenmişse buna ilişkin <strong>bilgi talep etme</strong>,</li>
+  <li><strong>c)</strong> Kişisel verilerinizin işlenme amacını ve bunların amacına uygun
+      kullanılıp kullanılmadığını <strong>öğrenme</strong>,</li>
+  <li><strong>ç)</strong> Yurt içinde veya yurt dışında kişisel verilerinizin aktarıldığı
       <strong>üçüncü kişileri bilme</strong>,</li>
-  <li>Kişisel verilerinizin eksik veya yanlış işlenmiş olması hâlinde bunların
-      <strong>düzeltilmesini isteme</strong>,</li>
-  <li>KVKK'nın 7. maddesinde öngörülen şartlar çerçevesinde kişisel verilerinizin
-      <strong>silinmesini veya yok edilmesini isteme</strong>,</li>
-  <li>(e) ve (f) bentleri uyarınca yapılan işlemlerin, kişisel verilerin aktarıldığı
-      üçüncü kişilere <strong>bildirilmesini isteme</strong>,</li>
-  <li>İşlenen verilerin münhasıran otomatik sistemler vasıtasıyla analiz edilmesi
-      suretiyle aleyhinize bir sonucun ortaya çıkmasına <strong>itiraz etme</strong>,</li>
-  <li>Kişisel verilerinizin kanuna aykırı olarak işlenmesi sebebiyle zarara uğramanız
-      hâlinde <strong>zararın giderilmesini talep etme</strong>.</li>
-</ol>
+  <li><strong>d)</strong> Kişisel verilerinizin eksik veya yanlış işlenmiş olması hâlinde
+      bunların <strong>düzeltilmesini isteme</strong>,</li>
+  <li><strong>e)</strong> KVKK'nın 7. maddesinde öngörülen şartlar çerçevesinde kişisel
+      verilerinizin <strong>silinmesini veya yok edilmesini isteme</strong>,</li>
+  <li><strong>f)</strong> (d) ve (e) bentleri uyarınca yapılan işlemlerin, kişisel verilerin
+      aktarıldığı üçüncü kişilere <strong>bildirilmesini isteme</strong>,</li>
+  <li><strong>g)</strong> İşlenen verilerin münhasıran otomatik sistemler vasıtasıyla analiz
+      edilmesi suretiyle aleyhinize bir sonucun ortaya çıkmasına <strong>itiraz etme</strong>,</li>
+  <li><strong>ğ)</strong> Kişisel verilerinizin kanuna aykırı olarak işlenmesi sebebiyle
+      zarara uğramanız hâlinde <strong>zararın giderilmesini talep etme</strong>.</li>
+</ul>
 
 <p><strong>Başvuru Yöntemi:</strong> <a href="mailto:{EPOSTA}">{EPOSTA}</a> adresine
 kimliğinizi tespit edici bilgiler ile birlikte yazılı olarak başvurabilirsiniz.
@@ -165,6 +169,27 @@ Başvurularınız en geç <strong>30 gün</strong> içinde sonuçlandırılacakt
 <p><strong>Hesap Silme (Unutulma Hakkı) Prosedürü:</strong> Yukarıdaki e-posta adresine
 "Hesap Silme Talebi" konulu başvuru gönderilebilir. Talebiniz en geç
 <strong>30 gün</strong> içinde işleme alınır.</p>
+
+<h3>6. Açık Rızaya Bağlı İşlemler</h3>
+<p>Aşağıdaki işlemler <strong>yalnızca ayrıca ve açıkça onay vermeniz hâlinde</strong>
+gerçekleştirilir. Bu onayları vermemeniz etkinliklere katılımınıza engel değildir ve
+dilediğiniz zaman <a href="mailto:{EPOSTA}">{EPOSTA}</a> adresine bildirimde bulunarak
+geri alabilirsiniz.</p>
+<ul>
+  <li><strong>Sağlık verileri:</strong> Başvuru formunda beyan ettiğiniz kronik hastalık
+      veya alerji bilgileri, yalnızca etkinlik süresince acil tıbbi müdahale gerekmesi
+      hâlinde yetkili sağlık personeliyle paylaşılmak üzere işlenir (KVKK md. 6/2).</li>
+  <li><strong>Fotoğraf ve video:</strong> Etkinlik sırasında çekilen görüntülerinizin
+      Nishdot'un sosyal medya hesaplarında, web sitesinde ve tanıtım materyallerinde
+      süresiz, münhasır olmayan ve bedelsiz olarak kullanılmasıdır. Rızanızı geri
+      almanız hâlinde görüntüleriniz yeni içeriklerde kullanılmaz; ancak hâlihazırda
+      yayımlanmış genel etkinlik kayıtlarının geriye dönük olarak kaldırılması taahhüt
+      edilmez.</li>
+  <li><strong>Ticari elektronik ileti:</strong> Başvurduğunuz etkinliğe ilişkin
+      bilgilendirmelerin dışında, yeni etkinlik ve duyurulara dair e-posta/SMS
+      gönderilmesidir (6563 sayılı Elektronik Ticaretin Düzenlenmesi Hakkında Kanun).
+      Her iletide yer alan bağlantı ile ücretsiz olarak abonelikten çıkabilirsiniz.</li>
+</ul>
 """
 
 
@@ -296,9 +321,12 @@ birlikte okunmalıdır.</p>
 </ul>
 
 <h3>Madde 6 — Mücbir Sebepler ve Etkinlik İptali</h3>
-<p>Doğal afet, salgın hastalık, savaş, terör, grev, hükümet kararları, teknik altyapı
-arızaları veya Nishdot'un kontrolü dışındaki mücbir sebep hâlleri nedeniyle etkinliğin
-iptali/ertelenmesi durumunda Nishdot tazminat yükümlülüğü altına girmez.</p>
+<p>Doğal afet, salgın hastalık, savaş, terör, grev, hükümet kararları,
+<strong>üniversite yönetiminin kararları, kampüs veya mekân tahsisinin iptali</strong>,
+teknik altyapı arızaları veya Nishdot'un kontrolü dışındaki diğer mücbir sebep hâlleri
+nedeniyle etkinliğin iptali, ertelenmesi ya da programında değişiklik yapılması
+durumunda Nishdot <strong>tazminat yükümlülüğü altına girmez</strong>. Bu hâllerde
+katılımcılara mümkün olan en kısa sürede bildirim yapılır.</p>
 
 <h3>Madde 7 — Sözleşme Değişiklikleri</h3>
 <p>Nishdot sözleşmeyi önceden bildirim yaparak değiştirebilir. Değişiklikler

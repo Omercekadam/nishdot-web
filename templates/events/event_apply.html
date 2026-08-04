@@ -256,6 +256,33 @@
                                     </span>
                                 </label>
                             </div>
+
+                            <!-- Sağlık Verisi Açık Rıza (KVKK m.6 — özel nitelikli veri,
+                                 kendi rızası olmadan işlenemez) -->
+                            <div class="p-6 border border-zinc-700/50 bg-zinc-900/50 rounded-xl">
+                                <label class="flex items-start gap-4 cursor-pointer">
+                                    <div class="mt-1">
+                                        <input type="checkbox" name="health_consent" class="w-5 h-5 rounded border-zinc-600 bg-zinc-800 text-brand-pink focus:ring-brand-pink/50 focus:ring-offset-zinc-900">
+                                    </div>
+                                    <span class="text-sm text-zinc-400 leading-relaxed">
+                                        Formda beyan ettiğim kronik hastalık / alerji bilgilerimin, yalnızca etkinlik süresince acil tıbbi müdahale gerekmesi hâlinde yetkili sağlık personeliyle paylaşılmak üzere işlenmesine açık rıza gösteriyorum.
+                                        <span class="block mt-1 text-xs text-zinc-500">İsteğe bağlıdır. İşaretlemezseniz sağlık bilgileriniz <strong>hiç kaydedilmez</strong>; etkinlik bitiminden 7 iş günü sonra otomatik silinir.</span>
+                                    </span>
+                                </label>
+                            </div>
+
+                            <!-- Ticari Elektronik İleti (6563 sayılı Kanun) -->
+                            <div class="p-6 border border-zinc-700/50 bg-zinc-900/50 rounded-xl">
+                                <label class="flex items-start gap-4 cursor-pointer">
+                                    <div class="mt-1">
+                                        <input type="checkbox" name="marketing_consent" class="w-5 h-5 rounded border-zinc-600 bg-zinc-800 text-brand-pink focus:ring-brand-pink/50 focus:ring-offset-zinc-900">
+                                    </div>
+                                    <span class="text-sm text-zinc-400 leading-relaxed">
+                                        Nishdot'un düzenleyeceği yeni etkinlik ve duyurulardan e-posta yoluyla haberdar edilmek istiyorum.
+                                        <span class="block mt-1 text-xs text-zinc-500">İsteğe bağlıdır. Başvurduğunuz etkinliğe dair bilgilendirmeler bu onaydan bağımsız olarak gönderilir.</span>
+                                    </span>
+                                </label>
+                            </div>
                         </div>
                     </div>
 

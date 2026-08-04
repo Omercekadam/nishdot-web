@@ -99,6 +99,13 @@ class JamApplication(TimeStampedModel):
     additional_notes = models.TextField(blank=True, verbose_name="Ek Notlar")
     kvkk_accepted    = models.BooleanField(default=False, verbose_name="KVKK Onayı")
     media_consent    = models.BooleanField(default=False, verbose_name="Fotoğraf/Video Rızası")
+    # Sağlık verisi özel nitelikli veridir (KVKK m.6): kendi açık rızası olmadan
+    # işlenemez. Rıza yoksa health_notes hiç kaydedilmez.
+    health_consent   = models.BooleanField(default=False, verbose_name="Sağlık Verisi Açık Rızası")
+    # 6563 sayılı Kanun: etkinlik bilgilendirmesi dışındaki duyurular için gerekli.
+    marketing_consent = models.BooleanField(default=False, verbose_name="Ticari Elektronik İleti Onayı")
+    # Saklama süresi hesaplamalarında kullanılır (bkz. purge_expired_data komutu).
+    health_purged_at = models.DateTimeField(null=True, blank=True, verbose_name="Sağlık Verisi Silinme Tarihi")
 
     # ── Dinamik Alanlar ──
     custom_answers = models.JSONField(default=dict, blank=True, verbose_name="Özel Cevaplar")

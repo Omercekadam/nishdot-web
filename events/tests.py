@@ -4,6 +4,7 @@ Etkinlik / çekiliş / kişisel veri güvenlik testleri.
 import json
 from datetime import timedelta
 
+from django.core.cache import cache
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
@@ -156,6 +157,10 @@ class MediaConsentOptionalTests(TestCase):
     def setUp(self):
         from jams.models import GameJam
 
+        # Başvuru ucu IP başına 5/saat ile sınırlı. Rate limit sayacı cache'te
+        # tutulur ve test transaction'ı ile geri alınmaz — testler arası sızmasın.
+        cache.clear()
+
         self.event = make_event(
             Event.Status.PUBLISHED, slug="rizasiz-jam",
             event_type=Event.EventType.GAME_JAM,
@@ -215,6 +220,131 @@ class MediaConsentOptionalTests(TestCase):
         resp = self.client.post(self.url, data=data)
         self.assertEqual(resp.status_code, 200)
         self.assertEqual(JamApplication.objects.filter(jam=self.jam).count(), 0)
+
+
+class HealthConsentTests(TestCase):
+    """Sağlık verisi özel nitelikli (KVKK m.6): açık rıza yoksa hiç kaydedilmemeli."""
+
+    def setUp(self):
+        from jams.models import GameJam
+
+        cache.clear()   # bkz. MediaConsentOptionalTests — rate limit sızıntısı
+
+        self.event = make_event(
+            Event.Status.PUBLISHED, slug="saglik-jam",
+            event_type=Event.EventType.GAME_JAM,
+        )
+        self.jam = GameJam.objects.create(
+            event=self.event,
+            application_deadline=timezone.now() + timedelta(days=5),
+            max_team_size=5,
+        )
+        self.url = reverse("events:apply", kwargs={"slug": self.event.slug})
+
+    def _payload(self, **extra):
+        data = {
+            "kvkk_accepted": "on",
+            "full_name": "Sağlık Testi",
+            "national_id": "12345678950",
+            "email": "saglik@example.com",
+            "phone_number": "05001112233",
+            "birth_date": "2002-01-01",
+            "university": "İstanbul Nişantaşı Üniversitesi",
+            "department": "Dijital Oyun Tasarımı",
+            "grade": "3",
+            "emergency_contact": "Veli Kişi - 05009998877",
+            "team_status": "solo",
+            "jam_role": "Developer",
+            "experience_level": "Intermediate",
+            "motivation": "Katılmak istiyorum.",
+            "health_notes": "Polen alerjisi",
+        }
+        data.update(extra)
+        return data
+
+    def test_health_notes_discarded_without_consent(self):
+        from jams.models import JamApplication
+
+        self.client.post(self.url, data=self._payload())
+        app = JamApplication.objects.get(jam=self.jam)
+        self.assertEqual(app.health_notes, "")   # yazılmış olsa bile kaydedilmez
+        self.assertFalse(app.health_consent)
+
+    def test_health_notes_saved_with_consent(self):
+        from jams.models import JamApplication
+
+        self.client.post(self.url, data=self._payload(health_consent="on"))
+        app = JamApplication.objects.get(jam=self.jam)
+        self.assertEqual(app.health_notes, "Polen alerjisi")
+        self.assertTrue(app.health_consent)
+
+    def test_marketing_consent_recorded(self):
+        from jams.models import JamApplication
+
+        self.client.post(self.url, data=self._payload(marketing_consent="on"))
+        app = JamApplication.objects.get(jam=self.jam)
+        self.assertTrue(app.marketing_consent)
+
+
+class PurgeExpiredDataTests(TestCase):
+    """Saklama süresi dolan veriler otomatik silinmeli (KVKK m.7)."""
+
+    def test_health_notes_purged_after_retention_period(self):
+        from io import StringIO
+
+        from django.core.management import call_command
+
+        from jams.models import GameJam, JamApplication
+
+        gecmis = timezone.now() - timedelta(days=60)
+        event = Event.objects.create(
+            title="Biten Jam", slug="biten-jam", description="x",
+            event_type=Event.EventType.GAME_JAM, status=Event.Status.COMPLETED,
+            start_date=gecmis, end_date=gecmis + timedelta(days=2), location="Kampüs",
+        )
+        jam = GameJam.objects.create(
+            event=event, application_deadline=gecmis, max_team_size=5,
+        )
+        app = JamApplication.objects.create(
+            jam=jam, full_name="Test", email="p@example.com",
+            national_id="12345678950", jam_role="Developer", team_status="solo",
+            health_notes="Astım", health_consent=True, kvkk_accepted=True,
+        )
+
+        call_command("purge_expired_data", stdout=StringIO())
+
+        app.refresh_from_db()
+        self.assertEqual(app.health_notes, "")
+        self.assertFalse(app.health_consent)
+        self.assertIsNotNone(app.health_purged_at)
+
+    def test_recent_health_notes_not_purged(self):
+        """Süresi dolmamış kayda dokunulmamalı."""
+        from io import StringIO
+
+        from django.core.management import call_command
+
+        from jams.models import GameJam, JamApplication
+
+        simdi = timezone.now()
+        event = Event.objects.create(
+            title="Yeni Jam", slug="yeni-jam", description="x",
+            event_type=Event.EventType.GAME_JAM, status=Event.Status.PUBLISHED,
+            start_date=simdi, end_date=simdi + timedelta(days=1), location="Kampüs",
+        )
+        jam = GameJam.objects.create(
+            event=event, application_deadline=simdi, max_team_size=5,
+        )
+        app = JamApplication.objects.create(
+            jam=jam, full_name="Test", email="y@example.com",
+            national_id="12345678950", jam_role="Developer", team_status="solo",
+            health_notes="Alerji", health_consent=True, kvkk_accepted=True,
+        )
+
+        call_command("purge_expired_data", stdout=StringIO())
+
+        app.refresh_from_db()
+        self.assertEqual(app.health_notes, "Alerji")
 
 
 class ManualRaffleParticipantTests(TestCase):

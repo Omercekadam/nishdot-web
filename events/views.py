@@ -84,10 +84,15 @@ class EventApplyWizardView(TemplateView):
             if not is_valid_national_id(national_id):
                 return self.render_to_response(self.get_context_data(error="Geçerli bir T.C. Kimlik Numarası girmeniz zorunludur (11 haneli)."))
 
-            # Fotoğraf/video açık rızası ZORUNLU DEĞİLDİR. KVKK'da açık rıza
-            # "özgür irade" ile verilmelidir; katılımı rızaya bağlamak rızayı
-            # sakatlar. Rıza vermeyen katılımcı da başvurabilir.
+            # Açık rızalar ZORUNLU DEĞİLDİR. KVKK'da açık rıza "özgür irade" ile
+            # verilmelidir; katılımı rızaya bağlamak rızayı sakatlar.
             media_consent = request.POST.get('media_consent') == 'on'
+            health_consent = request.POST.get('health_consent') == 'on'
+            marketing_consent = request.POST.get('marketing_consent') == 'on'
+
+            # Sağlık verisi özel nitelikli veridir (KVKK m.6): açık rıza yoksa
+            # kullanıcı forma bir şey yazmış olsa bile KAYDEDİLMEZ.
+            health_notes = request.POST.get('health_notes', '') if health_consent else ''
 
             if JamApplication.objects.filter(jam=jam, email=email).exists():
                 error_msg = "Bu e-posta adresiyle daha önce bir başvuru yapılmış. Başvurunuzda bir değişiklik yapmak istiyorsanız veya bir sorun olduğunu düşünüyorsanız lütfen bizimle iletişime geçin."
@@ -110,7 +115,7 @@ class EventApplyWizardView(TemplateView):
                     department=request.POST.get('department'),
                     grade=request.POST.get('grade'),
                     emergency_contact=request.POST.get('emergency_contact'),
-                    health_notes=request.POST.get('health_notes', ''),
+                    health_notes=health_notes,
 
                     team_status=request.POST.get('team_status'),
                     team_name=request.POST.get('team_name', ''),
@@ -123,6 +128,8 @@ class EventApplyWizardView(TemplateView):
                     additional_notes=request.POST.get('additional_notes', ''),
                     kvkk_accepted=True,
                     media_consent=media_consent,
+                    health_consent=health_consent,
+                    marketing_consent=marketing_consent,
                 )
                 return self.render_to_response(self.get_context_data(success=True))
             except IntegrityError:
