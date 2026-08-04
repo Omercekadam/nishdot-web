@@ -286,6 +286,67 @@ class HealthConsentTests(TestCase):
         self.assertTrue(app.marketing_consent)
 
 
+class NonJamConsentTests(TestCase):
+    """Jam dışı etkinliklerde de rızalar kaydedilmeli (eskiden hiç yazılmıyordu)."""
+
+    def setUp(self):
+        cache.clear()
+        self.event = make_event(Event.Status.PUBLISHED, slug="atolye-riza")
+        self.url = reverse("events:apply", kwargs={"slug": self.event.slug})
+
+    def _payload(self, **extra):
+        data = {
+            "kvkk_accepted": "on",
+            "full_name": "Atölye Katılımcısı",
+            "email": "atolye@example.com",
+            "university": "İstanbul Nişantaşı Üniversitesi",
+            "department": "Dijital Oyun Tasarımı",
+            "grade": "2",
+            "is_nisantasi_student": "yes",
+        }
+        data.update(extra)
+        return data
+
+    def test_consents_recorded(self):
+        self.client.post(self.url, data=self._payload(
+            media_consent="on", marketing_consent="on",
+        ))
+        app = EventApplication.objects.get(event=self.event)
+        self.assertTrue(app.kvkk_accepted)
+        self.assertTrue(app.media_consent)
+        self.assertTrue(app.marketing_consent)
+
+    def test_consents_default_false(self):
+        self.client.post(self.url, data=self._payload())
+        app = EventApplication.objects.get(event=self.event)
+        self.assertTrue(app.kvkk_accepted)      # zorunlu, işaretlendi
+        self.assertFalse(app.media_consent)     # isteğe bağlı, verilmedi
+        self.assertFalse(app.marketing_consent)
+
+
+class BroadcastConsentFilterTests(TestCase):
+    """Genel duyuru yalnızca ticari ileti onayı verenlere gidebilmeli (6563)."""
+
+    def test_only_consented_emails_returned(self):
+        from dashboard.views import marketing_consented_emails
+
+        event = make_event(Event.Status.PUBLISHED, slug="duyuru-etkinlik")
+        EventApplication.objects.create(
+            event=event, full_name="Onaylı", email="Onayli@Example.com",
+            university="X", department="Y", grade="1",
+            is_nisantasi_student=True, marketing_consent=True,
+        )
+        EventApplication.objects.create(
+            event=event, full_name="Onaysız", email="onaysiz@example.com",
+            university="X", department="Y", grade="1",
+            is_nisantasi_student=True, marketing_consent=False,
+        )
+
+        epostalar = marketing_consented_emails()
+        self.assertIn("onayli@example.com", epostalar)   # küçük harfe normalize
+        self.assertNotIn("onaysiz@example.com", epostalar)
+
+
 class PurgeExpiredDataTests(TestCase):
     """Saklama süresi dolan veriler otomatik silinmeli (KVKK m.7)."""
 

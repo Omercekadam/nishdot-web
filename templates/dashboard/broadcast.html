@@ -96,10 +96,16 @@
                         <label class="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-3">Duyuru Hedef Kitlesi (Kimin İçin?)</label>
                         <select id="sAudience" onchange="toggleCustomUsers()" class="w-full bg-zinc-950 border border-zinc-800 text-white rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-pink transition-colors">
                             <option value="all">Sistemdeki Tüm Kullanıcılar</option>
+                            <option value="consented">Duyuru Onayı Verenler ({{ consented_count }} kişi)</option>
                             <option value="members">Sadece Normal Üyeler</option>
                             <option value="board">Sadece Yönetim Kurulu (Staff)</option>
                             <option value="custom">Elle Bireysel Seçim...</option>
                         </select>
+                        <p id="audienceHint" class="hidden mt-2 text-xs text-zinc-500 leading-relaxed">
+                            Etkinlik bilgilendirmesi dışındaki genel duyurular için
+                            <strong class="text-zinc-400">"Duyuru Onayı Verenler"</strong> seçeneğini kullanın —
+                            6563 sayılı Kanun bu tür iletiler için ayrı onay şartı arar.
+                        </p>
                     </div>
 
                     <!-- Elle Kullanıcı Seçimi Paneli -->
@@ -217,6 +223,14 @@
             panel.classList.remove('hidden');
         } else {
             panel.classList.add('hidden');
+        }
+
+        // Onay gerektirmeyen geniş hedef seçildiğinde 6563 hatırlatmasını göster.
+        const hint = document.getElementById('audienceHint');
+        if(val === 'all' || val === 'members') {
+            hint.classList.remove('hidden');
+        } else {
+            hint.classList.add('hidden');
         }
     }
 

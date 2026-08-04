@@ -616,14 +616,39 @@ def send_broadcast_email_async(subject, message, recipient_list, smtp_account='s
     thread = threading.Thread(target=send, daemon=True)
     thread.start()
 
+def marketing_consented_emails():
+    """Ticari elektronik ileti onayı vermiş katılımcıların e-postaları.
+
+    Onay başvuru formlarında alınır (JamApplication / EventApplication);
+    kullanıcı hesabıyla e-posta üzerinden eşleştirilir. 6563 sayılı Kanun
+    kapsamındaki duyurular yalnızca bu kişilere gönderilebilir.
+    """
+    from events.models import EventApplication
+    from jams.models import JamApplication
+
+    epostalar = set(
+        JamApplication.objects.filter(marketing_consent=True)
+        .values_list("email", flat=True)
+    )
+    epostalar |= set(
+        EventApplication.objects.filter(marketing_consent=True)
+        .values_list("email", flat=True)
+    )
+    return {e.strip().lower() for e in epostalar if e}
+
+
 class BroadcastCenterView(StaffRequiredMixin, TemplateView):
     template_name = "dashboard/broadcast.html"
-    
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['announcements'] = Announcement.objects.all().order_by('-created_at')
         User = get_user_model()
         context['all_users'] = User.objects.filter(is_active=True).order_by('first_name', 'username')
+        # "Onay verenler" seçeneğinin yanında kaç kişiye gideceğini göstermek için.
+        context['consented_count'] = User.objects.filter(
+            email__in=marketing_consented_emails()
+        ).count()
         # Gönderici adresleri .env'den okunur — şablona sabit yazılmaz (depo herkese açık).
         context['smtp1_email'] = django_settings.EMAIL_HOST_USER
         context['smtp2_email'] = django_settings.EMAIL2_HOST_USER
@@ -669,9 +694,14 @@ def api_create_broadcast(request):
             elif target_audience == 'custom':
                 custom_user_ids = data.get('custom_users', [])
                 users = User.objects.filter(id__in=custom_user_ids)
+            elif target_audience == 'consented':
+                # 6563 sayılı Kanun: etkinlik bilgilendirmesi dışındaki duyurular
+                # yalnızca ticari elektronik ileti onayı verenlere gönderilebilir.
+                # Onay başvuru formunda alınır; kullanıcıyla e-posta üzerinden eşleşir.
+                users = User.objects.filter(email__in=marketing_consented_emails())
             else:
                 users = User.objects.all()
-                
+
             email_list = [u.email for u in users if u.email]
             if email_list:
                 send_broadcast_email_async(
@@ -881,7 +911,7 @@ def export_applications_csv(request):
     
     # Türkçe Excel sistemleri varsayılan olarak noktalı virgül (;) ile ayırır
     writer = csv.writer(response, delimiter=';')
-    writer.writerow(['Ad Soyad', 'E-Posta', 'Telefon', 'TC Kimlik', 'Üniversite', 'Bölüm', 'Sınıf', 'Rol', 'Deneyim', 'Takım Durumu', 'Takım Adı', 'Durum', 'Başvuru Tarihi'])
+    writer.writerow(['Ad Soyad', 'E-Posta', 'Telefon', 'TC Kimlik', 'Üniversite', 'Bölüm', 'Sınıf', 'Rol', 'Deneyim', 'Takım Durumu', 'Takım Adı', 'Durum', 'Başvuru Tarihi', 'Fotoğraf Rızası', 'Duyuru Onayı'])
     
     applications = current_jam.applications.all()
     
@@ -904,7 +934,9 @@ def export_applications_csv(request):
             team_status_display,
             app.team_name,
             status_display,
-            created_at_str
+            created_at_str,
+            'EVET' if app.media_consent else 'HAYIR',
+            'EVET' if app.marketing_consent else 'HAYIR',
         ])
         
     return response

@@ -176,7 +176,11 @@ class EventApplyWizardView(TemplateView):
                     grade=request.POST.get('grade', ''),
                     is_nisantasi_student=is_nisantasi_student,
                     national_id=national_id,
-                    national_id_hash=national_id_hash
+                    national_id_hash=national_id_hash,
+                    # Aydınlatma onayı yukarıda zorunlu tutuldu; diğerleri açık rıza.
+                    kvkk_accepted=True,
+                    media_consent=request.POST.get('media_consent') == 'on',
+                    marketing_consent=request.POST.get('marketing_consent') == 'on',
                 )
                 return self.render_to_response(self.get_context_data(success=True))
             except Exception:

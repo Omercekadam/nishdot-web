@@ -352,7 +352,7 @@
                         </div>
                     </div>
                     
-                    <div class="mt-8 pt-8 border-t border-zinc-700/50">
+                    <div class="mt-8 pt-8 border-t border-zinc-700/50 space-y-4">
                         <!-- KVKK Onayı (Aydınlatma Metni - Zorunlu) -->
                         <div class="p-6 border border-zinc-700/50 bg-zinc-900/50 rounded-xl">
                             <label class="flex items-start gap-4 cursor-pointer">
@@ -361,6 +361,32 @@
                                 </div>
                                 <span class="text-sm text-zinc-400 leading-relaxed">
                                     6698 sayılı Kişisel Verilerin Korunması Kanunu (KVKK) kapsamında, paylaştığım kişisel verilerimin Nişantaşı Üniversitesi Dijital Oyun Tasarımı Kulübü tarafından işlenmesine dair <a href="{% url 'pages:legal_document' 'kvkk' %}" target="_blank" class="text-brand-pink hover:underline">Aydınlatma Metni</a>'ni okudum ve anladım. *
+                                </span>
+                            </label>
+                        </div>
+
+                        <!-- Fotoğraf/Video Açık Rıza (İsteğe bağlı) -->
+                        <div class="p-6 border border-zinc-700/50 bg-zinc-900/50 rounded-xl">
+                            <label class="flex items-start gap-4 cursor-pointer">
+                                <div class="mt-1">
+                                    <input type="checkbox" name="media_consent" class="w-5 h-5 rounded border-zinc-600 bg-zinc-800 text-brand-pink focus:ring-brand-pink/50 focus:ring-offset-zinc-900">
+                                </div>
+                                <span class="text-sm text-zinc-400 leading-relaxed">
+                                    Etkinlik alanında çekilen fotoğraf ve videolarımın Nishdot sosyal medya hesaplarında ve tanıtım materyallerinde kullanılmasına açık rıza ile izin veriyorum.
+                                    <span class="block mt-1 text-xs text-zinc-500">İsteğe bağlıdır — işaretlemeseniz de etkinliğe katılabilirsiniz.</span>
+                                </span>
+                            </label>
+                        </div>
+
+                        <!-- Ticari Elektronik İleti (6563 sayılı Kanun) -->
+                        <div class="p-6 border border-zinc-700/50 bg-zinc-900/50 rounded-xl">
+                            <label class="flex items-start gap-4 cursor-pointer">
+                                <div class="mt-1">
+                                    <input type="checkbox" name="marketing_consent" class="w-5 h-5 rounded border-zinc-600 bg-zinc-800 text-brand-pink focus:ring-brand-pink/50 focus:ring-offset-zinc-900">
+                                </div>
+                                <span class="text-sm text-zinc-400 leading-relaxed">
+                                    Nishdot'un düzenleyeceği yeni etkinlik ve duyurulardan e-posta yoluyla haberdar edilmek istiyorum.
+                                    <span class="block mt-1 text-xs text-zinc-500">İsteğe bağlıdır. Başvurduğunuz etkinliğe dair bilgilendirmeler bu onaydan bağımsız olarak gönderilir.</span>
                                 </span>
                             </label>
                         </div>

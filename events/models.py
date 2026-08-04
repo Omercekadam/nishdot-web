@@ -236,7 +236,13 @@ class EventApplication(TimeStampedModel):
     is_nisantasi_student = models.BooleanField(default=True, verbose_name="Nişantaşı Öğrencisi mi?")
     national_id = models.CharField(max_length=255, blank=True, verbose_name="T.C. Kimlik Numarası")
     national_id_hash = models.CharField(max_length=64, blank=True, verbose_name="T.C. Kimlik Hash")
-    
+
+    # ── Onaylar (JamApplication ile aynı mantık) ──────────────────────────
+    # Aydınlatma metni onayı zorunlu; diğer ikisi açık rızadır ve isteğe bağlıdır.
+    kvkk_accepted     = models.BooleanField(default=False, verbose_name="KVKK Onayı")
+    media_consent     = models.BooleanField(default=False, verbose_name="Fotoğraf/Video Rızası")
+    marketing_consent = models.BooleanField(default=False, verbose_name="Ticari Elektronik İleti Onayı")
+
     class Meta(TimeStampedModel.Meta):
         verbose_name = "Etkinlik Başvurusu"
         verbose_name_plural = "Etkinlik Başvuruları"
