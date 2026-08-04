@@ -320,13 +320,25 @@ birlikte okunmalıdır.</p>
       Nishdot'un <strong>kasıt veya ağır ihmali</strong> bulunan hâllerde uygulanmaz.</li>
 </ul>
 
-<h3>Madde 6 — Mücbir Sebepler ve Etkinlik İptali</h3>
-<p>Doğal afet, salgın hastalık, savaş, terör, grev, hükümet kararları,
-<strong>üniversite yönetiminin kararları, kampüs veya mekân tahsisinin iptali</strong>,
-teknik altyapı arızaları veya Nishdot'un kontrolü dışındaki diğer mücbir sebep hâlleri
-nedeniyle etkinliğin iptali, ertelenmesi ya da programında değişiklik yapılması
-durumunda Nishdot <strong>tazminat yükümlülüğü altına girmez</strong>. Bu hâllerde
-katılımcılara mümkün olan en kısa sürede bildirim yapılır.</p>
+<h3>Madde 6 — Etkinlik İptali, Erteleme ve Program Değişikliği</h3>
+<ul>
+  <li><strong>6.1.</strong> Nishdot; etkinliği iptal etme, erteleme, yerini değiştirme
+      veya programında değişiklik yapma hakkını saklı tutar. Bu hakkın kullanılması
+      <strong>gerekçe açıklama zorunluluğuna tabi değildir</strong>. Değişiklikler
+      katılımcılara mümkün olan en kısa sürede duyurulur.</li>
+  <li><strong>6.2.</strong> Etkinliklere katılım <strong>ücretsizdir</strong>. Bu nedenle
+      iptal, erteleme veya program değişikliği hâlinde katılımcının ücret iadesi,
+      tazminat veya sair ad altında herhangi bir <strong>talep hakkı doğmaz</strong>.
+      Katılımcının etkinliğe katılmak amacıyla yaptığı ulaşım, konaklama ve benzeri
+      kişisel harcamalardan Nishdot sorumlu tutulamaz.</li>
+  <li><strong>6.3.</strong> Doğal afet, salgın hastalık, savaş, terör, grev, hükümet veya
+      üniversite yönetiminin kararları, kampüs ya da mekân tahsisinin iptali, teknik
+      altyapı arızaları gibi Nishdot'un kontrolü dışındaki hâller mücbir sebep sayılır;
+      bu sayım sınırlayıcı değildir.</li>
+  <li><strong>6.4.</strong> İşbu maddedeki sınırlamalar, 6098 sayılı Türk Borçlar Kanunu
+      m. 115 ve 116 uyarınca Nishdot'un <strong>kasıt veya ağır ihmali</strong> bulunan
+      hâllerde uygulanmaz.</li>
+</ul>
 
 <h3>Madde 7 — Sözleşme Değişiklikleri</h3>
 <p>Nishdot sözleşmeyi önceden bildirim yaparak değiştirebilir. Değişiklikler
