@@ -149,6 +149,74 @@ class DashboardPinToggleTests(TestCase):
         self.assertFalse(self.event.is_pinned)
 
 
+class MediaConsentOptionalTests(TestCase):
+    """KVKK: açık rıza özgür irade ile verilmelidir — fotoğraf/video rızası
+    katılımın ŞARTI OLAMAZ. Rıza vermeyen katılımcı da başvurabilmeli."""
+
+    def setUp(self):
+        from jams.models import GameJam
+
+        self.event = make_event(
+            Event.Status.PUBLISHED, slug="rizasiz-jam",
+            event_type=Event.EventType.GAME_JAM,
+        )
+        self.jam = GameJam.objects.create(
+            event=self.event,
+            application_deadline=timezone.now() + timedelta(days=5),
+            max_team_size=5,
+        )
+        self.url = reverse("events:apply", kwargs={"slug": self.event.slug})
+
+    def _payload(self, **extra):
+        data = {
+            "kvkk_accepted": "on",
+            "full_name": "Rıza Vermeyen Katılımcı",
+            "national_id": "12345678950",
+            "email": "rizasiz@example.com",
+            "phone_number": "05001112233",
+            "birth_date": "2002-01-01",
+            "university": "İstanbul Nişantaşı Üniversitesi",
+            "department": "Dijital Oyun Tasarımı",
+            "grade": "3",
+            "emergency_contact": "Veli Kişi - 05009998877",
+            "team_status": "solo",
+            "jam_role": "Developer",
+            "experience_level": "Intermediate",
+            "motivation": "Katılmak istiyorum.",
+        }
+        data.update(extra)
+        return data
+
+    def test_application_succeeds_without_media_consent(self):
+        from jams.models import JamApplication
+
+        resp = self.client.post(self.url, data=self._payload())
+        self.assertEqual(resp.status_code, 200)
+
+        app = JamApplication.objects.get(jam=self.jam, email="rizasiz@example.com")
+        self.assertFalse(app.media_consent)   # rıza verilmedi
+        self.assertTrue(app.kvkk_accepted)    # aydınlatma metni okundu
+
+    def test_media_consent_saved_when_given(self):
+        from jams.models import JamApplication
+
+        resp = self.client.post(self.url, data=self._payload(media_consent="on"))
+        self.assertEqual(resp.status_code, 200)
+
+        app = JamApplication.objects.get(jam=self.jam, email="rizasiz@example.com")
+        self.assertTrue(app.media_consent)
+
+    def test_kvkk_still_required(self):
+        """Aydınlatma metni onayı zorunlu kalmalı (rıza değil, bilgilendirmedir)."""
+        from jams.models import JamApplication
+
+        data = self._payload()
+        del data["kvkk_accepted"]
+        resp = self.client.post(self.url, data=data)
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(JamApplication.objects.filter(jam=self.jam).count(), 0)
+
+
 class ManualRaffleParticipantTests(TestCase):
     """Yönetici QR çekilişine elle (hesabı olmayan) misafir ekleyebilmeli."""
 

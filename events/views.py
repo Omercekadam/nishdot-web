@@ -84,8 +84,10 @@ class EventApplyWizardView(TemplateView):
             if not is_valid_national_id(national_id):
                 return self.render_to_response(self.get_context_data(error="Geçerli bir T.C. Kimlik Numarası girmeniz zorunludur (11 haneli)."))
 
-            if request.POST.get('media_consent') != 'on':
-                return self.render_to_response(self.get_context_data(error="Etkinlik kuralları gereği fotoğraf ve video kullanım izni (Açık Rıza) vermeniz zorunludur."))
+            # Fotoğraf/video açık rızası ZORUNLU DEĞİLDİR. KVKK'da açık rıza
+            # "özgür irade" ile verilmelidir; katılımı rızaya bağlamak rızayı
+            # sakatlar. Rıza vermeyen katılımcı da başvurabilir.
+            media_consent = request.POST.get('media_consent') == 'on'
 
             if JamApplication.objects.filter(jam=jam, email=email).exists():
                 error_msg = "Bu e-posta adresiyle daha önce bir başvuru yapılmış. Başvurunuzda bir değişiklik yapmak istiyorsanız veya bir sorun olduğunu düşünüyorsanız lütfen bizimle iletişime geçin."
@@ -120,7 +122,7 @@ class EventApplyWizardView(TemplateView):
                     motivation=request.POST.get('motivation', ''),
                     additional_notes=request.POST.get('additional_notes', ''),
                     kvkk_accepted=True,
-                    media_consent=True
+                    media_consent=media_consent,
                 )
                 return self.render_to_response(self.get_context_data(success=True))
             except IntegrityError:
