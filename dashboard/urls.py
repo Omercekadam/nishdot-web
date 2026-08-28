@@ -8,7 +8,7 @@ urlpatterns = [
     path("api/update-status/", views.update_application_status, name="api_update_status"),
     path("api/export-csv/", views.export_applications_csv, name="api_export_csv"),
     path("api/send-bulk-emails/", views.api_send_bulk_emails, name="api_send_bulk_emails"),
-    
+
     # Workspace Routes
     path('events/', views.EventBuilderView.as_view(), name='events'),
     path('api/save-event/', views.api_save_event, name='api_save_event'),
@@ -34,7 +34,13 @@ urlpatterns = [
     path('api/dismiss-announcement/<int:announcement_id>/', views.api_dismiss_announcement, name='api_dismiss_announcement'),
     path('api/resolve-log/', views.api_resolve_log, name='api_resolve_log'),
     path('api/delete-log/', views.api_delete_log, name='api_delete_log'),
-    
+
+    # Matchmaker (Takım Eşleştirme)
+    path('matchmaker/', views.MatchmakerView.as_view(), name='matchmaker'),
+    path('api/run-matchmaker/', views.api_run_matchmaker, name='api_run_matchmaker'),
+    path('api/matchmaker/team-status/', views.api_update_team_status, name='api_update_team_status'),
+    path('api/matchmaker/reset/', views.api_reset_matchmaker, name='api_reset_matchmaker'),
+
     # Raffles
     path('raffles/', views.RaffleListView.as_view(), name='raffles'),
     path('api/create-raffle/', views.api_create_raffle, name='api_create_raffle'),

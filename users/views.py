@@ -1,15 +1,18 @@
-from django.utils.decorators import method_decorator
-from django_ratelimit.decorators import ratelimit
-from dashboard.models import SecurityLog
-from django.shortcuts import render, redirect
-from django.contrib.auth.views import LoginView
-from django.views.generic import TemplateView
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.views import LoginView
+from django.db.models import Q
+from django.shortcuts import redirect, render
+from django.utils.decorators import method_decorator
+from django.views.generic import TemplateView
+from django_ratelimit.decorators import ratelimit
 
-from .forms import UserRegisterForm, UserLoginForm, UserProfileUpdateForm
+from core.http import get_client_ip
+from dashboard.models import Announcement, SecurityLog
 from jams.models import JamApplication
+
+from .forms import UserLoginForm, UserProfileUpdateForm, UserRegisterForm
 
 User = get_user_model()
 
@@ -47,7 +50,7 @@ class UserLoginView(LoginView):
     def post(self, request, *args, **kwargs):
         if getattr(request, 'limited', False):
             SecurityLog.objects.create(
-                ip_address=request.META.get('REMOTE_ADDR', ''),
+                ip_address=get_client_ip(request),
                 action=SecurityLog.ActionType.LOGIN_BRUTE_FORCE,
                 user_agent=request.META.get('HTTP_USER_AGENT', '')
             )
@@ -59,31 +62,47 @@ class DashboardView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        # Kullanıcının e-posta adresiyle eşleşen Game Jam başvurularını çekiyoruz
-        user_email = self.request.user.email
-        applications = JamApplication.objects.filter(email=user_email).order_by("-created_at")
-        
-        # Siteye yayınlanmış duyuruları çekiyoruz (Hedef kitleye göre filtreleyerek)
-        from dashboard.models import Announcement
-        from django.db.models import Q
         user = self.request.user
-        
-        query = Q(published_to_site=True) & (
-            Q(target_audience='all') |
-            Q(custom_users=user)
+
+        # Başvuru ya hesaba doğrudan bağlıdır (yeni kayıtlar) ya da yalnızca
+        # e-posta ile eşleşir (hesap açılmadan önce yapılmış eski başvurular).
+        # select_related olmadan şablondaki jam.event.title her satırda iki
+        # ekstra sorgu atar.
+        applications = (
+            JamApplication.objects
+            .filter(Q(applicant=user) | Q(email__iexact=user.email))
+            .select_related("jam__event")
+            .distinct()
+            .order_by("-created_at")
         )
-        
-        if user.is_staff or user.role in ['admin', 'board']:
-            query |= Q(target_audience='board')
+
+        # Hedef kitle koşulu ayrı bir Q'da toplanır; published_to_site kısıtı
+        # bunun DIŞINDA kalırsa (eski hâli) yalnızca e-posta olarak gönderilen
+        # duyurular da site panelinde görünüyordu.
+        hedef = Q(target_audience="all") | Q(custom_users=user)
+
+        if user.is_staff or user.role in (User.Role.BOARD, User.Role.ADMIN):
+            hedef |= Q(target_audience="board")
         else:
-            query |= Q(target_audience='members')
-            
-        announcements = Announcement.objects.filter(query).exclude(dismissed_by=user).distinct().order_by("-created_at")
-        
+            hedef |= Q(target_audience="members")
+
+        # 6563 sayılı Kanun e-posta/SMS gönderimini düzenler; kullanıcının kendi
+        # isteğiyle açtığı panelde içerik göstermek ticari elektronik ileti
+        # değildir. Bu yüzden "consented" hedefi site içinde herkese açıktır.
+        hedef |= Q(target_audience="consented")
+
+        announcements = (
+            Announcement.objects
+            .filter(Q(published_to_site=True) & hedef)
+            .exclude(dismissed_by=user)
+            .distinct()
+            .order_by("-created_at")
+        )
+
         context["applications"] = applications
         context["announcements"] = announcements
         if "form" not in context:
-            context["form"] = UserProfileUpdateForm(instance=self.request.user)
+            context["form"] = UserProfileUpdateForm(instance=user)
         return context
 
     def post(self, request, *args, **kwargs):
@@ -92,6 +111,6 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             form.save()
             messages.success(request, "Profil bilgilerin başarıyla güncellendi.")
             return redirect("users:dashboard")
-        
+
         context = self.get_context_data(form=form)
         return self.render_to_response(context)

@@ -6,3 +6,9 @@
 
 django-debug-toolbar>=5.0,<8.0
 django-extensions>=3.2,<5.0
+
+# Lint + format (tek araç). CI'da da aynı sürüm çalışır.
+ruff>=0.14,<1.0
+
+# Commit öncesi otomatik lint. Kurulum: pre-commit install
+pre-commit>=4.0,<5.0

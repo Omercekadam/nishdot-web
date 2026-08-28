@@ -1,0 +1,22 @@
+# Commit öncesi otomatik kontroller.
+# Kurulum (bir kez): venv/Scripts/pre-commit.exe install
+#
+# GitHub Desktop ile commit atarken de çalışır — hook git seviyesindedir.
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.14.0
+    hooks:
+      - id: ruff
+        args: [--fix]
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: ^(static/vendor/|.*\.min\.(js|css)$)
+      - id: end-of-file-fixer
+        exclude: ^(static/vendor/|static/css/output\.css$|.*\.min\.(js|css)$)
+      - id: check-yaml
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: [--maxkb=2048]

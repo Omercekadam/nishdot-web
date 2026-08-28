@@ -1,0 +1,230 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block title %}Takım Eşleştirme | Nishdot{% endblock %}
+
+{% block dashboard_content %}
+<div class="py-8 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-7xl mx-auto">
+
+        <!-- Başlık -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+            <div class="flex items-center gap-4">
+                <div>
+                    <h1 class="text-3xl font-bold text-white tracking-tight">Takım Eşleştirme</h1>
+                    <p class="text-zinc-400 mt-1">
+                        {% if jam %}{{ jam.event.title }}{% else %}Aktif Game Jam bulunamadı{% endif %}
+                    </p>
+                </div>
+
+                {% if all_jams %}
+                <form method="get" class="ml-4 border-l border-zinc-700 pl-4">
+                    <label for="jam-select" class="sr-only">Etkinlik Seç</label>
+                    <select name="jam" id="jam-select" onchange="this.form.submit()" class="bg-zinc-800 border border-zinc-700 text-zinc-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-brand-pink cursor-pointer shadow-lg">
+                        {% for j in all_jams %}
+                            <option value="{{ j.id }}" {% if j.id == jam.id %}selected{% endif %}>{{ j.event.title }}</option>
+                        {% endfor %}
+                    </select>
+                </form>
+                {% endif %}
+            </div>
+
+            {% if jam %}
+            <div class="flex gap-3">
+                <button id="btnReset" class="btn-outline flex items-center gap-2">
+                    Önerileri Sıfırla
+                </button>
+                <button id="btnRun" class="bg-brand-pink text-white px-6 py-2 rounded-xl font-medium hover:bg-opacity-90 transition-colors flex items-center gap-2 shadow-[0_0_15px_rgba(235,89,109,0.3)]">
+                    Eşleştirmeyi Çalıştır
+                </button>
+            </div>
+            {% endif %}
+        </div>
+
+        {% if jam %}
+        <!-- Nasıl çalışır -->
+        <div class="bg-zinc-800/30 border border-zinc-700/50 rounded-2xl p-6 mb-8">
+            <h2 class="text-white font-semibold mb-2">Nasıl çalışır?</h2>
+            <p class="text-zinc-400 text-sm leading-relaxed">
+                Yalnızca <strong class="text-zinc-200">&ldquo;Ekip Arıyorum&rdquo;</strong> diyen ve
+                reddedilmemiş başvurular değerlendirilir. Algoritma sabit bir takım şeması aramaz;
+                her takıma farklı rollerden birer kişi koyarak eksik rolleri tamamlamaya çalışır.
+                Üretilen takımlar <strong class="text-zinc-200">öneridir</strong> &mdash; siz
+                onaylayana kadar katılımcılara duyurulmaz. Eşleştirmeyi tekrar çalıştırmak mevcut
+                takımlara dokunmaz, yalnızca boştaki başvuruları değerlendirir.
+            </p>
+        </div>
+
+        <!-- Özet -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-zinc-800/50 border border-zinc-700/50 rounded-2xl p-6 backdrop-blur-sm">
+                <p class="text-zinc-400 text-sm font-medium">Önerilen Takım</p>
+                <p class="text-3xl font-bold text-white mt-2">{{ teams|length }}</p>
+            </div>
+            <div class="bg-zinc-800/50 border border-zinc-700/50 rounded-2xl p-6 backdrop-blur-sm">
+                <p class="text-zinc-400 text-sm font-medium">Eşleşmeyi Bekleyen</p>
+                <p class="text-3xl font-bold text-white mt-2">{{ unmatched_count }}</p>
+            </div>
+            <div class="bg-zinc-800/50 border border-zinc-700/50 rounded-2xl p-6 backdrop-blur-sm">
+                <p class="text-zinc-400 text-sm font-medium">Maksimum Takım Boyutu</p>
+                <p class="text-3xl font-bold text-white mt-2">{{ jam.max_team_size }}</p>
+            </div>
+        </div>
+
+        <!-- Takım Kartları -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for team in teams %}
+            <div class="bg-zinc-800/30 border border-zinc-700/50 rounded-2xl overflow-hidden backdrop-blur-sm" id="team-card-{{ team.id }}">
+                <div class="flex items-center justify-between p-6 border-b border-zinc-700/50">
+                    <h3 class="text-xl font-bold text-white">{{ team.name }}</h3>
+                    <span class="team-badge px-3 py-1 rounded-full text-xs font-bold border
+                        {% if team.status == 'approved' %}bg-green-500/10 text-green-400 border-green-500/25
+                        {% elif team.status == 'rejected' %}bg-red-500/10 text-red-400 border-red-500/25
+                        {% else %}bg-yellow-500/10 text-yellow-400 border-yellow-500/25{% endif %}"
+                        data-team-id="{{ team.id }}">
+                        {{ team.get_status_display }}
+                    </span>
+                </div>
+
+                <ul class="p-6 space-y-4">
+                    {% for member in team.members.all %}
+                    <li class="flex items-center justify-between gap-4">
+                        <div class="min-w-0">
+                            <p class="text-white font-medium truncate">{{ member.full_name }}</p>
+                            <p class="text-zinc-500 text-xs truncate">{{ member.email }}</p>
+                        </div>
+                        <span class="text-brand-pink text-xs font-semibold whitespace-nowrap">{{ member.jam_role }}</span>
+                    </li>
+                    {% empty %}
+                    <li class="text-zinc-500 text-sm">Bu takımda üye kalmamış.</li>
+                    {% endfor %}
+                </ul>
+
+                <div class="flex gap-2 p-6 pt-0">
+                    <button onclick="setTeamStatus({{ team.id }}, 'approved')" class="flex-1 bg-green-600/20 text-green-400 border border-green-600/30 hover:bg-green-600/30 px-4 py-2 rounded-xl text-sm font-medium transition-colors">
+                        Onayla
+                    </button>
+                    <button onclick="setTeamStatus({{ team.id }}, 'rejected')" class="flex-1 bg-red-600/20 text-red-400 border border-red-600/30 hover:bg-red-600/30 px-4 py-2 rounded-xl text-sm font-medium transition-colors">
+                        Reddet
+                    </button>
+                </div>
+
+                {% if team.reviewed_by %}
+                <p class="px-6 pb-6 text-xs text-zinc-500">
+                    {{ team.reviewed_by.get_full_name|default:team.reviewed_by.username }} tarafından
+                    {{ team.reviewed_at|date:"d M Y H:i" }} tarihinde incelendi.
+                </p>
+                {% endif %}
+            </div>
+            {% empty %}
+            <div class="col-span-full bg-zinc-800/30 border border-zinc-700/50 rounded-2xl p-12 text-center text-zinc-500">
+                <p>Henüz takım önerisi yok. &ldquo;Eşleştirmeyi Çalıştır&rdquo; ile başlayın.</p>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="bg-zinc-800/30 border border-zinc-700/50 rounded-2xl p-12 text-center text-zinc-500">
+            <p>Sistemde kayıtlı bir Game Jam bulunmuyor. Önce Etkinlik Oluşturucu'dan bir jam açın.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    const csrfToken = '{{ csrf_token }}';
+    {% if jam %}
+    const jamId = {{ jam.id }};
+    {% endif %}
+
+    async function postJson(url, payload) {
+        const res = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify(payload)
+        });
+        return res.json();
+    }
+
+    const btnRun = document.getElementById('btnRun');
+    if (btnRun) {
+        btnRun.addEventListener('click', async () => {
+            const originalText = btnRun.innerText;
+            btnRun.disabled = true;
+            btnRun.innerText = 'Eşleştiriliyor...';
+
+            try {
+                const result = await postJson("{% url 'dashboard:api_run_matchmaker' %}", { jam_id: jamId });
+                if (result.success) {
+                    if (result.created === 0) {
+                        alert('Eşleştirilecek yeni başvuru bulunamadı.');
+                        btnRun.disabled = false;
+                        btnRun.innerText = originalText;
+                    } else {
+                        window.location.reload();
+                    }
+                } else {
+                    alert('Hata: ' + result.error);
+                    btnRun.disabled = false;
+                    btnRun.innerText = originalText;
+                }
+            } catch (err) {
+                alert('Bağlantı hatası: ' + err.message);
+                btnRun.disabled = false;
+                btnRun.innerText = originalText;
+            }
+        });
+    }
+
+    const btnReset = document.getElementById('btnReset');
+    if (btnReset) {
+        btnReset.addEventListener('click', async () => {
+            if (!confirm('Tüm takım önerileri silinecek. Başvurular silinmez. Devam edilsin mi?')) return;
+
+            btnReset.disabled = true;
+            btnReset.innerText = 'Sıfırlanıyor...';
+
+            try {
+                const result = await postJson("{% url 'dashboard:api_reset_matchmaker' %}", { jam_id: jamId });
+                if (result.success) {
+                    window.location.reload();
+                } else {
+                    alert('Hata: ' + result.error);
+                    btnReset.disabled = false;
+                    btnReset.innerText = 'Önerileri Sıfırla';
+                }
+            } catch (err) {
+                alert('Bağlantı hatası: ' + err.message);
+                btnReset.disabled = false;
+                btnReset.innerText = 'Önerileri Sıfırla';
+            }
+        });
+    }
+
+    async function setTeamStatus(teamId, status) {
+        const badge = document.querySelector(`.team-badge[data-team-id="${teamId}"]`);
+        const oncekiMetin = badge.innerText;
+        badge.innerText = '...';
+
+        try {
+            const result = await postJson("{% url 'dashboard:api_update_team_status' %}", {
+                team_id: teamId, status: status
+            });
+
+            if (result.success) {
+                window.location.reload();
+            } else {
+                alert('Hata: ' + result.error);
+                badge.innerText = oncekiMetin;
+            }
+        } catch (err) {
+            alert('Bağlantı hatası: ' + err.message);
+            badge.innerText = oncekiMetin;
+        }
+    }
+</script>
+{% endblock %}

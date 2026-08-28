@@ -106,3 +106,59 @@ class OtpApiTests(TestCase):
                 content_type="application/json",
             )
         self.assertEqual(last.status_code, 429)
+
+
+class AnnouncementVisibilityTests(TestCase):
+    """Site içi duyurular yalnızca published_to_site=True ise görünmeli."""
+
+    def setUp(self):
+        self.uye = User.objects.create_user(
+            username="uye", email="uye@example.com", password="x", is_verified=True
+        )
+        self.yonetim = User.objects.create_user(
+            username="yk", email="yk@example.com", password="x",
+            is_verified=True, is_staff=True, role=User.Role.BOARD,
+        )
+
+    def _duyuru(self, baslik, hedef, yayinda):
+        from dashboard.models import Announcement
+        return Announcement.objects.create(
+            title=baslik, content="icerik",
+            target_audience=hedef, published_to_site=yayinda,
+        )
+
+    def _panel_duyurulari(self, kullanici):
+        self.client.force_login(kullanici)
+        resp = self.client.get(reverse("users:dashboard"))
+        self.assertEqual(resp.status_code, 200)
+        return {d.title for d in resp.context["announcements"]}
+
+    def test_email_only_board_announcement_hidden_from_site(self):
+        """REGRESYON: published_to_site=False olan 'board' duyurusu sızmamalı."""
+        self._duyuru("sadece-mail-board", "board", yayinda=False)
+        self.assertNotIn("sadece-mail-board", self._panel_duyurulari(self.yonetim))
+
+    def test_email_only_members_announcement_hidden_from_site(self):
+        """REGRESYON: published_to_site=False olan 'members' duyurusu sızmamalı."""
+        self._duyuru("sadece-mail-uye", "members", yayinda=False)
+        self.assertNotIn("sadece-mail-uye", self._panel_duyurulari(self.uye))
+
+    def test_published_board_announcement_visible_to_board(self):
+        self._duyuru("yayinda-board", "board", yayinda=True)
+        self.assertIn("yayinda-board", self._panel_duyurulari(self.yonetim))
+
+    def test_board_announcement_hidden_from_regular_member(self):
+        self._duyuru("yayinda-board", "board", yayinda=True)
+        self.assertNotIn("yayinda-board", self._panel_duyurulari(self.uye))
+
+    def test_published_all_announcement_visible_to_everyone(self):
+        self._duyuru("herkese", "all", yayinda=True)
+        self.assertIn("herkese", self._panel_duyurulari(self.uye))
+        self.assertIn("herkese", self._panel_duyurulari(self.yonetim))
+
+    def test_consented_announcement_visible_when_published(self):
+        """6563 sayılı Kanun e-posta/SMS gönderimini düzenler; kullanıcının
+        kendi isteğiyle girdiği panelde içerik göstermek ticari elektronik
+        ileti değildir. 'consented' hedefi site içinde 'all' gibi davranır."""
+        self._duyuru("onaylilara", "consented", yayinda=True)
+        self.assertIn("onaylilara", self._panel_duyurulari(self.uye))

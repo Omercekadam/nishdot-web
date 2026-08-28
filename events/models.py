@@ -59,7 +59,6 @@ class Event(TimeStampedModel):
         from io import BytesIO
         from PIL import Image, ImageOps
         from django.core.files.uploadedfile import InMemoryUploadedFile
-        import sys
         import os
 
         # Helper for compressing images
@@ -118,7 +117,7 @@ class Raffle(TimeStampedModel):
     title = models.CharField(max_length=200, verbose_name="Çekiliş Başlığı")
     secret_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, verbose_name="Gizli QR ID")
     is_active = models.BooleanField(default=True, verbose_name="Aktif mi?")
-    
+
     class Meta:
         verbose_name = "Çekiliş"
         verbose_name_plural = "Çekilişler"
@@ -176,7 +175,6 @@ class EventGame(TimeStampedModel):
         from io import BytesIO
         from PIL import Image, ImageOps
         from django.core.files.uploadedfile import InMemoryUploadedFile
-        import sys
         import os
 
         # Helper for compressing images
@@ -246,6 +244,20 @@ class EventApplication(TimeStampedModel):
     class Meta(TimeStampedModel.Meta):
         verbose_name = "Etkinlik Başvurusu"
         verbose_name_plural = "Etkinlik Başvuruları"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["event", "email"],
+                name="unique_event_application_per_email",
+            ),
+            # Koşul ŞART: Nişantaşı öğrencilerinden T.C. kimlik alınmadığı için
+            # hash alanı '' kalır. Koşulsuz bir kısıt, aynı etkinliğe kaydolan
+            # ikinci öğrenciyi IntegrityError ile reddederdi.
+            models.UniqueConstraint(
+                fields=["event", "national_id_hash"],
+                condition=~models.Q(national_id_hash=""),
+                name="unique_event_application_per_national_id",
+            ),
+        ]
 
     def __str__(self):
         return f"{self.full_name} - {self.event.title}"
@@ -273,7 +285,7 @@ class EventImage(TimeStampedModel):
     event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="gallery_images")
     image = models.ImageField(upload_to="events/gallery/", verbose_name="Görsel")
     caption = models.CharField(max_length=255, blank=True, verbose_name="Açıklama")
-    
+
     class Meta(TimeStampedModel.Meta):
         verbose_name = "Etkinlik Görseli"
         verbose_name_plural = "Etkinlik Görselleri"
@@ -286,7 +298,6 @@ class EventImage(TimeStampedModel):
         from io import BytesIO
         from PIL import Image, ImageOps
         from django.core.files.uploadedfile import InMemoryUploadedFile
-        import sys
         import os
 
         def compress_image(image_field, max_width=1920):
@@ -309,16 +320,16 @@ class EventImage(TimeStampedModel):
                     img = bg
                 elif img.mode != 'RGB':
                     img = img.convert('RGB')
-                
+
                 if img.width > max_width:
                     wpercent = (max_width / float(img.width))
                     hsize = int((float(img.height) * float(wpercent)))
                     img = img.resize((max_width, hsize), Image.Resampling.LANCZOS)
-                
+
                 output = BytesIO()
                 img.save(output, format='JPEG', quality=80, optimize=True)
                 output.seek(0)
-                
+
                 new_filename = f"{os.path.splitext(os.path.basename(image_field.name))[0]}.jpg"
                 return InMemoryUploadedFile(
                     output, 'ImageField', new_filename,

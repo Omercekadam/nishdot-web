@@ -1,34 +1,39 @@
 import csv
 import json
 import logging
+import random
+import threading
 
+from django.conf import settings as django_settings
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.db import models
-from django.http import JsonResponse, HttpResponse
-from django.shortcuts import render, get_object_or_404
+from django.contrib.auth.mixins import UserPassesTestMixin
+from django.core.mail import EmailMultiAlternatives, get_connection
+from django.db import models, transaction
+from django.http import HttpResponse, JsonResponse
+from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from django.utils.crypto import get_random_string
+from django.utils.text import slugify
 from django.views.decorators.http import require_POST
-from django.views.generic import TemplateView
+from django.views.generic import DetailView, TemplateView
 
-from jams.models import GameJam, JamApplication
-from events.models import Event
-from dashboard.models import MeetingNote, BoardTask, ClubAsset, Announcement
+from dashboard.models import Announcement, BoardTask, ClubAsset, MeetingNote, SecurityLog
+from events.models import Event, Raffle, RaffleParticipant
+from jams.models import GameJam, JamApplication, SuggestedTeam
+from jams.services import reset_matchmaker, run_matchmaker
 
 logger = logging.getLogger(__name__)
 
 # Kullanıcıya iç hata detayı (str(e)) SIZDIRILMAZ — detay log'a yazılır,
 # istemciye bu genel mesaj döner.
 GENERIC_API_ERROR = "İşlem sırasında bir hata oluştu. Lütfen tekrar deneyin."
+
+
 class StaffRequiredMixin(UserPassesTestMixin):
     def test_func(self):
         return self.request.user.is_authenticated and self.request.user.is_staff
-
-from django.views.generic import TemplateView, View
-from django.utils.text import slugify
-from django.db import transaction
 
 # Türkçe karakterler slugify'da tamamen düşer ("Şölen Gecesi" → "len-gecesi"
 # yerine boş kalabilir); önce ASCII karşılıklarına çevrilir.
@@ -70,18 +75,33 @@ def api_save_event(request):
         end_date = data.get('end_date')
         location = data.get('location', 'Belirtilmemiş')
         event_type = data.get('event_type', Event.EventType.GAME_JAM)
-        
+
+        # Choices doğrulaması: CharField keyfî string kabul eder, model
+        # seviyesinde full_clean() çağrılmadığı için burada kapatılmalı.
+        if event_type not in Event.EventType.values:
+            return JsonResponse(
+                {'success': False, 'error': 'Geçersiz etkinlik tipi.'}, status=400
+            )
+
+        # Durum opsiyoneldir: yeni etkinlikte varsayılan "yayında", mevcut
+        # etkinlikte gönderilmezse dokunulmaz.
+        status = data.get('status') or None
+        if status is not None and status not in Event.Status.values:
+            return JsonResponse(
+                {'success': False, 'error': 'Geçersiz etkinlik durumu.'}, status=400
+            )
+
         # Jam Specific (Only valid if event_type is GAME_JAM)
         deadline = data.get('application_deadline') or start_date
         max_team = data.get('max_team_size', 5)
         is_open = data.get('is_applications_open') == 'true'
         roles_str = data.get('available_roles', '')
         roles = [r.strip() for r in roles_str.split(',')] if roles_str else []
-        
+
         # File upload
         cover_image = request.FILES.get('cover_image')
         thumbnail = request.FILES.get('thumbnail')
-        
+
         with transaction.atomic():
             if event_id:
                 event = get_object_or_404(Event, id=event_id)
@@ -92,12 +112,14 @@ def api_save_event(request):
                 event.location = location
                 event.event_type = event_type
                 event.is_applications_open = is_open
+                if status is not None:
+                    event.status = status
                 if cover_image:
                     event.cover_image = cover_image
                 if thumbnail:
                     event.thumbnail = thumbnail
                 event.save()
-                
+
                 if event_type == Event.EventType.GAME_JAM:
                     if hasattr(event, 'jam'):
                         jam = event.jam
@@ -118,7 +140,7 @@ def api_save_event(request):
                     slug=_unique_event_slug(title),
                     description=description,
                     event_type=event_type,
-                    status=Event.Status.PUBLISHED,
+                    status=status or Event.Status.PUBLISHED,
                     start_date=start_date,
                     end_date=end_date,
                     location=location,
@@ -130,7 +152,7 @@ def api_save_event(request):
                     event.thumbnail = thumbnail
                 if cover_image or thumbnail:
                     event.save()
-                
+
                 if event_type == Event.EventType.GAME_JAM:
                     GameJam.objects.create(
                         event=event,
@@ -138,7 +160,7 @@ def api_save_event(request):
                         max_team_size=max_team,
                         available_roles=roles
                     )
-            
+
         return JsonResponse({'success': True, 'event_id': event.id})
     except Exception:
         logger.exception("Dashboard API hatası")
@@ -146,10 +168,10 @@ def api_save_event(request):
 
 @staff_member_required
 def api_event_games_list(request, pk):
-    from events.models import Event, EventGame
+    from events.models import Event
     event = get_object_or_404(Event, pk=pk)
     games = event.games.all()
-    
+
     games_data = []
     for g in games:
         games_data.append({
@@ -169,9 +191,9 @@ def api_add_event_game(request):
         title = request.POST.get('title')
         url = request.POST.get('url')
         cover_image = request.FILES.get('cover_image')
-        
+
         event = get_object_or_404(Event, id=event_id)
-        
+
         EventGame.objects.create(
             event=event,
             title=title,
@@ -202,7 +224,7 @@ def api_toggle_jam_status(request):
     try:
         data = json.loads(request.body)
         event_id = data.get('event_id')
-        
+
         if event_id:
             event = get_object_or_404(Event, id=event_id)
         else:
@@ -210,7 +232,7 @@ def api_toggle_jam_status(request):
             jam_id = data.get('jam_id')
             jam = get_object_or_404(GameJam, id=jam_id)
             event = jam.event
-            
+
         event.is_applications_open = not event.is_applications_open
         event.save()
 
@@ -238,16 +260,16 @@ def api_toggle_event_pin(request):
 
 class MeetingNotesView(StaffRequiredMixin, TemplateView):
     template_name = "dashboard/notes.html"
-    
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['notes'] = MeetingNote.objects.select_related('author').prefetch_related('attendees').all().order_by('-created_at')
-        
+
         User = get_user_model()
         all_users = User.objects.all().order_by('first_name', 'username')
         board_members = [u for u in all_users if u.role in ['admin', 'board'] or u.is_staff]
         context['board_members'] = board_members
-        
+
         return context
 
 @staff_member_required
@@ -259,7 +281,7 @@ def api_save_note(request):
         title = data.get('title')
         content = data.get('content')
         attendee_ids = data.get('attendees', [])
-        
+
         if note_id:
             note = get_object_or_404(MeetingNote, id=note_id)
             note.title = title
@@ -271,12 +293,12 @@ def api_save_note(request):
                 content=content,
                 author=request.user
             )
-            
+
         if attendee_ids:
             note.attendees.set(attendee_ids)
         else:
             note.attendees.clear()
-            
+
         return JsonResponse({'success': True, 'note_id': note.id})
     except Exception:
         logger.exception("Dashboard API hatası")
@@ -297,17 +319,17 @@ def api_delete_note(request):
 
 class KanbanView(StaffRequiredMixin, TemplateView):
     template_name = "dashboard/tasks.html"
-    
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         User = get_user_model()
         context['staff_users'] = User.objects.filter(is_staff=True).order_by('first_name', 'username')
-        
+
         all_tasks = BoardTask.objects.select_related('assignee', 'creator').all()
         context['todo_tasks'] = [t for t in all_tasks if t.status == 'todo']
         context['in_progress_tasks'] = [t for t in all_tasks if t.status == 'in_progress']
         context['done_tasks'] = [t for t in all_tasks if t.status == 'done']
-        
+
         return context
 
 @staff_member_required
@@ -316,7 +338,7 @@ def api_save_task(request):
     try:
         data = json.loads(request.body)
         task_id = data.get('task_id')
-        
+
         title = data.get('title')
         description = data.get('description', '')
         assignee_id = data.get('assignee_id')
@@ -324,12 +346,12 @@ def api_save_task(request):
         priority = data.get('priority', 'medium')
         category = data.get('category', 'admin')
         deadline = data.get('deadline')
-        
+
         User = get_user_model()
         assignee = None
         if assignee_id:
             assignee = User.objects.filter(id=assignee_id).first()
-            
+
         if task_id:
             task = get_object_or_404(BoardTask, id=task_id)
             task.title = title
@@ -354,7 +376,7 @@ def api_save_task(request):
                 category=category,
                 deadline=deadline if deadline else None
             )
-            
+
         return JsonResponse({'success': True, 'task_id': task.id})
     except Exception:
         logger.exception("Dashboard API hatası")
@@ -394,29 +416,29 @@ def api_delete_task(request):
 
 class AssetsView(StaffRequiredMixin, TemplateView):
     template_name = "dashboard/assets.html"
-    
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         User = get_user_model()
         context['staff_users'] = User.objects.filter(is_staff=True).order_by('first_name', 'username')
-        
+
         assets = ClubAsset.objects.select_related('assignee').all()
-        
+
         incomes = [a for a in assets if a.type == 'income']
         expenses = [a for a in assets if a.type == 'expense']
         equipments = [a for a in assets if a.type == 'equipment']
         finances = [a for a in assets if a.type in ['income', 'expense']]
-        
+
         total_income = sum(a.amount for a in incomes if a.amount)
         total_expense = sum(a.amount for a in expenses if a.amount)
-        
+
         context['finances'] = finances
         context['equipments'] = equipments
-        
+
         context['total_income'] = total_income
         context['total_expense'] = total_expense
         context['total_balance'] = total_income - total_expense
-        
+
         return context
 
 @staff_member_required
@@ -425,14 +447,14 @@ def api_save_asset(request):
     try:
         data = json.loads(request.body)
         asset_id = data.get('asset_id')
-        
+
         asset_type = data.get('type')
         title = data.get('title')
         amount = data.get('amount')
         quantity = data.get('quantity', 1)
         notes = data.get('notes', '')
         assignee_id = data.get('assignee_id')
-        
+
         # Validate amount for finances
         if asset_type in ['income', 'expense']:
             if not amount:
@@ -443,7 +465,7 @@ def api_save_asset(request):
                 return JsonResponse({'success': False, 'error': 'Geçersiz tutar.'}, status=400)
         else:
             amount = None
-            
+
         # Validate quantity
         try:
             quantity = int(quantity)
@@ -451,12 +473,12 @@ def api_save_asset(request):
                 quantity = 1
         except ValueError:
             quantity = 1
-            
+
         User = get_user_model()
         assignee = None
         if assignee_id and asset_type == 'equipment':
             assignee = User.objects.filter(id=assignee_id).first()
-            
+
         if asset_id:
             asset = get_object_or_404(ClubAsset, id=asset_id)
             asset.type = asset_type
@@ -475,7 +497,7 @@ def api_save_asset(request):
                 notes=notes,
                 assignee=assignee
             )
-            
+
         return JsonResponse({'success': True, 'asset_id': asset.id})
     except Exception:
         logger.exception("Dashboard API hatası")
@@ -496,7 +518,7 @@ def api_delete_asset(request):
 
 class MembersDirectoryView(StaffRequiredMixin, TemplateView):
     template_name = "dashboard/members.html"
-    
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         User = get_user_model()
@@ -529,32 +551,28 @@ class MembersDirectoryView(StaffRequiredMixin, TemplateView):
 def api_update_user_profile(request):
     if not request.user.is_superuser:
         return JsonResponse({'success': False, 'error': 'Bu işlem için yetkiniz yok.'}, status=403)
-        
+
     try:
         data = json.loads(request.body)
         user_id = data.get('user_id')
         role = data.get('role')
         job_title = data.get('job_title', '')
         is_staff = data.get('is_staff')
-        
+
         User = get_user_model()
         user = get_object_or_404(User, id=user_id)
-        
+
         if role in dict(User.Role.choices):
             user.role = role
         user.job_title = job_title
         if is_staff is not None:
             user.is_staff = bool(is_staff)
-            
+
         user.save()
         return JsonResponse({'success': True})
     except Exception:
         logger.exception("Dashboard API hatası")
         return JsonResponse({'success': False, 'error': GENERIC_API_ERROR}, status=400)
-
-from django.core.mail import get_connection, EmailMultiAlternatives
-import threading
-from django.conf import settings as django_settings
 
 def send_broadcast_email_async(subject, message, recipient_list, smtp_account='smtp1'):
     def send():
@@ -579,7 +597,7 @@ def send_broadcast_email_async(subject, message, recipient_list, smtp_account='s
                     use_tls=True
                 )
                 from_email = django_settings.EMAIL_HOST_USER
-                
+
             html_content = f"""
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #eee; border-radius: 10px; overflow: hidden;">
                 <div style="background-color: #eb596d; padding: 20px; text-align: center;">
@@ -596,7 +614,7 @@ def send_broadcast_email_async(subject, message, recipient_list, smtp_account='s
                 </div>
             </div>
             """
-            
+
             email = EmailMultiAlternatives(
                 subject=subject,
                 body=message,
@@ -666,10 +684,10 @@ def api_create_broadcast(request):
         # send_discord = data.get('send_discord', False) # Şimdilik devre dışı
         smtp_account = data.get('smtp_account', 'smtp1')
         target_audience = data.get('target_audience', 'all')
-        
+
         if not title or not content:
             return JsonResponse({'success': False, 'error': 'Başlık ve içerik zorunludur.'}, status=400)
-            
+
         announcement = Announcement.objects.create(
             title=title,
             content=content,
@@ -679,12 +697,12 @@ def api_create_broadcast(request):
             target_audience=target_audience,
             author=request.user
         )
-        
+
         if target_audience == 'custom':
             custom_user_ids = data.get('custom_users', [])
             if custom_user_ids:
                 announcement.custom_users.add(*custom_user_ids)
-        
+
         if send_email:
             User = get_user_model()
             if target_audience == 'board':
@@ -710,47 +728,45 @@ def api_create_broadcast(request):
                     recipient_list=email_list,
                     smtp_account=smtp_account
                 )
-                
+
         return JsonResponse({'success': True})
     except Exception:
         logger.exception("Dashboard API hatası")
         return JsonResponse({'success': False, 'error': GENERIC_API_ERROR}, status=400)
-
-from dashboard.models import SecurityLog
 
 class DashboardView(StaffRequiredMixin, TemplateView):
     template_name = "dashboard/index.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        
+
         # Security Logs
         context['security_logs'] = SecurityLog.objects.filter(resolved=False).order_by('-timestamp')[:10]
-        
+
         all_jams = GameJam.objects.select_related('event').order_by("-created_at")
         jam_id = self.request.GET.get('jam')
-        
+
         if jam_id:
             current_jam = all_jams.filter(id=jam_id).first()
         else:
             current_jam = all_jams.first()
-            
+
         if current_jam:
             applications = current_jam.applications.all()
-            
+
             # İstatistikler
             total_apps = applications.count()
             solo_apps = applications.filter(team_status=JamApplication.TeamStatus.SOLO).count()
             looking_team = applications.filter(team_status=JamApplication.TeamStatus.LOOKING).count()
             has_team = applications.filter(team_status=JamApplication.TeamStatus.HAS_TEAM).count()
-            
+
             # Rol bazlı istatistik
             role_stats = {}
             for app in applications:
                 role = app.jam_role
                 if role:
                     role_stats[role] = role_stats.get(role, 0) + 1
-                    
+
             context.update({
                 "jam": current_jam,
                 "all_jams": all_jams,
@@ -763,7 +779,7 @@ class DashboardView(StaffRequiredMixin, TemplateView):
                 },
                 "role_stats": role_stats,
             })
-            
+
         return context
 
 @staff_member_required
@@ -773,9 +789,9 @@ def update_application_status(request):
         data = json.loads(request.body)
         app_id = data.get('app_id')
         new_status = data.get('status')
-        
+
         application = get_object_or_404(JamApplication, id=app_id)
-        
+
         if new_status in [choice[0] for choice in JamApplication.ApplicationStatus.choices]:
             application.status = new_status
             application.save()
@@ -899,27 +915,27 @@ def export_applications_csv(request):
         current_jam = get_object_or_404(GameJam, id=jam_id)
     else:
         current_jam = GameJam.objects.order_by("-created_at").first()
-        
+
     if not current_jam:
         return HttpResponse("Etkinlik bulunamadı.", status=404)
-        
+
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = f'attachment; filename="jam_applications_{current_jam.id}.csv"'
-    
+
     # BOM for Excel utf-8 recognition
     response.write('\ufeff'.encode('utf8'))
-    
+
     # Türkçe Excel sistemleri varsayılan olarak noktalı virgül (;) ile ayırır
     writer = csv.writer(response, delimiter=';')
     writer.writerow(['Ad Soyad', 'E-Posta', 'Telefon', 'TC Kimlik', 'Üniversite', 'Bölüm', 'Sınıf', 'Rol', 'Deneyim', 'Takım Durumu', 'Takım Adı', 'Durum', 'Başvuru Tarihi', 'Fotoğraf Rızası', 'Duyuru Onayı'])
-    
+
     applications = current_jam.applications.all()
-    
+
     for app in applications:
         team_status_display = app.get_team_status_display()
         status_display = app.get_status_display()
         created_at_str = app.created_at.strftime('%Y-%m-%d %H:%M')
-        
+
         writer.writerow([
             app.full_name,
             app.email,
@@ -938,7 +954,7 @@ def export_applications_csv(request):
             'EVET' if app.media_consent else 'HAYIR',
             'EVET' if app.marketing_consent else 'HAYIR',
         ])
-        
+
     return response
 
 @staff_member_required
@@ -968,12 +984,9 @@ def api_delete_log(request):
         logger.exception("Dashboard API hatası")
         return JsonResponse({'success': False, 'error': GENERIC_API_ERROR}, status=400)
 
-from events.models import Raffle, RaffleParticipant
-import random
-
 class RaffleListView(StaffRequiredMixin, TemplateView):
     template_name = "dashboard/raffles_list.html"
-    
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['raffles'] = Raffle.objects.all()
@@ -987,7 +1000,7 @@ def api_create_raffle(request):
         data = json.loads(request.body)
         event_id = data.get('event_id')
         title = data.get('title')
-        
+
         event = get_object_or_404(Event, id=event_id)
         Raffle.objects.create(event=event, title=title)
         return JsonResponse({'success': True})
@@ -995,13 +1008,11 @@ def api_create_raffle(request):
         logger.exception("Dashboard API hatası")
         return JsonResponse({'success': False, 'error': GENERIC_API_ERROR}, status=400)
 
-from django.views.generic import DetailView
-
 class RaffleQRView(StaffRequiredMixin, DetailView):
     model = Raffle
     template_name = "dashboard/raffle_qr.html"
     context_object_name = "raffle"
-    
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         # Nginx/Proxy arkasında request.get_host() 127.0.0.1 dönebildiği için
@@ -1064,11 +1075,11 @@ def api_raffle_remove_participant(request, pk):
 @require_POST
 def api_raffle_pick_winner(request, pk):
     raffle = get_object_or_404(Raffle, pk=pk)
-        
+
     participants = list(raffle.participants.all())
     if not participants:
         return JsonResponse({'success': False, 'error': 'Henüz katılımcı yok.'})
-        
+
     winner = random.choice(participants)
     return JsonResponse({
         'success': True,
@@ -1095,12 +1106,12 @@ class StorageManagerView(SuperuserRequiredMixin, TemplateView):
         context = super().get_context_data(**kwargs)
         import os
         from django.conf import settings
-        
+
         media_root = settings.MEDIA_ROOT
-        
+
         file_list = []
         total_size = 0
-        
+
         if os.path.exists(media_root):
             for root, dirs, files in os.walk(media_root):
                 for file in files:
@@ -1108,11 +1119,11 @@ class StorageManagerView(SuperuserRequiredMixin, TemplateView):
                     size = os.path.getsize(file_path)
                     total_size += size
                     rel_path = os.path.relpath(file_path, media_root)
-                    
+
                     folder_name = os.path.relpath(root, media_root).replace('\\', '/')
                     if folder_name == '.':
                         folder_name = 'Kök Dizin'
-                        
+
                     file_list.append({
                         'name': file,
                         'path': rel_path.replace('\\', '/'),
@@ -1120,9 +1131,9 @@ class StorageManagerView(SuperuserRequiredMixin, TemplateView):
                         'size_mb': round(size / (1024*1024), 2),
                         'directory': folder_name
                     })
-                    
+
         file_list.sort(key=lambda x: x['size'], reverse=True)
-        
+
         context['file_list'] = file_list
         context['total_size_mb'] = round(total_size / (1024*1024), 2)
         return context
@@ -1133,15 +1144,15 @@ def api_storage_delete(request):
     import json
     import os
     from django.conf import settings
-    
+
     if not request.user.is_superuser:
         return JsonResponse({'success': False, 'error': 'Yetkisiz erisim'}, status=403)
-        
+
     data = json.loads(request.body)
     file_path = data.get('path')
     if not file_path:
         return JsonResponse({'success': False, 'error': 'Dosya yolu eksik'})
-        
+
     media_root = os.path.abspath(settings.MEDIA_ROOT)
     full_path = os.path.abspath(os.path.join(media_root, file_path))
 
@@ -1174,11 +1185,11 @@ def api_storage_delete(request):
 def api_upload_event_image(request, pk):
     from events.models import Event, EventImage
     event = get_object_or_404(Event, pk=pk)
-    
+
     images = request.FILES.getlist('images')
     if not images:
         return JsonResponse({'success': False, 'error': 'Görsel yüklenmedi'})
-        
+
     uploaded_images = []
     for image in images:
         event_image = EventImage.objects.create(event=event, image=image)
@@ -1186,7 +1197,7 @@ def api_upload_event_image(request, pk):
             'id': event_image.id,
             'url': event_image.image.url
         })
-        
+
     return JsonResponse({'success': True, 'images': uploaded_images})
 
 @staff_member_required
@@ -1194,34 +1205,134 @@ def api_upload_event_image(request, pk):
 def api_delete_event_image(request, pk):
     from events.models import EventImage
     import json
-    
+
     data = json.loads(request.body)
     image_id = data.get('image_id')
-    
+
     image = get_object_or_404(EventImage, pk=image_id, event_id=pk)
-    
+
     if image.image and image.image.storage.exists(image.image.name):
         image.image.delete()
-        
+
     image.delete()
-    
+
     return JsonResponse({'success': True})
 
 @staff_member_required
 def api_event_gallery(request, pk):
     from events.models import Event
-    import os
     event = get_object_or_404(Event, pk=pk)
-    
+
     images = []
     for img in event.gallery_images.all():
         if img.image and not img.image.storage.exists(img.image.name):
             img.delete()
             continue
-            
+
         images.append({
             'id': img.id,
             'url': img.image.url
         })
-        
+
     return JsonResponse({'success': True, 'images': images})
+
+
+# ==============================================================================
+# Matchmaker (Takım Eşleştirme)
+# ==============================================================================
+
+class MatchmakerView(StaffRequiredMixin, TemplateView):
+    """Jam bazında takım önerilerini gösterir ve yönetir."""
+
+    template_name = "dashboard/matchmaker.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        all_jams = GameJam.objects.select_related("event").order_by("-created_at")
+        jam_id = self.request.GET.get("jam")
+
+        if jam_id:
+            jam = all_jams.filter(id=jam_id).first()
+        else:
+            jam = all_jams.first()
+
+        context["all_jams"] = all_jams
+        context["jam"] = jam
+
+        if not jam:
+            return context
+
+        # prefetch_related olmadan her takım kartı üye listesi için ayrı sorgu atar.
+        context["teams"] = (
+            SuggestedTeam.objects
+            .filter(jam=jam)
+            .prefetch_related("members")
+            .order_by("created_at")
+        )
+        context["unmatched_count"] = (
+            JamApplication.objects
+            .filter(
+                jam=jam,
+                team_status=JamApplication.TeamStatus.LOOKING,
+                suggested_team__isnull=True,
+            )
+            .exclude(status=JamApplication.ApplicationStatus.REJECTED)
+            .count()
+        )
+        return context
+
+
+@staff_member_required
+@require_POST
+def api_run_matchmaker(request):
+    """Seçili jam için takım önerileri üretir."""
+    try:
+        data = json.loads(request.body)
+        jam = get_object_or_404(GameJam, id=data.get("jam_id"))
+
+        olusturulanlar = run_matchmaker(jam)
+
+        return JsonResponse({"success": True, "created": len(olusturulanlar)})
+    except Exception:
+        logger.exception("Matchmaker çalıştırılamadı")
+        return JsonResponse({"success": False, "error": GENERIC_API_ERROR}, status=400)
+
+
+@staff_member_required
+@require_POST
+def api_update_team_status(request):
+    """Önerilen takımı onaylar veya reddeder."""
+    try:
+        data = json.loads(request.body)
+        new_status = data.get("status")
+
+        if new_status not in SuggestedTeam.Status.values:
+            return JsonResponse({"success": False, "error": "Geçersiz durum."}, status=400)
+
+        team = get_object_or_404(SuggestedTeam, id=data.get("team_id"))
+        team.status = new_status
+        team.reviewed_by = request.user
+        team.reviewed_at = timezone.now()
+        team.save(update_fields=["status", "reviewed_by", "reviewed_at", "updated_at"])
+
+        return JsonResponse({"success": True})
+    except Exception:
+        logger.exception("Takım durumu güncellenemedi")
+        return JsonResponse({"success": False, "error": GENERIC_API_ERROR}, status=400)
+
+
+@staff_member_required
+@require_POST
+def api_reset_matchmaker(request):
+    """Jam'in tüm takım önerilerini siler (başvurulara dokunmaz)."""
+    try:
+        data = json.loads(request.body)
+        jam = get_object_or_404(GameJam, id=data.get("jam_id"))
+
+        silinen = reset_matchmaker(jam)
+
+        return JsonResponse({"success": True, "deleted": silinen})
+    except Exception:
+        logger.exception("Matchmaker sıfırlanamadı")
+        return JsonResponse({"success": False, "error": GENERIC_API_ERROR}, status=400)

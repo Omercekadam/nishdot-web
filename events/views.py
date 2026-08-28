@@ -7,6 +7,7 @@ from django.views.generic import DetailView, TemplateView
 from django_ratelimit.decorators import ratelimit
 
 from core.crypto import hash_national_id, is_valid_national_id
+from core.http import get_client_ip
 from dashboard.models import SecurityLog
 from .models import Event, Raffle, RaffleParticipant
 
@@ -54,7 +55,7 @@ class EventApplyWizardView(TemplateView):
     def post(self, request, *args, **kwargs):
         if getattr(request, 'limited', False):
             SecurityLog.objects.create(
-                ip_address=request.META.get('REMOTE_ADDR', ''),
+                ip_address=get_client_ip(request),
                 action=SecurityLog.ActionType.APPLY_SPAM,
                 user_agent=request.META.get('HTTP_USER_AGENT', '')
             )
@@ -106,6 +107,7 @@ class EventApplyWizardView(TemplateView):
             try:
                 JamApplication.objects.create(
                     jam=jam,
+                    applicant=request.user if request.user.is_authenticated else None,
                     full_name=request.POST.get('full_name'),
                     national_id=national_id,
                     email=email,
@@ -183,6 +185,11 @@ class EventApplyWizardView(TemplateView):
                     marketing_consent=request.POST.get('marketing_consent') == 'on',
                 )
                 return self.render_to_response(self.get_context_data(success=True))
+            except IntegrityError:
+                # Kullanıcı gönder tuşuna iki kez bastıysa view'daki exists()
+                # kontrolü ile INSERT arasında yarış oluşur; DB kısıtı yakalar.
+                error_msg = "Bu etkinliğe zaten kayıtlısınız. Bir sorun olduğunu düşünüyorsanız lütfen bizimle iletişime geçin."
+                return self.render_to_response(self.get_context_data(error=error_msg))
             except Exception:
                 import logging
                 logging.getLogger(__name__).exception("Etkinlik başvurusu kaydedilemedi (event=%s)", event.pk)

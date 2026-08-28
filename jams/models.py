@@ -129,7 +129,13 @@ class JamApplication(TimeStampedModel):
         ordering = ["-created_at"]
         constraints = [
             models.UniqueConstraint(fields=["jam", "email"], name="unique_application_per_jam"),
-            models.UniqueConstraint(fields=["jam", "national_id_hash"], name="unique_national_id_per_jam"),
+            # Koşul ŞART: T.C. kimliği girilmemiş başvurularda hash '' olur ve
+            # koşulsuz kısıt aynı jam'deki ikinci böyle kaydı reddederdi.
+            models.UniqueConstraint(
+                fields=["jam", "national_id_hash"],
+                condition=~models.Q(national_id_hash=""),
+                name="unique_national_id_per_jam",
+            ),
         ]
 
     def __str__(self):

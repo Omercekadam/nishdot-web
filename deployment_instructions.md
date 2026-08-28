@@ -17,7 +17,7 @@ Kullanıcıların `nishdot.com.tr` yazdığında sunucunuza ulaşabilmesi için 
 4. İkinci bir **A Kaydı** daha oluşturun (www yönlendirmesi için):
    - **İsim / Host / Ad:** `www`
    - **Değer / Hedef:** Yine VDS Sunucunuzun IP Adresi
-   
+
 *Not: Bu ayarın tüm dünyaya yayılması bazen 15 dakika, bazen 24 saat sürebilir. Ancak genelde çok kısa sürer.*
 
 ---
@@ -279,7 +279,7 @@ server {
     server_name nishdot.com.tr www.nishdot.com.tr;
 
     location = /favicon.ico { access_log off; log_not_found off; }
-    
+
     # CSS, JS ve Resim dosyalarını Nginx üzerinden çok hızlı sunuyoruz
     location /static/ {
         root /var/www/nishdot-web;
@@ -412,3 +412,36 @@ systemctl restart gunicorn
 
 > Dağıtımdan önce güvenlik ayarlarını doğrulamak için:
 > `python manage.py check --deploy` çalıştırın (0 uyarı beklenir).
+
+---
+
+## ⚠️ TEKİLLİK KISITLARI EKLENİRKEN (tek seferlik)
+
+`events/0011` ve `jams/0010` migration'ları veritabanına tekillik kısıtı ekler.
+Canlıda çift kayıt varsa migration `IntegrityError` ile durur ve deploy yarıda
+kalır. **Migrate etmeden ÖNCE** çakışma olup olmadığını kontrol edin:
+
+```bash
+cd /var/www/nishdot-web
+source venv/bin/activate
+export DJANGO_SETTINGS_MODULE=nishdot.settings.production
+python manage.py shell -c "
+from django.db.models import Count
+from events.models import EventApplication
+from jams.models import JamApplication
+
+for ad, qs, alanlar in [
+    ('EventApplication e-posta', EventApplication.objects, ('event', 'email')),
+    ('EventApplication kimlik', EventApplication.objects.exclude(national_id_hash=''), ('event', 'national_id_hash')),
+    ('JamApplication kimlik', JamApplication.objects.exclude(national_id_hash=''), ('jam', 'national_id_hash')),
+]:
+    cakisan = qs.values(*alanlar).annotate(n=Count('id')).filter(n__gt=1)
+    print(f'{ad}: {len(cakisan)} cakisma')
+    for c in cakisan:
+        print('   ', c)
+"
+```
+
+Hepsi `0 cakisma` diyorsa doğrudan `migrate` edebilirsiniz. Çakışma varsa,
+her grupta **en eski** kaydı tutup diğerlerini panelden veya admin'den elle
+silin — migration'ın kişisel veriyi kendi başına silmesine izin verilmez.

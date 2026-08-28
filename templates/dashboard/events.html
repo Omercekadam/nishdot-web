@@ -35,7 +35,7 @@
 
 {% block dashboard_content %}
 <div class="p-8">
-    
+
     <div class="flex justify-between items-center mb-8">
         <div>
             <h1 class="text-3xl font-bold text-white tracking-tight">Etkinlik Oluşturucu</h1>
@@ -117,7 +117,7 @@
     <div id="createEventModal" class="fixed inset-0 z-50 hidden">
         <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeEventModal()"></div>
         <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-4xl max-h-[90vh] overflow-y-auto bg-zinc-900 border border-zinc-700/50 rounded-2xl shadow-2xl p-8">
-            
+
             <div class="flex justify-between items-center mb-6">
                 <h3 id="modalTitle" class="text-2xl font-bold text-white">Yeni Etkinlik Oluştur</h3>
                 <button onclick="closeEventModal()" class="text-zinc-500 hover:text-white">
@@ -143,11 +143,23 @@
                         </select>
                     </div>
 
+                    <!-- Yayın Durumu -->
+                    <div class="col-span-full">
+                        <label for="evPublishStatus" class="block text-sm font-medium text-zinc-300 mb-2">Yayın Durumu</label>
+                        <select id="evPublishStatus" class="w-full bg-zinc-950 border border-zinc-800 text-white rounded-xl px-4 py-3 focus:outline-none focus:border-brand-pink transition-all">
+                            <option value="published">Yayında</option>
+                            <option value="draft">Taslak (yalnızca yönetim görür)</option>
+                            <option value="completed">Tamamlandı</option>
+                            <option value="cancelled">İptal Edildi</option>
+                        </select>
+                        <p class="text-xs text-zinc-500 mt-2">Taslak etkinlikler ana sayfada listelenmez ve doğrudan bağlantıyla açılamaz.</p>
+                    </div>
+
                     <!-- Kapak Görseli ve Kırpma Alanı -->
                     <div class="col-span-full">
                         <label class="block text-sm font-medium text-zinc-300 mb-2">Afiş / Kapak Görseli (Geniş Format Önerilir)</label>
                         <input type="file" id="evCoverImage" accept="image/*" class="w-full bg-zinc-950 border border-zinc-800 text-zinc-400 rounded-xl px-4 py-2 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-brand-pink/10 file:text-brand-pink hover:file:bg-brand-pink/20 transition-all">
-                        
+
                         <!-- Kırpma Konteyneri -->
                         <div id="cropperContainer" class="mt-4 hidden border border-zinc-800 rounded-xl overflow-hidden bg-zinc-950 p-2 text-center relative max-h-[400px]">
                             <img id="cropperImage" src="" alt="Kırpılacak Görsel" class="max-w-full max-h-[350px] object-contain mx-auto">
@@ -189,7 +201,7 @@
                             <label class="block text-sm font-medium text-brand-pink mb-2">Maks. Takım Boyutu</label>
                             <input type="number" id="evTeamSize" value="5" min="1" max="10" class="w-full bg-zinc-950 border border-zinc-800 text-white rounded-xl px-4 py-3 focus:outline-none focus:border-brand-pink transition-all">
                         </div>
-                        
+
                         <div class="col-span-full">
                             <label class="block text-sm font-medium text-brand-pink mb-2">Açık Roller (Virgülle ayırın)</label>
                             <input type="text" id="evRoles" value="Developer, 3D Artist, 2D Artist, Game Designer, Sound Designer" class="w-full bg-zinc-950 border border-zinc-800 text-white rounded-xl px-4 py-3 focus:outline-none focus:border-brand-pink transition-all">
@@ -230,6 +242,7 @@
          data-end="{{ event.end_date|date:'Y-m-d\TH:i' }}"
          data-location="{{ event.location }}"
          data-isopen="{{ event.is_applications_open|yesno:'true,false' }}"
+         data-status="{{ event.status }}"
          {% if event.jam %}
          data-deadline="{{ event.jam.application_deadline|date:'Y-m-d\TH:i' }}"
          data-teamsize="{{ event.jam.max_team_size }}"
@@ -269,17 +282,18 @@
     function openEventModal(eventId = null) {
         const modal = document.getElementById('createEventModal');
         const form = document.getElementById('eventForm');
-        
+
         form.reset();
         document.getElementById('evId').value = "";
         document.getElementById('modalTitle').innerText = "Yeni Etkinlik Oluştur";
         document.getElementById('evStatus').checked = true;
-        
+        document.getElementById('evPublishStatus').value = "published";
+
         // Reset Cropper
         if(cropper) { cropper.destroy(); cropper = null; }
         document.getElementById('cropperContainer').classList.add('hidden');
         document.getElementById('cropperImage').src = "";
-        
+
         if (eventId) {
             document.getElementById('modalTitle').innerText = "Etkinliği Düzenle";
             const dataDiv = document.getElementById('event-data-' + eventId);
@@ -287,18 +301,19 @@
                 document.getElementById('evId').value = dataDiv.getAttribute('data-id');
                 document.getElementById('evType').value = dataDiv.getAttribute('data-type');
                 document.getElementById('evTitle').value = dataDiv.getAttribute('data-title');
-                
+
                 let desc = dataDiv.getAttribute('data-description');
                 if (desc && !desc.includes('<p>') && !desc.includes('<br>')) {
                     desc = desc.replace(/\n/g, '<br>');
                 }
                 quill.root.innerHTML = desc || '';
-                
+
                 document.getElementById('evStart').value = dataDiv.getAttribute('data-start');
                 document.getElementById('evEnd').value = dataDiv.getAttribute('data-end');
                 document.getElementById('evLocation').value = dataDiv.getAttribute('data-location');
                 document.getElementById('evStatus').checked = dataDiv.getAttribute('data-isopen') === 'true';
-                
+                document.getElementById('evPublishStatus').value = dataDiv.getAttribute('data-status') || 'published';
+
                 if (dataDiv.getAttribute('data-type') === 'game_jam') {
                     document.getElementById('evDeadline').value = dataDiv.getAttribute('data-deadline');
                     document.getElementById('evTeamSize').value = dataDiv.getAttribute('data-teamsize');
@@ -306,7 +321,7 @@
                 }
             }
         }
-        
+
         toggleJamFields();
         modal.classList.remove('hidden');
     }
@@ -327,7 +342,7 @@
                 const img = document.getElementById('cropperImage');
                 img.src = evt.target.result;
                 document.getElementById('cropperContainer').classList.remove('hidden');
-                
+
                 if(cropper) { cropper.destroy(); }
                 cropper = new Cropper(img, {
                     aspectRatio: 16 / 9,
@@ -343,7 +358,7 @@
 
     document.getElementById('eventForm').addEventListener('submit', async function(e) {
         e.preventDefault();
-        
+
         const btn = document.getElementById('btnSubmitEvent');
         const originalText = btn.innerText;
         btn.innerText = "Kaydediliyor...";
@@ -356,13 +371,14 @@
         formData.append('start_date', document.getElementById('evStart').value);
         formData.append('end_date', document.getElementById('evEnd').value);
         formData.append('location', document.getElementById('evLocation').value);
-        
+
         let descHtml = quill.root.innerHTML;
         if (descHtml === '<p><br></p>') descHtml = '';
         formData.append('description', descHtml);
-        
+
         formData.append('is_applications_open', document.getElementById('evStatus').checked);
-        
+        formData.append('status', document.getElementById('evPublishStatus').value);
+
         if (document.getElementById('evType').value === 'game_jam') {
             formData.append('application_deadline', document.getElementById('evDeadline').value);
             formData.append('max_team_size', document.getElementById('evTeamSize').value);
@@ -499,7 +515,7 @@
 <div id="gamesModal" class="fixed inset-0 z-50 hidden">
     <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeGamesModal()"></div>
     <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl max-h-[90vh] overflow-hidden bg-zinc-900 border border-zinc-700/50 rounded-2xl shadow-2xl flex flex-col">
-        
+
         <div class="flex justify-between items-center p-6 border-b border-zinc-800 shrink-0">
             <div>
                 <h3 id="gamesModalTitle" class="text-2xl font-bold text-white">Etkinlik Oyunları</h3>
@@ -561,7 +577,7 @@
         try {
             const res = await fetch(`/management/api/events/${eventId}/games/`);
             const data = await res.json();
-            
+
             if(data.games.length === 0) {
                 listEl.innerHTML = '<p class="text-zinc-500 text-sm">Henüz eklenmiş oyun yok.</p>';
                 return;
@@ -616,14 +632,14 @@
         } catch(err) {
             alert("Bağlantı hatası.");
         }
-        
+
         btn.innerText = originalText;
         btn.disabled = false;
     });
 
     async function deleteEventGame(gameId) {
         if(!confirm("Bu oyunu silmek istediğinize emin misiniz?")) return;
-        
+
         try {
             const res = await fetch(`/management/api/games/${gameId}/delete/`, {
                 method: 'POST',
@@ -645,7 +661,7 @@
 <div id="galleryModal" class="fixed inset-0 z-50 hidden">
     <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeGalleryModal()"></div>
     <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-4xl max-h-[90vh] overflow-hidden bg-zinc-900 border border-zinc-700/50 rounded-2xl shadow-2xl flex flex-col">
-        
+
         <div class="flex justify-between items-center p-6 border-b border-zinc-800 shrink-0">
             <div>
                 <h3 id="galleryModalTitle" class="text-2xl font-bold text-white">Etkinlik Galerisi</h3>
@@ -694,7 +710,7 @@
         try {
             const res = await fetch('/management/api/events/' + currentEventIdForGallery + '/gallery/');
             const data = await res.json();
-            
+
             if(!data.success || data.images.length === 0) {
                 listEl.innerHTML = '<div class="col-span-full text-zinc-500 text-center py-4">Henüz fotoğraf yüklenmemiş.</div>';
                 return;
@@ -752,7 +768,7 @@
 
     async function deleteGalleryImage(imageId) {
         if(!confirm("Bu fotoğrafı silmek istediğinize emin misiniz?")) return;
-        
+
         try {
             const res = await fetch('/management/api/events/' + currentEventIdForGallery + '/delete-image/', {
                 method: 'POST',

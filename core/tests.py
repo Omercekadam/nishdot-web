@@ -1,7 +1,7 @@
 """
 Kripto yardımcıları ve HTML sanitizasyon filtresi testleri.
 """
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.template import Context, Template
 
 from core.crypto import (
@@ -54,3 +54,44 @@ class SanitizeFilterTests(TestCase):
         self.assertIn("<strong>", out)
         self.assertIn("<h2>", out)
         self.assertIn("<li>", out)
+
+
+class ClientIpTests(TestCase):
+    """SecurityLog, rate limit ile AYNI IP kaynağını kullanmalı."""
+
+    def setUp(self):
+        from django.test import RequestFactory
+        self.factory = RequestFactory()
+
+    def _istek(self, **meta):
+        from core.http import get_client_ip
+        request = self.factory.get("/")
+        request.META.update(meta)
+        return get_client_ip(request)
+
+    @override_settings(RATELIMIT_IP_META_KEY="HTTP_X_REAL_IP")
+    def test_prefers_configured_meta_key(self):
+        """Production'da proxy'nin IP'si değil, X-Real-IP okunmalı."""
+        ip = self._istek(HTTP_X_REAL_IP="203.0.113.7", REMOTE_ADDR="127.0.0.1")
+        self.assertEqual(ip, "203.0.113.7")
+
+    @override_settings(RATELIMIT_IP_META_KEY="HTTP_X_REAL_IP")
+    def test_falls_back_to_remote_addr_when_header_missing(self):
+        ip = self._istek(REMOTE_ADDR="198.51.100.4")
+        self.assertEqual(ip, "198.51.100.4")
+
+    def test_uses_remote_addr_when_no_meta_key_configured(self):
+        """Development'ta RATELIMIT_IP_META_KEY tanımlı değil."""
+        ip = self._istek(REMOTE_ADDR="198.51.100.9")
+        self.assertEqual(ip, "198.51.100.9")
+
+    def test_never_returns_empty_string(self):
+        """GenericIPAddressField boş string kabul etmez (PostgreSQL inet)."""
+        from core.http import FALLBACK_IP
+        self.assertEqual(self._istek(REMOTE_ADDR=""), FALLBACK_IP)
+
+    @override_settings(RATELIMIT_IP_META_KEY="HTTP_X_FORWARDED_FOR")
+    def test_takes_first_address_from_comma_list(self):
+        """X-Forwarded-For virgüllü liste olabilir; ilki gerçek istemcidir."""
+        ip = self._istek(HTTP_X_FORWARDED_FOR="203.0.113.7, 10.0.0.1", REMOTE_ADDR="10.0.0.1")
+        self.assertEqual(ip, "203.0.113.7")

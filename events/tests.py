@@ -408,6 +408,167 @@ class PurgeExpiredDataTests(TestCase):
         self.assertEqual(app.health_notes, "Alerji")
 
 
+class JamApplicantLinkTests(TestCase):
+    """Giriş yapmış kullanıcının jam başvurusu hesabına bağlanmalı."""
+
+    def setUp(self):
+        from jams.models import GameJam
+
+        cache.clear()   # bkz. MediaConsentOptionalTests — rate limit sızıntısı
+
+        self.event = make_event(
+            Event.Status.PUBLISHED, slug="baglanti-jam",
+            event_type=Event.EventType.GAME_JAM,
+        )
+        self.jam = GameJam.objects.create(
+            event=self.event,
+            application_deadline=timezone.now() + timedelta(days=5),
+            max_team_size=5,
+        )
+        self.url = reverse("events:apply", kwargs={"slug": self.event.slug})
+        self.user = User.objects.create_user(
+            username="basvuran", email="basvuran@example.com",
+            password="x", is_verified=True,
+        )
+
+    def _payload(self, **extra):
+        data = {
+            "kvkk_accepted": "on",
+            "full_name": "Bağlantı Testi",
+            "national_id": "12345678950",
+            "email": "basvuran@example.com",
+            "phone_number": "05001112233",
+            "birth_date": "2002-01-01",
+            "university": "İstanbul Nişantaşı Üniversitesi",
+            "department": "Dijital Oyun Tasarımı",
+            "grade": "3",
+            "emergency_contact": "Veli Kişi - 05009998877",
+            "team_status": "solo",
+            "jam_role": "Developer",
+            "experience_level": "Intermediate",
+            "motivation": "Katılmak istiyorum.",
+        }
+        data.update(extra)
+        return data
+
+    def test_logged_in_applicant_is_linked(self):
+        from jams.models import JamApplication
+
+        self.client.force_login(self.user)
+        self.client.post(self.url, data=self._payload())
+
+        app = JamApplication.objects.get(jam=self.jam)
+        self.assertEqual(app.applicant, self.user)
+
+    def test_anonymous_applicant_stays_null(self):
+        from jams.models import JamApplication
+
+        self.client.post(self.url, data=self._payload())
+
+        app = JamApplication.objects.get(jam=self.jam)
+        self.assertIsNone(app.applicant)
+
+    def test_dashboard_finds_application_after_email_change(self):
+        """REGRESYON: e-posta değişse bile başvuru panelde görünmeli."""
+        self.client.force_login(self.user)
+        self.client.post(self.url, data=self._payload())
+
+        self.user.email = "yeni-adres@example.com"
+        self.user.save(update_fields=["email"])
+
+        resp = self.client.get(reverse("users:dashboard"))
+        self.assertEqual(len(resp.context["applications"]), 1)
+
+    def test_dashboard_still_finds_application_by_email(self):
+        """Hesap açılmadan yapılmış eski başvurular e-postayla eşleşmeye devam etmeli."""
+        from jams.models import JamApplication
+
+        self.client.post(self.url, data=self._payload())   # anonim başvuru
+        self.client.force_login(self.user)
+
+        resp = self.client.get(reverse("users:dashboard"))
+        self.assertEqual(len(resp.context["applications"]), 1)
+        self.assertIsNone(JamApplication.objects.get(jam=self.jam).applicant)
+
+
+class ApplicationUniquenessTests(TestCase):
+    """Tekillik view'da değil, veritabanı kısıtıyla garanti edilmeli."""
+
+    def setUp(self):
+        cache.clear()
+        self.event = make_event(Event.Status.PUBLISHED, slug="tekillik-etkinlik")
+
+    def _basvuru(self, email, national_id="", **extra):
+        return EventApplication.objects.create(
+            event=self.event, full_name="Test Kişi", email=email,
+            university="X", department="Y", grade="1",
+            is_nisantasi_student=not national_id,
+            national_id=national_id, **extra,
+        )
+
+    def test_duplicate_email_rejected_by_database(self):
+        from django.db import IntegrityError, transaction
+
+        self._basvuru("ayni@example.com")
+        with self.assertRaises(IntegrityError):
+            with transaction.atomic():
+                self._basvuru("ayni@example.com")
+
+    def test_duplicate_national_id_rejected_by_database(self):
+        from django.db import IntegrityError, transaction
+
+        self._basvuru("bir@example.com", national_id="12345678950")
+        with self.assertRaises(IntegrityError):
+            with transaction.atomic():
+                self._basvuru("iki@example.com", national_id="12345678950")
+
+    def test_multiple_applicants_without_national_id_allowed(self):
+        """REGRESYON: T.C. kimliği alınmayan öğrencilerin hash'i '' olur —
+        koşullu kısıt olmazsa ikinci öğrenci kaydedilemez."""
+        self._basvuru("ogrenci1@example.com")
+        self._basvuru("ogrenci2@example.com")
+        self.assertEqual(EventApplication.objects.filter(event=self.event).count(), 2)
+
+    def test_same_email_allowed_on_different_events(self):
+        digeri = make_event(Event.Status.PUBLISHED, slug="baska-etkinlik")
+        self._basvuru("ayni@example.com")
+        EventApplication.objects.create(
+            event=digeri, full_name="Test Kişi", email="ayni@example.com",
+            university="X", department="Y", grade="1", is_nisantasi_student=True,
+        )
+        self.assertEqual(EventApplication.objects.count(), 2)
+
+
+class JamApplicationEmptyHashTests(TestCase):
+    """REGRESYON: T.C. kimliği olmayan iki jam başvurusu çakışmamalı."""
+
+    def setUp(self):
+        from jams.models import GameJam
+
+        self.event = make_event(
+            Event.Status.PUBLISHED, slug="bos-hash-jam",
+            event_type=Event.EventType.GAME_JAM,
+        )
+        self.jam = GameJam.objects.create(
+            event=self.event,
+            application_deadline=timezone.now() + timedelta(days=5),
+            max_team_size=5,
+        )
+
+    def test_two_applications_without_national_id_allowed(self):
+        from jams.models import JamApplication
+
+        JamApplication.objects.create(
+            jam=self.jam, full_name="Bir", email="bir@example.com",
+            jam_role="Developer", team_status="solo", kvkk_accepted=True,
+        )
+        JamApplication.objects.create(
+            jam=self.jam, full_name="İki", email="iki@example.com",
+            jam_role="Artist", team_status="solo", kvkk_accepted=True,
+        )
+        self.assertEqual(JamApplication.objects.filter(jam=self.jam).count(), 2)
+
+
 class ManualRaffleParticipantTests(TestCase):
     """Yönetici QR çekilişine elle (hesabı olmayan) misafir ekleyebilmeli."""
 

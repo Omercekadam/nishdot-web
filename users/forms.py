@@ -1,13 +1,13 @@
 from django import forms
 from django.contrib.auth import get_user_model
-from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.contrib.auth.forms import AuthenticationForm
 
 User = get_user_model()
 
 class UserRegisterForm(forms.ModelForm):
     password = forms.CharField(
         widget=forms.PasswordInput(attrs={
-            'class': 'form-input', 
+            'class': 'form-input',
             'placeholder': '••••••••',
             'required': True
         }),
@@ -15,7 +15,7 @@ class UserRegisterForm(forms.ModelForm):
     )
     password_confirm = forms.CharField(
         widget=forms.PasswordInput(attrs={
-            'class': 'form-input', 
+            'class': 'form-input',
             'placeholder': '••••••••',
             'required': True
         }),
@@ -44,7 +44,7 @@ class UserRegisterForm(forms.ModelForm):
 
         if password and password_confirm and password != password_confirm:
             self.add_error('password_confirm', "Şifreler eşleşmiyor.")
-        
+
         return cleaned_data
 
     def save(self, commit=True):
@@ -59,7 +59,7 @@ class UserRegisterForm(forms.ModelForm):
             username = f"{base_username}{counter}"
             counter += 1
         user.username = username
-        
+
         if commit:
             user.save()
         return user
@@ -69,7 +69,7 @@ class UserLoginForm(AuthenticationForm):
     username = forms.EmailField(
         label="E-Posta",
         widget=forms.EmailInput(attrs={
-            'class': 'form-input', 
+            'class': 'form-input',
             'placeholder': 'ornek@email.com',
             'required': True
         })
@@ -77,12 +77,12 @@ class UserLoginForm(AuthenticationForm):
     password = forms.CharField(
         label="Şifre",
         widget=forms.PasswordInput(attrs={
-            'class': 'form-input', 
+            'class': 'form-input',
             'placeholder': '••••••••',
             'required': True
         })
     )
-    
+
     def clean(self):
         email = self.cleaned_data.get("username")
         password = self.cleaned_data.get("password")
@@ -94,7 +94,7 @@ class UserLoginForm(AuthenticationForm):
                 actual_username = user_obj.username
             except User.DoesNotExist:
                 actual_username = email
-                
+
             self.user_cache = authenticate(
                 self.request, username=actual_username, password=password
             )

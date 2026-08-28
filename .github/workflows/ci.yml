@@ -1,0 +1,61 @@
+# Her push ve pull request'te lint + test çalıştırır.
+#
+# Sır (secret) GEREKMEZ: SECRET_KEY ve FERNET_KEY her koşuda yeniden üretilir,
+# çünkü testler kalıcı veri kullanmaz (her test kendi geçici SQLite DB'sini kurar).
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Depoyu indir
+        uses: actions/checkout@v4
+
+      - name: Python 3.12 kur
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements/*.txt
+
+      - name: Bağımlılıkları kur
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements/development.txt
+          # production.txt da kurulur: son adım production ayarlarını
+          # (postgres motoru → psycopg) yükleyerek check --deploy çalıştırıyor.
+          pip install -r requirements/production.txt
+
+      - name: Ortam değişkenlerini üret
+        run: |
+          echo "DJANGO_SECRET_KEY=ci-only-$(python -c 'import secrets; print(secrets.token_urlsafe(32))')" >> $GITHUB_ENV
+          echo "FERNET_KEY=$(python -c 'from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())')" >> $GITHUB_ENV
+          echo "DJANGO_SETTINGS_MODULE=nishdot.settings.development" >> $GITHUB_ENV
+          echo "DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1" >> $GITHUB_ENV
+          echo "DATABASE_URL=sqlite:///ci.sqlite3" >> $GITHUB_ENV
+
+      - name: Lint (ruff)
+        run: ruff check .
+
+      - name: Django sistem kontrolü
+        run: python manage.py check
+
+      - name: Eksik migration var mı?
+        run: python manage.py makemigrations --check --dry-run
+
+      - name: Testler
+        run: python manage.py test --verbosity 2
+
+      - name: Production ayarlarının güvenlik denetimi
+        env:
+          DJANGO_SETTINGS_MODULE: nishdot.settings.production
+          DATABASE_URL: postgres://ci:ci@127.0.0.1:5432/ci
+          REDIS_URL: redis://127.0.0.1:6379/1
+        run: python manage.py check --deploy --fail-level WARNING

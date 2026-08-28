@@ -1,7 +1,6 @@
-from django.urls import path
-
 app_name = "jams"
 
-urlpatterns = [
-    # path('', views.jam_list, name='list'),
-]
+# Jam'lere özgü herkese açık bir görünüm henüz yok. Jam başvuruları
+# events.urls üzerinden (EventApplyWizardView) alınır; takım eşleştirme
+# yönetimi dashboard.urls'de (Matchmaker).
+urlpatterns = []

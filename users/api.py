@@ -29,6 +29,7 @@ from django.utils.html import strip_tags
 from django.views.decorators.http import require_POST
 from django_ratelimit.decorators import ratelimit
 
+from core.http import get_client_ip
 from dashboard.models import SecurityLog
 
 logger = logging.getLogger(__name__)
@@ -49,7 +50,7 @@ def _generate_otp():
 
 def _log_rate_limited(request, action=None):
     SecurityLog.objects.create(
-        ip_address=request.META.get('REMOTE_ADDR', ''),
+        ip_address=get_client_ip(request),
         action=action or SecurityLog.ActionType.OTP_ABUSE,
         user_agent=request.META.get('HTTP_USER_AGENT', ''),
     )
