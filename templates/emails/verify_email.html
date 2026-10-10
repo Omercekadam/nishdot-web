@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>Nishdot E-posta Doğrulama</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f4f5; margin: 0; padding: 0; color: #27272a; }
+        .container { max-width: 600px; margin: 40px auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
+        .header { background-color: #18181b; padding: 30px; text-align: center; border-bottom: 4px solid #EB596D; }
+        .header h1 { color: #ffffff; margin: 0; font-size: 24px; letter-spacing: 1px; }
+        .content { padding: 40px 30px; text-align: center; }
+        .greeting { font-size: 20px; font-weight: 600; margin-bottom: 20px; }
+        .message { font-size: 16px; line-height: 1.5; color: #52525b; margin-bottom: 30px; }
+        .fallback { font-size: 12px; color: #a1a1aa; margin: 24px 0; word-break: break-all; }
+        .fallback a { color: #EB596D; }
+        .warning { font-size: 14px; line-height: 1.6; color: #71717a; }
+        .footer { background-color: #f4f4f5; padding: 20px; text-align: center; font-size: 12px; color: #a1a1aa; border-top: 1px solid #e4e4e7; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>NISHDOT</h1>
+        </div>
+        <div class="content">
+            <div class="greeting">Merhaba {{ first_name }},</div>
+            <div class="message">
+                Nishdot'a hoş geldin! Hesabın hazır, hemen kullanabilirsin.
+                E-posta adresini doğrulamak için aşağıdaki butona tıkla.
+            </div>
+            <a href="{{ verify_url }}" style="display:inline-block;background-color:#EB596D;color:#ffffff;text-decoration:none;font-weight:600;font-size:16px;padding:14px 32px;border-radius:8px;">E-postamı doğrula</a>
+            <div class="fallback">
+                Buton çalışmazsa bu adresi tarayıcına yapıştır:<br>
+                <a href="{{ verify_url }}">{{ verify_url }}</a>
+            </div>
+            <div class="warning">
+                Link <strong>3 gün</strong> boyunca geçerlidir.<br>
+                Bu maili spam klasöründe bulduysan "Spam değil" olarak işaretle; sonraki maillerimiz gelen kutuna düşer.<br>
+                Bu hesabı sen açmadıysan bu mesajı görmezden gelebilirsin.
+            </div>
+        </div>
+        <div class="footer">
+            &copy; 2026 İstanbul Nişantaşı Üniversitesi Dijital Oyun Tasarımı Kulübü
+        </div>
+    </div>
+</body>
+</html>

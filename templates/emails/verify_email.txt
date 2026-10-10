@@ -1,0 +1,17 @@
+{% autoescape off %}Merhaba {{ first_name }},
+
+Nishdot'a hoş geldin! Hesabın hazır, hemen kullanabilirsin.
+E-posta adresini doğrulamak için şu linke tıkla:
+
+{{ verify_url }}
+
+Link 3 gün geçerlidir. Doğrulama, sana ulaşmamız gerektiğinde
+(ör. ödül kazanırsan) e-postanın doğru olduğundan emin olmamız içindir.
+
+Bu maili spam klasöründe bulduysan "Spam değil" olarak işaretle;
+sonraki maillerimiz gelen kutuna düşer.
+
+Bu hesabı sen açmadıysan bu mesajı görmezden gelebilirsin.
+
+İstanbul Nişantaşı Üniversitesi Dijital Oyun Tasarımı Kulübü
+{% endautoescape %}

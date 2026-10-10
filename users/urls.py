@@ -45,6 +45,10 @@ urlpatterns = [
         template_name="users/password_reset_complete.html"
     ), name="password_reset_complete"),
 
+    # E-posta doğrulama (isteğe bağlı; hiçbir işlemi kilitlemez)
+    path("dogrula/<uidb64>/<token>/", views.verify_email_view, name="verify_email"),
+    path("dogrulama-gonder/", views.resend_verification_view, name="resend_verification"),
+
     # API Endpoints
     path("api/register/", api.register_api_view, name="api_register"),
     path("api/verify/", api.verify_otp_api_view, name="api_verify"),

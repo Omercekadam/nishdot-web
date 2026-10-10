@@ -1,20 +1,34 @@
+import logging
+
 from django.contrib import messages
 from django.contrib.auth import get_user_model
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import LoginView
+from django.core.exceptions import ValidationError
 from django.db.models import Q
 from django.shortcuts import redirect, render
 from django.utils.decorators import method_decorator
+from django.utils.encoding import force_str
+from django.utils.http import urlsafe_base64_decode
+from django.views.decorators.http import require_POST
 from django.views.generic import TemplateView
 from django_ratelimit.decorators import ratelimit
 
-from core.http import get_client_ip
+from core.http import get_client_ip, safe_redirect_url
 from dashboard.models import Announcement, SecurityLog
 from jams.models import JamApplication
 
+from .api import _log_rate_limited
 from .forms import UserLoginForm, UserProfileUpdateForm, UserRegisterForm
+from .tokens import email_verification_token
+from .verification import send_verification_email
+
+logger = logging.getLogger(__name__)
 
 User = get_user_model()
+
+INVALID_LINK_MESSAGE = "Link geçersiz veya süresi dolmuş; giriş yapıp yeni link isteyebilirsin."
 
 class UserRegisterView(TemplateView):
     """
@@ -114,3 +128,56 @@ class DashboardView(LoginRequiredMixin, TemplateView):
 
         context = self.get_context_data(form=form)
         return self.render_to_response(context)
+
+
+def verify_email_view(request, uidb64, token):
+    """
+    Maildeki doğrulama linki. Giriş gerektirmez: link başka cihazda (ör. telefonda)
+    açılabilir; token kimliği zaten kanıtlar.
+    """
+    try:
+        user = User.objects.get(pk=force_str(urlsafe_base64_decode(uidb64)))
+    except (TypeError, ValueError, OverflowError, ValidationError, User.DoesNotExist):
+        user = None
+
+    if user is not None and user.is_verified:
+        messages.info(request, "E-posta adresin zaten doğrulanmış.")
+    elif user is not None and email_verification_token.check_token(user, token):
+        user.is_verified = True
+        user.save(update_fields=["is_verified"])
+        messages.success(request, "E-posta adresin doğrulandı. Teşekkürler!")
+    else:
+        messages.error(request, INVALID_LINK_MESSAGE)
+    return redirect("pages:home")
+
+
+@login_required
+@require_POST
+@ratelimit(key="user", rate="3/h", block=False)
+def resend_verification_view(request):
+    """Uyarı bandındaki "Tekrar gönder" butonu. Kullanıcıyı geldiği sayfaya döndürür."""
+    geri = safe_redirect_url(request, request.META.get("HTTP_REFERER"))
+
+    if getattr(request, "limited", False):
+        # OTP_ABUSE etiketi "doğrulama kötüye kullanımı" olarak kullanılıyor;
+        # ayrı bir seçenek migration gerektirirdi.
+        _log_rate_limited(request)
+        messages.warning(request, "Kısa sürede çok fazla istek gönderdin. Lütfen 1 saat sonra tekrar dene.")
+        return redirect(geri)
+
+    if request.user.is_verified:
+        messages.info(request, "E-posta adresin zaten doğrulanmış.")
+        return redirect(geri)
+
+    try:
+        send_verification_email(request, request.user)
+    except Exception:
+        logger.exception("Doğrulama maili yeniden gönderilemedi (user_id=%s)", request.user.pk)
+        messages.error(request, "Doğrulama maili şu an gönderilemedi. Lütfen biraz sonra tekrar dene.")
+        return redirect(geri)
+
+    messages.success(
+        request,
+        f"Doğrulama linkini {request.user.email} adresine gönderdik. Spam klasörünü de kontrol et.",
+    )
+    return redirect(geri)
