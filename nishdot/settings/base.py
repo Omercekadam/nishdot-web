@@ -163,6 +163,10 @@ EMAIL_HOST_USER = env("SMTP_USERNAME", default="")
 EMAIL_HOST_PASSWORD = env("SMTP_PASSWORD", default="")
 DEFAULT_FROM_EMAIL = f"Nishdot <{EMAIL_HOST_USER}>"
 
+# SMTP sunucusu yanıt vermezse istek asılı kalmasın: 10 sn sonra hata fırlatılır.
+# Kayıt akışı bu hatayı loglayıp yine başarılı döner (bkz. users/api.py).
+EMAIL_TIMEOUT = 10
+
 # İkinci SMTP hesabı (Game Jam / İletişim formu geri bildirimleri).
 # Tüm ortam değişkeni okumaları settings üzerinden yapılır — kod içinde
 # os.getenv / decouple KULLANILMAZ (tek konfigürasyon mekanizması).

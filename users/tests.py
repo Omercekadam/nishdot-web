@@ -10,6 +10,10 @@ from django.test import TestCase, Client, override_settings
 from django.core.cache import cache
 from django.urls import reverse
 from django.contrib.auth import get_user_model
+from django.contrib.auth.tokens import default_token_generator
+from django.utils import timezone
+
+from users.tokens import email_verification_token
 
 User = get_user_model()
 
@@ -162,3 +166,32 @@ class AnnouncementVisibilityTests(TestCase):
         ileti değildir. 'consented' hedefi site içinde 'all' gibi davranır."""
         self._duyuru("onaylilara", "consented", yayinda=True)
         self.assertIn("onaylilara", self._panel_duyurulari(self.uye))
+
+
+class EmailVerificationTokenTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username="t@example.com", email="t@example.com",
+            password="SuperGizli123", is_verified=False,
+        )
+
+    def test_token_survives_login(self):
+        """Kayıt token'ı üretip hemen login() çağırıyor; last_login değişince link ölmemeli."""
+        token = email_verification_token.make_token(self.user)
+        self.user.last_login = timezone.now()
+        self.user.save(update_fields=["last_login"])
+        self.assertTrue(email_verification_token.check_token(self.user, token))
+
+    def test_token_dies_after_verification(self):
+        token = email_verification_token.make_token(self.user)
+        self.user.is_verified = True
+        self.assertFalse(email_verification_token.check_token(self.user, token))
+
+    def test_token_dies_after_email_change(self):
+        token = email_verification_token.make_token(self.user)
+        self.user.email = "baska@example.com"
+        self.assertFalse(email_verification_token.check_token(self.user, token))
+
+    def test_password_reset_token_not_accepted(self):
+        token = default_token_generator.make_token(self.user)
+        self.assertFalse(email_verification_token.check_token(self.user, token))

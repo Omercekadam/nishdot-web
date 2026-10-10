@@ -8,6 +8,7 @@ farklı olur ve loglar işe yaramaz hâle gelir.
 """
 
 from django.conf import settings
+from django.utils.http import url_has_allowed_host_and_scheme
 
 # GenericIPAddressField boş string kabul etmez (PostgreSQL'de inet tipi
 # DataError verir). Hiçbir kaynak IP vermezse bu sentinel yazılır — kayıt
@@ -40,3 +41,18 @@ def get_client_ip(request):
     ip = raw.split(",")[0].strip()
 
     return ip or FALLBACK_IP
+
+
+def safe_redirect_url(request, url, fallback="/"):
+    """
+    Kullanıcıdan gelen yönlendirme adresini (next, Referer) yalnızca bu sitenin
+    içini gösteriyorsa döndürür; değilse fallback.
+
+    Açık yönlendirme (open redirect) açığını kapatır: ?next=https://kotu-site.com
+    ile gelen biri kayıttan sonra dışarı gönderilmez.
+    """
+    if isinstance(url, str) and url and url_has_allowed_host_and_scheme(
+        url, allowed_hosts={request.get_host()}, require_https=request.is_secure()
+    ):
+        return url
+    return fallback

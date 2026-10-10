@@ -2,7 +2,10 @@
 Kripto yardımcıları ve HTML sanitizasyon filtresi testleri.
 """
 from django.test import TestCase, override_settings
+from django.test import RequestFactory
 from django.template import Context, Template
+
+from core.http import safe_redirect_url
 
 from core.crypto import (
     encrypt_value, decrypt_value, hash_national_id,
@@ -95,3 +98,24 @@ class ClientIpTests(TestCase):
         """X-Forwarded-For virgüllü liste olabilir; ilki gerçek istemcidir."""
         ip = self._istek(HTTP_X_FORWARDED_FOR="203.0.113.7, 10.0.0.1", REMOTE_ADDR="10.0.0.1")
         self.assertEqual(ip, "203.0.113.7")
+
+
+class SafeRedirectUrlTests(TestCase):
+    """next / Referer yalnızca site içini gösteriyorsa kullanılmalı (open redirect)."""
+
+    def setUp(self):
+        self.request = RequestFactory().get("/")
+
+    def test_internal_path_allowed(self):
+        self.assertEqual(safe_redirect_url(self.request, "/#oyun"), "/#oyun")
+
+    def test_external_url_rejected(self):
+        self.assertEqual(safe_redirect_url(self.request, "https://kotu.example.com/"), "/")
+
+    def test_scheme_relative_url_rejected(self):
+        self.assertEqual(safe_redirect_url(self.request, "//kotu.example.com"), "/")
+
+    def test_empty_or_non_string_falls_back(self):
+        self.assertEqual(safe_redirect_url(self.request, None), "/")
+        self.assertEqual(safe_redirect_url(self.request, ""), "/")
+        self.assertEqual(safe_redirect_url(self.request, 42), "/")
