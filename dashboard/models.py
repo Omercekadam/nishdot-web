@@ -105,6 +105,7 @@ class SecurityLog(models.Model):
         CONTACT_SPAM = "contact_spam", "İletişim Formu (Spam) Sınırı"
         APPLY_SPAM = "apply_spam", "Başvuru (Spam) Sınırı"
         OTP_ABUSE = "otp_abuse", "OTP Doğrulama (Brute-Force) Sınırı"
+        GAME_SPAM = "game_spam", "Oyun Skoru (Spam) Sınırı"
         OTHER = "other", "Diğer"
 
     ip_address = models.GenericIPAddressField(verbose_name="IP Adresi")
