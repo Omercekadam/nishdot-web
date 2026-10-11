@@ -1,0 +1,16 @@
+{% if user.is_authenticated and not user.is_verified %}
+<!-- E-posta doğrulama hatırlatması: hiçbir işlemi kilitlemez, kapatılamaz. -->
+<div class="bg-amber-500/10 border-b border-amber-500/30" data-verify-banner>
+    <div class="container-main py-3 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm text-amber-200">
+        <p class="flex-1">
+            E-posta adresini henüz doğrulamadın. Gelen kutunu ve spam klasörünü kontrol et.
+        </p>
+        <form action="{% url 'users:resend_verification' %}" method="post" class="shrink-0">
+            {% csrf_token %}
+            <button type="submit" class="font-semibold text-amber-100 underline decoration-amber-400/50 underline-offset-4 hover:decoration-amber-200 transition-colors">
+                Tekrar gönder
+            </button>
+        </form>
+    </div>
+</div>
+{% endif %}

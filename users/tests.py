@@ -309,3 +309,38 @@ class ResendVerificationTests(TestCase):
             self.client.post(self.url)
         self.assertEqual(len(mail.outbox), 3)
         self.assertEqual(SecurityLog.objects.count(), 1)
+
+
+class VerifyBannerTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username="b@example.com", email="b@example.com",
+            password="SuperGizli123", is_verified=False,
+        )
+
+    def test_shown_to_unverified_user(self):
+        self.client.force_login(self.user)
+        resp = self.client.get(reverse("pages:home"))
+        self.assertContains(resp, "data-verify-banner")
+        self.assertContains(resp, reverse("users:resend_verification"))
+
+    def test_hidden_for_verified_user(self):
+        self.user.is_verified = True
+        self.user.save()
+        self.client.force_login(self.user)
+        self.assertNotContains(self.client.get(reverse("pages:home")), "data-verify-banner")
+
+    def test_hidden_for_anonymous(self):
+        self.assertNotContains(self.client.get(reverse("pages:home")), "data-verify-banner")
+
+
+class GlobalMessagesTests(TestCase):
+    def test_message_rendered_once_on_login_page(self):
+        """Yerel döngü + genel bileşen çift gösterim yapmamalı."""
+        self.client.get(reverse("users:verify_email", args=["zzzz", "bozuk-token"]))
+        resp = self.client.get(reverse("users:login"))
+        self.assertContains(resp, INVALID_LINK_MESSAGE, count=1)
+
+    def test_message_rendered_on_home(self):
+        resp = self.client.get(reverse("users:verify_email", args=["zzzz", "bozuk-token"]), follow=True)
+        self.assertContains(resp, INVALID_LINK_MESSAGE, count=1)
