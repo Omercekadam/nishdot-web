@@ -344,3 +344,25 @@ class GlobalMessagesTests(TestCase):
     def test_message_rendered_on_home(self):
         resp = self.client.get(reverse("users:verify_email", args=["zzzz", "bozuk-token"]), follow=True)
         self.assertContains(resp, INVALID_LINK_MESSAGE, count=1)
+
+
+class SharedIpRateLimitTests(TestCase):
+    """Stand cihazı / kampüs NAT: aynı IP'den birkaç kişi kayıt olup giriş yapabilmeli."""
+
+    def setUp(self):
+        cache.clear()
+
+    def test_five_registrations_from_one_ip(self):
+        for i in range(5):
+            resp = self.client.post(
+                reverse("users:api_register"),
+                data=json.dumps({"email": f"kisi{i}@example.com", "password": "SuperGizli123",
+                                 "first_name": "Kişi", "last_name": "Bir"}),
+                content_type="application/json",
+            )
+            self.assertEqual(resp.status_code, 200, f"{i + 1}. kayıt engellendi")
+
+    def test_six_logins_from_one_ip(self):
+        for _ in range(6):
+            resp = self.client.post(reverse("users:login"), {"username": "yok@example.com", "password": "yanlis"})
+        self.assertEqual(resp.status_code, 200)  # form hatası, 429 değil

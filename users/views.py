@@ -52,7 +52,8 @@ class UserRegisterView(TemplateView):
         context['form'] = UserRegisterForm()
         return context
 
-@method_decorator(ratelimit(key='ip', rate='5/5m', block=False), name='post')
+# Stand cihazı ve kampüs Wi-Fi'ı tek IP'den çıkar; başarılı girişler de sayılır.
+@method_decorator(ratelimit(key='ip', rate='30/5m', block=False), name='post')
 class UserLoginView(LoginView):
     template_name = "users/login.html"
     form_class = UserLoginForm

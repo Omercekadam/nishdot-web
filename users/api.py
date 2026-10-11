@@ -38,7 +38,8 @@ def _log_rate_limited(request, action=None):
     )
 
 
-@ratelimit(key='ip', rate='3/h', block=False)
+# Stand haftası: tek ortak cihaz ve kampüs Wi-Fi'ı (tek genel IP) kayıtları tıkamasın.
+@ratelimit(key='ip', rate='60/h', block=False)
 @require_POST
 def register_api_view(request):
     if getattr(request, 'limited', False):
