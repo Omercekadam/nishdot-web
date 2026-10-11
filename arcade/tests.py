@@ -1,18 +1,24 @@
 """
 Yılan oyunu: model, liderlik tablosu, API, sahiplenme ve temizlik testleri.
 """
+import json
 import secrets
+import time
 from datetime import timedelta
+from unittest import mock
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
+from django.core import signing
+from django.core.cache import cache
 from django.core.exceptions import ValidationError
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
 from arcade.models import Competition, GameRun
 from arcade.services import display_name, leaderboard
+from dashboard.models import SecurityLog
 
 User = get_user_model()
 
@@ -148,3 +154,113 @@ class GameRunAdminTests(TestCase):
         run = kosu(oyuncu("ali@example.com"), 40)
         self.client.post(self.url, {"action": "diskalifiye_et", "_selected_action": [run.pk]})
         self.assertEqual(leaderboard(y)["tablo"], [])
+
+
+@override_settings(RATELIMIT_ENABLE=False)
+class GameApiTests(TestCase):
+    def setUp(self):
+        cache.clear()
+        self.yarisma = yarisma()
+
+    def _bilet(self):
+        return self.client.post(reverse("arcade:start")).json()["bilet"]
+
+    def _bitir(self, bilet, skor=7, sure_ms=1000):
+        return self.client.post(
+            reverse("arcade:finish"),
+            data=json.dumps({"bilet": bilet, "skor": skor, "sure_ms": sure_ms}),
+            content_type="application/json",
+        )
+
+    def assertRejected(self, **kwargs):
+        with self.assertLogs("arcade.views", level="WARNING"):
+            resp = self._bitir(**kwargs)
+        self.assertEqual(resp.status_code, 400)
+        self.assertEqual(resp.json(), {"error": "Skor kaydedilemedi."})  # sebep sızdırılmaz
+
+    def test_start_returns_ticket(self):
+        resp = self.client.post(reverse("arcade:start"))
+        self.assertEqual(resp.status_code, 200)
+        self.assertIn("bilet", resp.json())
+
+    def test_get_not_allowed(self):
+        self.assertEqual(self.client.get(reverse("arcade:start")).status_code, 405)
+
+    def test_endpoints_404_when_switched_off(self):
+        Competition.objects.update(is_visible=False)
+        self.assertEqual(self.client.post(reverse("arcade:start")).status_code, 404)
+        self.assertEqual(self._bitir("x").status_code, 404)
+
+    def test_logged_in_score_saved_to_account(self):
+        ali = oyuncu("ali@example.com")
+        self.client.force_login(ali)
+        resp = self._bitir(self._bilet(), skor=7)
+        self.assertEqual(resp.status_code, 200)
+        veri = resp.json()
+        self.assertFalse(veri["bekliyor"])
+        self.assertEqual(veri["durum"], "live")
+        self.assertEqual(veri["sen"], {"sira": 1, "en_iyi": 7})
+        self.assertEqual(veri["tablo"][0]["ad"], "Ali V.")
+        self.assertEqual(GameRun.objects.get().user, ali)
+
+    def test_anonymous_score_saved_unclaimed_and_remembered(self):
+        resp = self._bitir(self._bilet())
+        self.assertTrue(resp.json()["bekliyor"])
+        self.assertIsNone(resp.json()["sen"])
+        run = GameRun.objects.get()
+        self.assertIsNone(run.user)
+        self.assertEqual(self.client.session["arcade_pending"], [run.pk])
+
+    def test_pending_list_capped_at_20(self):
+        oturum = self.client.session
+        oturum["arcade_pending"] = list(range(1000, 1020))
+        oturum.save()
+        self._bitir(self._bilet())
+        bekleyen = self.client.session["arcade_pending"]
+        self.assertEqual(len(bekleyen), 20)
+        self.assertEqual(bekleyen[-1], GameRun.objects.get().pk)
+
+    def test_ticket_single_use(self):
+        bilet = self._bilet()
+        self.assertEqual(self._bitir(bilet).status_code, 200)
+        self.assertRejected(bilet=bilet)
+        self.assertEqual(GameRun.objects.count(), 1)
+
+    def test_tampered_ticket_rejected(self):
+        self.assertRejected(bilet=self._bilet() + "x")
+
+    def test_expired_ticket_rejected(self):
+        with mock.patch("django.core.signing.time.time", return_value=time.time() - 31 * 60):
+            bilet = signing.dumps({"n": "a" * 32, "t": 0}, salt="arcade.run")
+        self.assertRejected(bilet=bilet)
+
+    def test_duration_longer_than_elapsed_rejected(self):
+        # Bilet az önce verildi; 60 sn'lik oyun iddiası imkânsız.
+        self.assertRejected(bilet=self._bilet(), sure_ms=60_000)
+
+    def test_score_above_max_rejected(self):
+        self.assertRejected(bilet=self._bilet(), skor=398)
+
+    def test_bool_score_rejected(self):
+        self.assertRejected(bilet=self._bilet(), skor=True)
+
+    def test_upcoming_competition_saves_but_returns_empty_board(self):
+        Competition.objects.update(
+            starts_at=timezone.now() + timedelta(days=1), ends_at=timezone.now() + timedelta(days=7),
+        )
+        self.client.force_login(oyuncu("ali@example.com"))
+        veri = self._bitir(self._bilet()).json()
+        self.assertEqual((veri["durum"], veri["tablo"], veri["sen"]), ("upcoming", [], None))
+        self.assertEqual(GameRun.objects.count(), 1)
+
+
+class GameRateLimitTests(TestCase):
+    def setUp(self):
+        cache.clear()
+        yarisma()
+
+    def test_limit_returns_429_and_logs(self):
+        with mock.patch("arcade.views.GAME_RATE", "2/h"):
+            kodlar = [self.client.post(reverse("arcade:start")).status_code for _ in range(3)]
+        self.assertEqual(kodlar, [200, 200, 429])
+        self.assertEqual(SecurityLog.objects.filter(action=SecurityLog.ActionType.GAME_SPAM).count(), 1)
