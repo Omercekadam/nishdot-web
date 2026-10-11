@@ -4,9 +4,10 @@ Yılan oyunu: model, liderlik tablosu, API, sahiplenme ve temizlik testleri.
 import json
 import secrets
 import time
-from datetime import timedelta
+from datetime import datetime, timedelta
 from io import StringIO
 from unittest import mock
+from zoneinfo import ZoneInfo
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
@@ -388,3 +389,36 @@ class PurgeGameRunsTests(TestCase):
         kosu(None, 5, at=timezone.now() - timedelta(hours=25))
         call_command("purge_expired_data", "--dry-run", stdout=StringIO())
         self.assertEqual(GameRun.objects.count(), 1)
+
+
+class StandWeekHeaderTests(TestCase):
+    """Stand haftası etkinliği ana sayfada öne çıkmalı; tarih aralığı yarışmadan gelir."""
+
+    def setUp(self):
+        istanbul = ZoneInfo("Europe/Istanbul")
+        Competition.objects.create(
+            name="Yılan Turnuvası",
+            starts_at=datetime(2026, 10, 12, 9, 0, tzinfo=istanbul),
+            ends_at=datetime(2026, 10, 16, 18, 0, tzinfo=istanbul),
+            is_visible=True,
+        )
+
+    def test_badge_name_and_date_range(self):
+        resp = self.client.get(reverse("pages:home"))
+        self.assertContains(resp, "Stand Haftası Etkinliği")
+        self.assertContains(resp, "Yılan Turnuvası")
+        self.assertContains(resp, "12 – 16 Ekim", count=2)  # hero duyurusu + oyun bölümü
+
+    def test_hero_links_to_game(self):
+        resp = self.client.get(reverse("pages:home"))
+        self.assertContains(resp, 'href="#oyun"')
+        self.assertContains(resp, '<h1 class="text-4xl')  # duyuru eklenirken başlık etiketi bozulmasın
+
+    def test_food_image_passed_to_game(self):
+        self.assertContains(self.client.get(reverse("pages:home")), 'data-food-src="/static/images/tonish_head.webp"')
+
+    def test_nothing_when_switched_off(self):
+        Competition.objects.update(is_visible=False)
+        resp = self.client.get(reverse("pages:home"))
+        self.assertNotContains(resp, "Stand Haftası Etkinliği")
+        self.assertNotContains(resp, 'href="#oyun"')

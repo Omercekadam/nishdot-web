@@ -31,8 +31,9 @@
         head: "#EB596D",
         body: "rgba(235, 89, 109, 0.72)",
         food: "#fecdd3",
-        glow: "#EB596D",
+        glow: "#ffd6e0",   // açık pembe: pembe yılandan ayrışsın
     };
+    const FOOD_SCALE = 1.75;   // Tonish hücreden biraz büyük çizilir; küçük ekranda da seçilsin
 
     const DIRS = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
     const KEYS = {
@@ -63,6 +64,10 @@
         me: $("#arcade-me"),
         verify: $("#arcade-verify"),
     };
+
+    // Yem: maskot Tonish'in kafası. Görsel yüklenemezse parlayan nokta çizilir.
+    const foodImg = new Image();
+    foodImg.src = cfg.foodSrc || "";
 
     let game = null;      // null: hiç oynanmadı; game.over: bitti
     let cell = 0;         // bir hücrenin CSS piksel boyu
@@ -112,21 +117,33 @@
 
         if (!game) return;
 
-        if (game.food) {
-            ctx.save();
-            ctx.shadowColor = COLORS.glow;
-            ctx.shadowBlur = cell * 0.8;
-            ctx.fillStyle = COLORS.food;
-            ctx.beginPath();
-            ctx.arc((game.food[0] + 0.5) * cell, (game.food[1] + 0.5) * cell, cell * 0.3, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.restore();
-        }
+        if (game.food) drawFood(game.food);
 
         for (let i = game.snake.length - 1; i >= 0; i--) {
             const p = game.snake[i];
             block(p[0], p[1], i === 0 ? COLORS.head : COLORS.body);
         }
+    }
+
+    function drawFood(f) {
+        const cx = (f[0] + 0.5) * cell;
+        const cy = (f[1] + 0.5) * cell;
+        const pulse = 0.5 + 0.5 * Math.sin(performance.now() / 250);   // nabız gibi atan parıltı
+        ctx.save();
+        ctx.shadowColor = COLORS.glow;
+        ctx.shadowBlur = cell * (0.5 + 0.7 * pulse);
+        if (foodImg.complete && foodImg.naturalWidth) {
+            // Gölge görselin şeffaflığını izler: parıltı kafanın silüetinin arkasından taşar.
+            const h = cell * FOOD_SCALE;
+            const w = h * foodImg.naturalWidth / foodImg.naturalHeight;
+            ctx.drawImage(foodImg, cx - w / 2, cy - h / 2, w, h);
+        } else {
+            ctx.fillStyle = COLORS.food;
+            ctx.beginPath();
+            ctx.arc(cx, cy, cell * 0.3, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        ctx.restore();
     }
 
     // ---------------------------------------------------------------- oyun

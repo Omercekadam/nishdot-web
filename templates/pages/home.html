@@ -99,6 +99,14 @@
 
     <!-- Hero Content -->
     <div class="container-main relative z-20 text-center flex flex-col items-center justify-center gap-6">
+        {% if arcade %}
+        <!-- Stand haftası duyurusu: oyun açıkken en üstte, oyun bölümüne götürür -->
+        <a href="#oyun" class="group inline-flex flex-wrap items-center justify-center gap-x-3 gap-y-1 rounded-full border border-brand-pink/40 bg-zinc-900/70 py-1.5 pl-2 pr-4 text-sm md:text-base font-semibold text-zinc-100 backdrop-blur hover:border-brand-pink transition-colors">
+            <span class="rounded-full bg-brand-pink px-2.5 py-0.5 text-xs font-bold uppercase tracking-wider text-white">Stand Haftası</span>
+            <span>{{ arcade.competition.name }} · {% include "arcade/_dates.html" %}</span>
+            <span class="text-brand-pink transition-transform group-hover:translate-x-0.5" aria-hidden="true">&rarr;</span>
+        </a>
+        {% endif %}
         <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold uppercase tracking-tight text-zinc-100 max-w-7xl leading-tight">
             İSTANBUL NİŞANTAŞI ÜNİVERSİTESİ<br>DİJİTAL OYUN TASARIMI KULÜBÜ
         </h1>

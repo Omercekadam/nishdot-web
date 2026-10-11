@@ -1,0 +1,1 @@
+{% with s=arcade.competition.starts_at e=arcade.competition.ends_at %}{% if s|date:"Ym" == e|date:"Ym" %}{{ s|date:"j" }} – {{ e|date:"j F" }}{% else %}{{ s|date:"j F" }} – {{ e|date:"j F" }}{% endif %}{% endwith %}

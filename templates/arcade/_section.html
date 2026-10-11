@@ -1,3 +1,4 @@
+{% load static %}
 {# Yılan oyunu — yalnızca admin'de "Ana sayfada göster" açık bir yarışma varken render edilir (arcade/services.home_context). #}
 {# data-csrf: şablon token'a dokunduğu için anonim ziyaretçiye de CSRF çerezi gider; yoksa ilk gönderim 403 alırdı. #}
 <section id="oyun" class="py-20 bg-zinc-900 border-t border-zinc-800/50 scroll-mt-20"
@@ -5,14 +6,19 @@
          data-csrf="{{ csrf_token }}"
          data-start-url="{% url 'arcade:start' %}"
          data-finish-url="{% url 'arcade:finish' %}"
+         data-food-src="{% static 'images/tonish_head.webp' %}"
          data-verified="{% if user.is_verified %}1{% else %}0{% endif %}">
     <div class="container-main">
         <div class="text-center mb-10">
-            <h2 class="section-title">Yılan</h2>
-            <p class="section-subtitle">{{ arcade.competition.name }}</p>
+            <span class="inline-flex items-center gap-2 rounded-full border border-brand-pink/30 bg-brand-pink/10 px-4 py-1 text-xs font-bold uppercase tracking-widest text-brand-pink">
+                <span class="h-2 w-2 rounded-full bg-brand-pink animate-pulse" aria-hidden="true"></span>
+                Stand Haftası Etkinliği
+            </span>
+            <h2 class="section-title mt-4">{{ arcade.competition.name }}</h2>
+            <p class="section-subtitle">{% include "arcade/_dates.html" %} boyunca açık · standda ya da evden oyna</p>
             <p class="text-zinc-400 mt-4 max-w-xl mx-auto">
                 Yemleri topla, duvara ve kendine çarpma. Her yem 1 puan; yılan büyüdükçe hızlanır.
-                Yarışma sonunda tablonun zirvesindekilere küçük ödüllerimiz var.
+                Yarışma sonunda tablonun zirvesindekilere ödüllerimiz var.
             </p>
         </div>
 
