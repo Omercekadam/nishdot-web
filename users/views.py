@@ -32,13 +32,12 @@ INVALID_LINK_MESSAGE = "Link geçersiz veya süresi dolmuş; giriş yapıp yeni 
 
 class UserRegisterView(TemplateView):
     """
-    Kayıt sayfasını render eder. Sayfadaki form, JS ile OTP'li API akışına
-    (users:api_register + users:api_verify) gönderim yapar.
+    Kayıt sayfasını render eder. Sayfadaki form JS ile users:api_register'a
+    gönderim yapar; API kullanıcıyı oluşturur, oturumu açar ve doğrulama
+    linkini mailler.
 
-    GÜVENLİK: Bu view POST kabul ETMEZ. Eski CreateView halinde doğrudan
-    form POST'u, OTP doğrulaması olmadan kullanıcı oluşturup login ediyordu
-    (e-posta doğrulama bypass'ı). TemplateView POST'a otomatik olarak
-    405 Method Not Allowed döndürür.
+    GÜVENLİK: Bu view POST kabul ETMEZ (TemplateView POST'a 405 döner).
+    Tek kayıt yolu, hız sınırlı API'dir.
     """
     template_name = "users/register.html"
 

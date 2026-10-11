@@ -51,6 +51,4 @@ urlpatterns = [
 
     # API Endpoints
     path("api/register/", api.register_api_view, name="api_register"),
-    path("api/verify/", api.verify_otp_api_view, name="api_verify"),
-    path("api/resend-otp/", api.resend_otp_api_view, name="api_resend_otp"),
 ]

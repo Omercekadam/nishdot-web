@@ -5,6 +5,8 @@ En kritik regresyon: e-posta doğrulama bypass'ının (eski form POST'unun)
 tekrar açılmadığını garanti eder.
 """
 import json
+import re
+from unittest import mock
 
 from django.test import TestCase, Client, override_settings
 from django.core.cache import cache
@@ -46,76 +48,94 @@ class RegisterBypassTests(TestCase):
 
 
 @override_settings(RATELIMIT_ENABLE=False)
-class OtpApiTests(TestCase):
+class RegisterApiTests(TestCase):
     def setUp(self):
-        self.client = Client()
-        cache.clear()  # IP/e-posta kilit durumları testler arası sızmasın
+        cache.clear()
 
-    def _register(self, email="yeni@example.com"):
+    def _register(self, email="yeni@example.com", next_url=None):
+        govde = {"email": email, "password": "SuperGizli123", "first_name": "Yeni", "last_name": "Uye"}
+        if next_url is not None:
+            govde["next"] = next_url
         return self.client.post(
-            reverse("users:api_register"),
-            data=json.dumps({
-                "email": email, "password": "SuperGizli123",
-                "first_name": "Yeni", "last_name": "Uye",
-            }),
-            content_type="application/json",
+            reverse("users:api_register"), data=json.dumps(govde), content_type="application/json",
         )
 
-    def test_register_creates_unverified_user(self):
+    def test_register_logs_in_unverified_user(self):
         resp = self._register()
         self.assertEqual(resp.status_code, 200)
         user = User.objects.get(email="yeni@example.com")
         self.assertFalse(user.is_verified)
-        self.assertTrue(user.verification_code)
+        self.assertEqual(self.client.session["_auth_user_id"], str(user.pk))
 
-    def test_verify_with_wrong_code_fails_and_stays_unverified(self):
+    def test_register_sends_verification_link(self):
         self._register()
-        resp = self.client.post(
-            reverse("users:api_verify"),
-            data=json.dumps({"email": "yeni@example.com", "code": "000000"}),
-            content_type="application/json",
-        )
-        self.assertEqual(resp.status_code, 400)
-        self.assertFalse(User.objects.get(email="yeni@example.com").is_verified)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].to, ["yeni@example.com"])
+        self.assertIn("/auth/dogrula/", mail.outbox[0].body)
 
-    def test_verify_with_correct_code_succeeds(self):
+    def test_mailed_link_verifies_account(self):
+        """Uçtan uca: login()'den SONRA da maildeki link çalışmalı."""
         self._register()
-        user = User.objects.get(email="yeni@example.com")
-        resp = self.client.post(
-            reverse("users:api_verify"),
-            data=json.dumps({"email": "yeni@example.com", "code": user.verification_code}),
-            content_type="application/json",
-        )
-        self.assertEqual(resp.status_code, 200)
+        yol = re.search(r"/auth/dogrula/[\w-]+/[\w-]+/", mail.outbox[0].body).group(0)
+        self.client.get(yol)
         self.assertTrue(User.objects.get(email="yeni@example.com").is_verified)
 
-    def test_resend_does_not_leak_account_existence(self):
-        """Var olmayan hesap ile resend, var olan ile AYNI yanıtı döndürmeli."""
-        r1 = self.client.post(
-            reverse("users:api_resend_otp"),
-            data=json.dumps({"email": "yok@example.com"}),
-            content_type="application/json",
-        )
-        self._register(email="var@example.com")
-        r2 = self.client.post(
-            reverse("users:api_resend_otp"),
-            data=json.dumps({"email": "var@example.com"}),
-            content_type="application/json",
-        )
-        self.assertEqual(r1.status_code, r2.status_code)
-        self.assertEqual(json.loads(r1.content), json.loads(r2.content))
+    def test_register_succeeds_when_mail_fails(self):
+        with mock.patch("users.api.send_verification_email", side_effect=OSError("SMTP kapalı")):
+            with self.assertLogs("users.api", level="ERROR"):
+                resp = self._register()
+        self.assertEqual(resp.status_code, 200)
+        self.assertIn("_auth_user_id", self.client.session)
 
-    def test_verify_lockout_after_repeated_failures(self):
-        """5 hatalı denemeden sonra 429 (kilit) dönmeli."""
-        self._register(email="kilit@example.com")
-        last = None
-        for _ in range(6):
-            last = self.client.post(
-                reverse("users:api_verify"),
-                data=json.dumps({"email": "kilit@example.com", "code": "111111"}),
-                content_type="application/json",
-            )
-        self.assertEqual(last.status_code, 429)
+    def test_register_returns_safe_next(self):
+        self.assertEqual(self._register(next_url="/#oyun").json()["redirect"], "/#oyun")
+
+    def test_register_rejects_external_next(self):
+        self.assertEqual(self._register(next_url="https://kotu.example.com/").json()["redirect"], "/")
+
+    def test_register_without_next_goes_home(self):
+        self.assertEqual(self._register().json()["redirect"], "/")
+
+    def test_duplicate_email_rejected(self):
+        self._register()
+        self.assertEqual(self._register().status_code, 400)
+
+    def test_old_otp_endpoints_removed(self):
+        self.assertEqual(self.client.post("/auth/api/verify/").status_code, 404)
+        self.assertEqual(self.client.post("/auth/api/resend-otp/").status_code, 404)
+
+
+@override_settings(RATELIMIT_ENABLE=False)
+class LoginTests(TestCase):
+    def setUp(self):
+        User.objects.create_user(
+            username="u@example.com", email="u@example.com",
+            password="SuperGizli123", is_verified=False,
+        )
+
+    def test_unverified_user_can_log_in(self):
+        resp = self.client.post(reverse("users:login"), {"username": "u@example.com", "password": "SuperGizli123"})
+        self.assertEqual(resp.status_code, 302)
+        self.assertIn("_auth_user_id", self.client.session)
+
+    def test_login_returns_to_next(self):
+        resp = self.client.post(
+            reverse("users:login") + "?next=/%23oyun",
+            {"username": "u@example.com", "password": "SuperGizli123"},
+        )
+        self.assertEqual(resp["Location"], "/#oyun")
+
+    def test_register_link_keeps_next(self):
+        resp = self.client.get(reverse("users:login") + "?next=/%23oyun")
+        self.assertContains(resp, reverse("users:register") + "?next=/%23oyun")
+
+
+class RegisterPageTests(TestCase):
+    def test_page_has_no_otp_step_and_keeps_next(self):
+        resp = self.client.get(reverse("users:register") + "?next=/%23oyun")
+        self.assertNotContains(resp, "verify-section")
+        self.assertContains(resp, 'name="next" value="/#oyun"')
+        self.assertContains(resp, reverse("users:login") + "?next=/%23oyun")
 
 
 class AnnouncementVisibilityTests(TestCase):

@@ -100,10 +100,9 @@ class UserLoginForm(AuthenticationForm):
             )
             if self.user_cache is None:
                 raise self.get_invalid_login_error()
-            else:
-                if not getattr(self.user_cache, 'is_verified', True):
-                    raise forms.ValidationError("Lütfen önce e-posta adresinizi doğrulayın.")
-                self.confirm_login_allowed(self.user_cache)
+            # E-posta doğrulaması girişi engellemez; doğrulanmamış hesap
+            # yalnızca uyarı bandını görür (bkz. components/verify_banner.html).
+            self.confirm_login_allowed(self.user_cache)
 
         return self.cleaned_data
 
