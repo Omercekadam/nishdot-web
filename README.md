@@ -140,7 +140,8 @@ Bu platform o iş akışlarının tamamını tek bir yerde topladı:
   - *Diğer etkinlikler:* tek adımlı hızlı form.
   - Her ikisinde de KVKK ve görsel kullanım onayı ayrı ayrı alınır.
 - **QR çekilişi** — Katılımcı ekrandaki QR'ı okutur, giriş yapar ve çekilişe anında dâhil olur. Aynı kullanıcı iki kez katılamaz.
-- **OTP'li üyelik** — E-posta ile 6 haneli doğrulama kodu; doğrulanmamış hesap giriş yapamaz. Şifre sıfırlama akışı Django'nun yerleşik token sistemiyle.
+- **Yılan oyunu** — Ana sayfada liderlik tablolu yarışma; üye olmadan oynanır, skor üyelikle tabloya girer. Yarışma penceresi ve aç/kapa anahtarı admin'den yönetilir.
+- **Anında üyelik** — Kayıt olan hemen giriş yapar; e-posta 3 gün geçerli bir linkle doğrulanır. Doğrulama hiçbir işlemi kilitlemez, her sayfadaki bir bantla hatırlatılır. Şifre sıfırlama Django'nun yerleşik token sistemiyle.
 - **İletişim formu** — Asenkron e-posta gönderimi, gönderene otomatik bilgilendirme yanıtı, rate limit korumalı.
 - **Dinamik yasal sayfalar** — KVKK, gizlilik politikası ve kullanıcı sözleşmesi panelden düzenlenebilir.
 
@@ -200,7 +201,8 @@ flowchart TB
         P["pages<br/>ana sayfa · yasal · iletişim"]
         E["events<br/>etkinlik · galeri · çekiliş"]
         J["jams<br/>jam başvuru · takım eşleştirme"]
-        U["users<br/>OTP kayıt · profil"]
+        U["users<br/>kayıt · e-posta doğrulama · profil"]
+        A["arcade<br/>yılan oyunu · liderlik tablosu"]
         D["dashboard<br/>yönetim paneli · JSON API"]
         C["core<br/>ortak modeller · şifreleme · sanitizasyon"]
     end
@@ -215,7 +217,7 @@ flowchart TB
     B --> N
     N --> P & E & U
     N --> D
-    P & E & J & U & D --> C
+    P & E & J & U & D & A --> C
     C --> PG
     D --> R
     E --> FS
@@ -227,11 +229,12 @@ flowchart TB
 nishdot-web/
 ├── nishdot/settings/     # base · development · production
 ├── core/                 # TimeStampedModel, crypto.py, sanitize filtresi
-├── users/                # CustomUser (e-posta ile giriş), OTP akışı
+├── users/                # CustomUser (e-posta ile giriş), doğrulama linki
 ├── events/               # Event, Raffle, EventImage, EventGame, başvurular
 ├── jams/                 # GameJam, JamApplication, SuggestedTeam
 ├── pages/                # Ana sayfa, yasal belgeler, iletişim API, sitemap
 ├── dashboard/            # Yönetim paneli görünümleri + JSON uçları
+├── arcade/               # Yılan oyunu: yarışma, skor API'si, liderlik tablosu
 ├── templates/            # 39 şablon (components/ altında navbar, footer)
 └── static/
     ├── css/input.css     # Tailwind kaynağı → output.css

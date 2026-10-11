@@ -21,7 +21,8 @@
   - `settings/development.py`: Local settings (SQLite, Debug Toolbar).
   - `settings/production.py`: VDS settings (PostgreSQL, Redis, Security Headers).
 - **`core/`**: Abstract base models and core utilities.
-- **`users/`**: Custom user model and authentication (OTP-based email verification).
+- **`users/`**: Custom user model and authentication (optional email verification via a 3-day link).
+- **`arcade/`**: Stand-week snake game — competition window, signed-ticket score API, leaderboard.
 - **`events/`**: Event management (Game Jams, Workshops, Meetups). Gallery, applications, raffles.
 - **`jams/`**: Game Jam specific logic extending Events.
 - **`pages/`**: Static pages (Home) and Legal Documents. Contact form logic.
@@ -40,8 +41,8 @@
 
 ### 3.2 `users` App
 - **Models:**
-  - `CustomUser`: Extends `AbstractUser`. Uses `email` as unique identifier. Has Roles (`MEMBER`, `BOARD`, `ADMIN`). Includes profile data (University, Department, Portfolio, Phone, National ID) and OTP fields (`is_verified`, `verification_code`, `code_expires_at`).
-- **Auth Flow:** Registration requires Name, Surname, Email, Password. An OTP is sent asynchronously (using `asgiref.sync.sync_to_async`). Login requires a verified email.
+  - `CustomUser`: Extends `AbstractUser`. Uses `email` as unique identifier. Has Roles (`MEMBER`, `BOARD`, `ADMIN`). Includes profile data (University, Department, Portfolio, Phone, National ID) and verification fields (`is_verified`; legacy `verification_code`, `code_expires_at`).
+- **Auth Flow:** Registration requires Name, Surname, Email, Password. The user is logged in immediately and a verification link (`users/tokens.py`, valid `PASSWORD_RESET_TIMEOUT` = 3 days) is emailed. Verification locks nothing; unverified users see a reminder banner. `verification_code` / `code_expires_at` are legacy fields kept for rollback compatibility.
 - **Forms:** `UserRegisterForm`, `UserLoginForm`, `UserProfileUpdateForm`.
 
 ### 3.3 `events` App
