@@ -188,6 +188,10 @@
     </div>
 </section>
 
+{% if arcade %}
+{% include "arcade/_section.html" %}
+{% endif %}
+
 <!-- ABOUT US SECTION -->
 <section id="about" class="py-20 bg-zinc-900 border-t border-zinc-800/50 scroll-mt-20">
     <div class="container-main">
@@ -297,6 +301,7 @@
 {% endblock %}
 
 {% block extra_scripts %}
+{% if arcade %}<script src="{% static 'js/snake.js' %}" defer></script>{% endif %}
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     // Contact Form Logic

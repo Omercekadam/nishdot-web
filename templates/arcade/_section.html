@@ -1,0 +1,90 @@
+{# Yılan oyunu — yalnızca admin'de "Ana sayfada göster" açık bir yarışma varken render edilir (arcade/services.home_context). #}
+{# data-csrf: şablon token'a dokunduğu için anonim ziyaretçiye de CSRF çerezi gider; yoksa ilk gönderim 403 alırdı. #}
+<section id="oyun" class="py-20 bg-zinc-900 border-t border-zinc-800/50 scroll-mt-20"
+         data-arcade
+         data-csrf="{{ csrf_token }}"
+         data-start-url="{% url 'arcade:start' %}"
+         data-finish-url="{% url 'arcade:finish' %}"
+         data-verified="{% if user.is_verified %}1{% else %}0{% endif %}">
+    <div class="container-main">
+        <div class="text-center mb-10">
+            <h2 class="section-title">Yılan</h2>
+            <p class="section-subtitle">{{ arcade.competition.name }}</p>
+            <p class="text-zinc-400 mt-4 max-w-xl mx-auto">
+                Yemleri topla, duvara ve kendine çarpma. Her yem 1 puan; yılan büyüdükçe hızlanır.
+                Yarışma sonunda tablonun zirvesindekilere küçük ödüllerimiz var.
+            </p>
+        </div>
+
+        <div id="snake-play" class="flex flex-col items-center gap-4">
+            <div class="relative w-full max-w-[480px] aspect-square">
+                <canvas id="snake-canvas" class="block w-full h-full rounded-2xl border border-zinc-800 bg-zinc-950 touch-none select-none"
+                        role="img" aria-label="Yılan oyunu alanı"></canvas>
+
+                <div id="snake-start" class="absolute inset-0 flex flex-col items-center justify-center gap-3 rounded-2xl bg-zinc-950/70">
+                    <button type="button" id="snake-start-btn" class="btn-primary px-8 py-3 text-lg">Başla</button>
+                    <p class="text-xs text-zinc-400">Ok tuşları / WASD · telefonda kaydır ya da yön tuşları</p>
+                </div>
+
+                <div id="snake-over" class="hidden absolute inset-0 flex flex-col items-center justify-center gap-3 rounded-2xl bg-zinc-950/85 px-6 text-center">
+                    <p class="text-sm uppercase tracking-widest text-zinc-500">Skorun</p>
+                    <p id="snake-final" class="text-6xl font-black text-white tabular-nums">0</p>
+                    <p id="snake-best" class="text-sm text-zinc-400"></p>
+                    <p id="snake-msg" class="text-sm text-zinc-300 max-w-xs"></p>
+                    <div id="snake-guest" class="hidden flex flex-col sm:flex-row gap-2">
+                        <a href="{% url 'users:register' %}?next=/%23oyun" class="btn-primary">Tabloya girmek için üye ol</a>
+                        <a href="{% url 'users:login' %}?next=/%23oyun" class="btn-outline">Giriş yap</a>
+                    </div>
+                    <button type="button" id="snake-again" class="btn-outline mt-2">Tekrar</button>
+                </div>
+            </div>
+
+            <p class="text-sm text-zinc-400" aria-live="polite">
+                Skor: <span id="snake-score" class="font-bold text-white tabular-nums">0</span>
+            </p>
+
+            <!-- Yön tuşları: yalnızca dokunmatik ekranlarda görünür -->
+            <div id="snake-pad" class="hidden [@media(pointer:coarse)]:grid grid-cols-3 gap-2 select-none" aria-label="Yön tuşları">
+                <span></span>
+                <button type="button" data-dir="up" class="h-16 w-16 rounded-2xl border border-zinc-700 bg-zinc-800 text-2xl text-zinc-200 active:bg-brand-pink active:text-white touch-manipulation" aria-label="Yukarı">&#9650;</button>
+                <span></span>
+                <button type="button" data-dir="left" class="h-16 w-16 rounded-2xl border border-zinc-700 bg-zinc-800 text-2xl text-zinc-200 active:bg-brand-pink active:text-white touch-manipulation" aria-label="Sol">&#9664;</button>
+                <button type="button" data-dir="down" class="h-16 w-16 rounded-2xl border border-zinc-700 bg-zinc-800 text-2xl text-zinc-200 active:bg-brand-pink active:text-white touch-manipulation" aria-label="Aşağı">&#9660;</button>
+                <button type="button" data-dir="right" class="h-16 w-16 rounded-2xl border border-zinc-700 bg-zinc-800 text-2xl text-zinc-200 active:bg-brand-pink active:text-white touch-manipulation" aria-label="Sağ">&#9654;</button>
+            </div>
+
+            <p class="text-xs text-zinc-500 text-center max-w-md">
+                Skorunu kaydettiğinde adın ve soyadının baş harfi tabloda herkese açık görünür.
+            </p>
+        </div>
+
+        <div class="max-w-md mx-auto mt-12">
+            {% if arcade.status == "upcoming" %}
+                <p class="text-center text-zinc-300 bg-zinc-800/40 border border-white/5 rounded-2xl p-6">
+                    Yarışma <strong class="text-white">{{ arcade.competition.starts_at|date:"j F, H:i" }}</strong> itibarıyla başlıyor — şimdiden ısın.
+                </p>
+            {% else %}
+                <h3 class="text-xl font-bold text-white text-center mb-1">Liderlik Tablosu</h3>
+                {% if arcade.status == "ended" %}
+                    <p class="text-center text-sm text-zinc-400 mb-4">Yarışma bitti. Final sıralaması:</p>
+                {% else %}
+                    <p class="text-center text-sm text-zinc-500 mb-4">Herkesin en iyi skoru sayılır.</p>
+                {% endif %}
+
+                <ol id="arcade-board" class="space-y-2">
+                    {% for satir in arcade.tablo %}
+                        {% include "arcade/_row.html" with sira=satir.sira ad=satir.ad skor=satir.skor me=satir.bu_sen_misin %}
+                    {% empty %}
+                        <li class="text-center text-zinc-500 py-6">Henüz skor yok — ilk sen ol!</li>
+                    {% endfor %}
+                </ol>
+                <template id="arcade-row">{% include "arcade/_row.html" only %}</template>
+
+                <p id="arcade-me" class="{% if not arcade.sen or arcade.sen.sira <= arcade.tablo|length %}hidden {% endif %}mt-3 text-center text-sm text-zinc-300">{% if arcade.sen %}Senin sıran: #{{ arcade.sen.sira }} · en iyin {{ arcade.sen.en_iyi }}{% endif %}</p>
+                <p id="arcade-verify" class="{% if not arcade.sen or user.is_verified %}hidden {% endif %}mt-3 text-center text-sm text-amber-300">
+                    Ödül kazanırsan sana ulaşabilmemiz için e-postanı doğrula.
+                </p>
+            {% endif %}
+        </div>
+    </div>
+</section>

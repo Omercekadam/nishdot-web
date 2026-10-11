@@ -321,3 +321,49 @@ class ClaimPendingRunsTests(TestCase):
         self._giris("ali@example.com")
         onun.refresh_from_db()
         self.assertEqual(onun.user, ayse)
+
+
+class HomeSectionTests(TestCase):
+    KVKK_NOTU = "Skorunu kaydettiğinde adın ve soyadının baş harfi tabloda herkese açık görünür."
+
+    def test_hidden_when_switched_off(self):
+        yarisma(gorunur=False)
+        resp = self.client.get(reverse("pages:home"))
+        self.assertNotContains(resp, 'id="oyun"')
+        self.assertNotContains(resp, 'href="/#oyun"')
+        self.assertNotContains(resp, "js/snake")
+
+    def test_visible_when_switched_on(self):
+        yarisma()
+        resp = self.client.get(reverse("pages:home"))
+        self.assertContains(resp, 'id="oyun"')
+        self.assertContains(resp, 'href="/#oyun"')
+        self.assertContains(resp, "js/snake")
+        self.assertContains(resp, self.KVKK_NOTU)
+
+    def test_navbar_link_on_other_pages(self):
+        yarisma()
+        self.assertContains(self.client.get(reverse("users:login")), 'href="/#oyun"')
+
+    def test_board_with_own_row_highlighted(self):
+        yarisma()
+        ali = oyuncu("ali@example.com", is_verified=True)
+        kosu(ali, 15)
+        self.client.force_login(ali)
+        resp = self.client.get(reverse("pages:home"))
+        self.assertContains(resp, "Ali V.")
+        self.assertContains(resp, "data-me", count=1)
+
+    def test_unverified_player_in_table_sees_hint(self):
+        yarisma()
+        ali = oyuncu("ali@example.com", is_verified=False)
+        kosu(ali, 15)
+        self.client.force_login(ali)
+        resp = self.client.get(reverse("pages:home"))
+        self.assertContains(resp, 'id="arcade-verify" class="mt-3')  # "hidden" ile başlamıyor
+
+    def test_upcoming_shows_start_time_not_board(self):
+        yarisma(baslangic=timedelta(days=1), bitis=timedelta(days=7))
+        resp = self.client.get(reverse("pages:home"))
+        self.assertContains(resp, "şimdiden ısın")
+        self.assertNotContains(resp, 'id="arcade-board"')

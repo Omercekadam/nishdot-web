@@ -104,8 +104,6 @@ class PinnedEventOrderingTests(TestCase):
     """Ana sayfada sabitlenmiş etkinlikler tarihten bağımsız en üstte gösterilmeli."""
 
     def test_pinned_event_comes_first_even_if_older(self):
-        from pages.views import HomePageView
-
         make_event(Event.Status.PUBLISHED, slug="yeni-etkinlik")  # daha yeni start_date (varsayılan: şimdi)
         old = Event.objects.create(
             title="Eski Sabitlenmiş", slug="eski-sabitlenmis",
@@ -116,7 +114,8 @@ class PinnedEventOrderingTests(TestCase):
             location="Kampüs", is_pinned=True,
         )
 
-        events = list(HomePageView().get_context_data()['events'])
+        # Görünüm request.user'a ihtiyaç duyuyor (oyun bölümü); gerçek istekle çağrılır.
+        events = list(self.client.get(reverse("pages:home")).context['events'])
         self.assertEqual(events[0].id, old.id)
 
 

@@ -20,6 +20,12 @@
                     Etkinlikler
                     <span class="absolute left-0 bottom-0 w-full h-[2px] bg-brand-pink transform scale-x-0 transition-transform duration-300 origin-left group-[.active]:scale-x-100 group-hover:scale-x-100"></span>
                 </a>
+                {% if arcade_visible %}
+                <a href="{% url 'pages:home' %}#oyun" class="nav-link text-zinc-300 hover:text-white transition-colors relative group py-2">
+                    Oyun
+                    <span class="absolute left-0 bottom-0 w-full h-[2px] bg-brand-pink transform scale-x-0 transition-transform duration-300 origin-left group-[.active]:scale-x-100 group-hover:scale-x-100"></span>
+                </a>
+                {% endif %}
                 <a href="{% url 'pages:home' %}#about" class="nav-link text-zinc-300 hover:text-white transition-colors relative group py-2">
                     Hakkımızda
                     <span class="absolute left-0 bottom-0 w-full h-[2px] bg-brand-pink transform scale-x-0 transition-transform duration-300 origin-left group-[.active]:scale-x-100 group-hover:scale-x-100"></span>

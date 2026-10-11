@@ -1,0 +1,5 @@
+<li class="flex items-center gap-3 rounded-xl border border-white/5 bg-zinc-800/40 px-4 py-3 data-[me]:border-brand-pink/50 data-[me]:bg-brand-pink/10"{% if me %} data-me{% endif %}>
+    <span class="w-10 font-bold text-brand-pink tabular-nums" data-sira>{% if sira %}#{{ sira }}{% endif %}</span>
+    <span class="flex-1 truncate text-zinc-200" data-ad>{{ ad }}</span>
+    <span class="font-bold text-white tabular-nums" data-skor>{{ skor }}</span>
+</li>
