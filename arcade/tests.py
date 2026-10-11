@@ -264,3 +264,60 @@ class GameRateLimitTests(TestCase):
             kodlar = [self.client.post(reverse("arcade:start")).status_code for _ in range(3)]
         self.assertEqual(kodlar, [200, 200, 429])
         self.assertEqual(SecurityLog.objects.filter(action=SecurityLog.ActionType.GAME_SPAM).count(), 1)
+
+
+@override_settings(RATELIMIT_ENABLE=False)
+class ClaimPendingRunsTests(TestCase):
+    def setUp(self):
+        cache.clear()
+        yarisma()
+
+    def _anonim_oyna(self, skor=9):
+        bilet = self.client.post(reverse("arcade:start")).json()["bilet"]
+        self.client.post(
+            reverse("arcade:finish"),
+            data=json.dumps({"bilet": bilet, "skor": skor, "sure_ms": 1000}),
+            content_type="application/json",
+        )
+        return GameRun.objects.latest("created_at")
+
+    def _giris(self, email):
+        self.client.post(reverse("users:login"), {"username": email, "password": "SuperGizli123"})
+
+    def test_claimed_on_login(self):
+        oyuncu("ali@example.com")
+        run = self._anonim_oyna()
+        self._giris("ali@example.com")
+        run.refresh_from_db()
+        self.assertEqual(run.user.email, "ali@example.com")
+        self.assertNotIn("arcade_pending", self.client.session)
+
+    def test_claimed_on_register(self):
+        run = self._anonim_oyna()
+        self.client.post(
+            reverse("users:api_register"),
+            data=json.dumps({"email": "yeni@example.com", "password": "SuperGizli123",
+                             "first_name": "Yeni", "last_name": "Üye", "next": "/#oyun"}),
+            content_type="application/json",
+        )
+        run.refresh_from_db()
+        self.assertEqual(run.user.email, "yeni@example.com")
+
+    def test_old_unclaimed_run_not_claimed(self):
+        oyuncu("ali@example.com")
+        run = self._anonim_oyna()
+        GameRun.objects.filter(pk=run.pk).update(created_at=timezone.now() - timedelta(hours=25))
+        self._giris("ali@example.com")
+        run.refresh_from_db()
+        self.assertIsNone(run.user)
+
+    def test_someone_elses_run_not_taken(self):
+        ayse = oyuncu("ayse@example.com", "Ayşe", "Kaya")
+        onun = kosu(ayse, 30)
+        oturum = self.client.session
+        oturum["arcade_pending"] = [onun.pk]
+        oturum.save()
+        oyuncu("ali@example.com")
+        self._giris("ali@example.com")
+        onun.refresh_from_db()
+        self.assertEqual(onun.user, ayse)
