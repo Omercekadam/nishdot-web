@@ -52,6 +52,7 @@ class Command(BaseCommand):
 
         self._saglik_verilerini_sil(simdi, kuru)
         self._suresi_dolan_basvurulari_sil(simdi, kuru)
+        self._eski_oyun_skorlarini_sil(simdi, kuru)
 
         if kuru:
             self.stdout.write(self.style.WARNING("\nKuru çalışma bitti. Gerçekten silmek için --dry-run olmadan çalıştırın."))
@@ -111,3 +112,18 @@ class Command(BaseCommand):
                 b.delete()
             for b in etkinlik_kayitlari:
                 b.delete()
+
+    def _eski_oyun_skorlarini_sil(self, simdi, kuru):
+        """Sahiplenilmemiş oyun skorları 24 saatte, tüm skorlar 1 yılda silinir."""
+        from django.db.models import Q
+
+        from arcade.models import UNCLAIMED_TTL, GameRun
+
+        hedef = GameRun.objects.filter(
+            Q(user__isnull=True, created_at__lt=simdi - UNCLAIMED_TTL)
+            | Q(created_at__lt=simdi - timedelta(days=GENEL_GUN))
+        )
+        adet = hedef.count()
+        self.stdout.write(f"Oyun skorları (sahipsiz 24 saat / tümü {GENEL_GUN} gün): {adet} kayıt")
+        if not kuru:
+            hedef.delete()

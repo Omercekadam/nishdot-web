@@ -5,6 +5,7 @@ import json
 import secrets
 import time
 from datetime import timedelta
+from io import StringIO
 from unittest import mock
 
 from django.contrib.auth import get_user_model
@@ -12,6 +13,7 @@ from django.contrib.auth.models import AnonymousUser
 from django.core import signing
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
+from django.core.management import call_command
 from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
@@ -367,3 +369,22 @@ class HomeSectionTests(TestCase):
         resp = self.client.get(reverse("pages:home"))
         self.assertContains(resp, "şimdiden ısın")
         self.assertNotContains(resp, 'id="arcade-board"')
+
+
+class PurgeGameRunsTests(TestCase):
+    def test_purges_old_unclaimed_and_year_old_runs(self):
+        simdi = timezone.now()
+        ali = oyuncu("ali@example.com")
+        kosu(None, 5, at=simdi - timedelta(hours=25))       # silinir
+        yeni_sahipsiz = kosu(None, 5, at=simdi - timedelta(hours=1))
+        kosu(ali, 9, at=simdi - timedelta(days=366))        # silinir
+        guncel = kosu(ali, 9)
+
+        call_command("purge_expired_data", stdout=StringIO())
+
+        self.assertEqual(set(GameRun.objects.values_list("pk", flat=True)), {yeni_sahipsiz.pk, guncel.pk})
+
+    def test_dry_run_deletes_nothing(self):
+        kosu(None, 5, at=timezone.now() - timedelta(hours=25))
+        call_command("purge_expired_data", "--dry-run", stdout=StringIO())
+        self.assertEqual(GameRun.objects.count(), 1)
