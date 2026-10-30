@@ -1,0 +1,130 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Yönetim Alımı | Karargah{% endblock %}
+
+{% block dashboard_content %}
+<div class="p-6 md:p-10 max-w-6xl">
+    <!-- Başlık ve dönem kontrolleri -->
+    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-8">
+        <div>
+            <h1 class="text-3xl font-bold text-white">Yönetim Alımı</h1>
+            <p class="text-zinc-400 mt-1">
+                {% if round %}{{ round.title }} · {{ total }} başvuru{% else %}Henüz bir alım dönemi yok.{% endif %}
+            </p>
+        </div>
+        {% if round %}
+        <div class="flex flex-wrap items-center gap-3">
+            {% if round.is_open %}
+                <span class="inline-flex items-center gap-2 rounded-full bg-green-500/10 border border-green-500/40 px-3 py-1 text-xs font-bold text-green-400">
+                    <span class="h-2 w-2 rounded-full bg-green-400 animate-pulse" aria-hidden="true"></span> Başvurular açık
+                </span>
+            {% else %}
+                <span class="inline-flex items-center rounded-full bg-zinc-800 border border-zinc-700 px-3 py-1 text-xs font-bold text-zinc-400">Kapalı</span>
+            {% endif %}
+            <form method="post" action="{% url 'dashboard:recruitment_toggle' %}">
+                {% csrf_token %}
+                <button type="submit" class="{% if round.is_open %}btn-outline{% else %}btn-primary{% endif %}">
+                    {% if round.is_open %}Başvuruları kapat{% else %}Başvuruları aç{% endif %}
+                </button>
+            </form>
+            <a href="{% url 'dashboard:recruitment_csv' %}{% if request.GET %}?{{ request.GET.urlencode }}{% endif %}" class="btn-outline">CSV indir</a>
+            {% if round.is_open %}
+                <a href="{% url 'recruitment:apply' %}" target="_blank" rel="noopener" class="text-sm text-brand-pink hover:underline">Formu gör ↗</a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+
+    {% if not round %}
+        <!-- İlk kurulum: dönem oluştur -->
+        <form method="post" action="{% url 'dashboard:recruitment_create' %}" class="max-w-md space-y-4 bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
+            {% csrf_token %}
+            <div>
+                <label for="title" class="block text-sm font-medium text-zinc-300 mb-2">Dönem başlığı</label>
+                <input id="title" name="title" value="{{ default_title }}" maxlength="120" class="form-input" required>
+            </div>
+            <button type="submit" class="btn-primary">Dönemi oluştur</button>
+            <p class="text-xs text-zinc-500">Oluşturduktan sonra "Başvuruları aç" ile yayına alırsın; açılınca ana sayfanın tepesinde duyuru görünür.</p>
+        </form>
+    {% else %}
+        <!-- Süzgeçler (sunucu tarafı; seçince sayfa yenilenir) -->
+        <form method="get" class="flex flex-wrap items-center gap-3 mb-6">
+            <select name="pozisyon" onchange="this.form.submit()" aria-label="Pozisyon" class="bg-zinc-900 border border-zinc-700 text-zinc-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-brand-pink">
+                <option value="">Tüm pozisyonlar</option>
+                {% for kod, ad in positions %}<option value="{{ kod }}" {% if filters.pozisyon == kod %}selected{% endif %}>{{ ad }}</option>{% endfor %}
+            </select>
+            <select name="sinif" onchange="this.form.submit()" aria-label="Sınıf" class="bg-zinc-900 border border-zinc-700 text-zinc-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-brand-pink">
+                <option value="">Tüm sınıflar</option>
+                {% for kod, ad in grades %}<option value="{{ kod }}" {% if filters.sinif == kod %}selected{% endif %}>{{ ad }}</option>{% endfor %}
+            </select>
+            <select name="durum" onchange="this.form.submit()" aria-label="Durum" class="bg-zinc-900 border border-zinc-700 text-zinc-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-brand-pink">
+                <option value="">Tüm durumlar</option>
+                {% for kod, ad in statuses %}<option value="{{ kod }}" {% if filters.durum == kod %}selected{% endif %}>{{ ad }}</option>{% endfor %}
+            </select>
+            <noscript><button type="submit" class="btn-outline">Süz</button></noscript>
+            {% if request.GET %}<a href="{% url 'dashboard:recruitment' %}" class="text-sm text-zinc-400 hover:text-white">Süzgeci temizle</a>{% endif %}
+        </form>
+
+        <!-- Başvurular -->
+        <div class="space-y-4">
+            {% for app in applications %}
+            <article class="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
+                <div class="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
+                    <div class="min-w-0">
+                        <h2 class="text-lg font-semibold text-white">{{ app.user.get_full_name|default:app.user.email }}</h2>
+                        <p class="text-sm text-zinc-400">{{ app.department }} · {{ app.get_grade_display }} · haftada {{ app.get_weekly_hours_display }}</p>
+                        <p class="text-sm text-zinc-500 mt-1 break-all">
+                            <a href="mailto:{{ app.user.email }}" class="hover:text-brand-pink">{{ app.user.email }}</a> ·
+                            <a href="tel:{{ app.phone }}" class="hover:text-brand-pink">{{ app.phone }}</a>
+                        </p>
+                        <div class="flex flex-wrap gap-2 mt-3">
+                            {% for etiket in app.position_labels %}
+                            <span class="rounded-full border border-brand-pink/30 bg-brand-pink/10 px-2.5 py-0.5 text-xs font-medium text-brand-pink">{{ etiket }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3 shrink-0">
+                        <span class="text-xs text-zinc-500">{{ app.created_at|date:"j M, H:i" }}</span>
+                        <form method="post" action="{% url 'dashboard:recruitment_status' %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="app_id" value="{{ app.pk }}">
+                            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                            <select name="status" onchange="this.form.submit()" aria-label="Durum" class="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm font-medium focus:outline-none focus:border-brand-pink
+                                {% if app.status == 'kabul' %}text-green-400{% elif app.status == 'ret' %}text-red-400{% elif app.status == 'mulakat' %}text-sky-300{% else %}text-yellow-400{% endif %}">
+                                {% for kod, ad in statuses %}<option value="{{ kod }}" class="bg-zinc-800 text-zinc-200" {% if app.status == kod %}selected{% endif %}>{{ ad }}</option>{% endfor %}
+                            </select>
+                            <noscript><button type="submit" class="btn-outline">Kaydet</button></noscript>
+                        </form>
+                    </div>
+                </div>
+
+                <details class="mt-4">
+                    <summary class="cursor-pointer text-sm font-medium text-brand-pink hover:underline">Cevapları göster</summary>
+                    <dl class="mt-4 space-y-4 text-sm">
+                        {% include "recruitment/_qa.html" with q="Neden ekibimize katılmak istiyorsun?" a=app.motivation %}
+                        {% include "recruitment/_qa.html" with q="Kulübümüzün şu anki durumu hakkında ne düşünüyorsun?" a=app.club_opinion %}
+                        {% include "recruitment/_qa.html" with q="Hayata geçirmek istediği proje veya fikir" a=app.project_idea %}
+                        {% include "recruitment/_qa.html" with q="Bu alan(lar)daki deneyimi" a=app.experience %}
+                        {% if app.portfolio_links %}
+                        <div>
+                            <dt class="text-zinc-500">Portfolyo / örnek çalışmalar</dt>
+                            <dd class="mt-1 space-y-1">
+                                {% for link in app.portfolio_links %}
+                                <p class="break-all">{% if link.url %}<a href="{{ link.url }}" target="_blank" rel="noopener noreferrer" class="text-brand-pink hover:underline">{{ link.text }}</a>{% else %}<span class="text-zinc-200">{{ link.text }}</span>{% endif %}</p>
+                                {% endfor %}
+                            </dd>
+                        </div>
+                        {% endif %}
+                        {% include "recruitment/_qa.html" with q="Eklemek istedikleri" a=app.extra %}
+                    </dl>
+                </details>
+            </article>
+            {% empty %}
+            <p class="text-zinc-500 bg-zinc-900 border border-zinc-800 rounded-2xl p-8 text-center">
+                {% if total %}Bu süzgece uyan başvuru yok.{% else %}Henüz başvuru yok.{% endif %}
+            </p>
+            {% endfor %}
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -53,6 +53,7 @@ class Command(BaseCommand):
         self._saglik_verilerini_sil(simdi, kuru)
         self._suresi_dolan_basvurulari_sil(simdi, kuru)
         self._eski_oyun_skorlarini_sil(simdi, kuru)
+        self._eski_yonetim_basvurularini_sil(simdi, kuru)
 
         if kuru:
             self.stdout.write(self.style.WARNING("\nKuru çalışma bitti. Gerçekten silmek için --dry-run olmadan çalıştırın."))
@@ -125,5 +126,15 @@ class Command(BaseCommand):
         )
         adet = hedef.count()
         self.stdout.write(f"Oyun skorları (sahipsiz 24 saat / tümü {GENEL_GUN} gün): {adet} kayıt")
+        if not kuru:
+            hedef.delete()
+
+    def _eski_yonetim_basvurularini_sil(self, simdi, kuru):
+        """Yönetim kurulu başvuruları, diğer başvurular gibi 1 yılda silinir."""
+        from recruitment.models import BoardApplication
+
+        hedef = BoardApplication.objects.filter(created_at__lt=simdi - timedelta(days=GENEL_GUN))
+        adet = hedef.count()
+        self.stdout.write(f"Yönetim kurulu başvuruları ({GENEL_GUN} gün): {adet} kayıt")
         if not kuru:
             hedef.delete()

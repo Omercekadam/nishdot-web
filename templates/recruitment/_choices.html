@@ -1,0 +1,13 @@
+{# Tek ya da çok seçimli soru: seçenekler tıklanabilir kartlar olarak #}
+<fieldset>
+    <legend class="block text-sm font-medium text-zinc-300 mb-3">{{ field.label }}{% if field.field.required %} <span class="text-brand-pink">*</span>{% endif %}</legend>
+    <div class="grid gap-2 sm:grid-cols-2">
+        {% for option in field %}
+        <label for="{{ option.id_for_label }}" class="flex items-center gap-3 rounded-xl border border-white/10 bg-zinc-900/50 px-4 py-3 text-sm text-zinc-200 cursor-pointer transition-colors hover:border-brand-pink/50 has-[:checked]:border-brand-pink has-[:checked]:bg-brand-pink/10 [&_input]:accent-[#EB596D]">
+            {{ option.tag }}
+            <span>{{ option.choice_label }}</span>
+        </label>
+        {% endfor %}
+    </div>
+    {% for error in field.errors %}<p class="text-red-400 text-xs mt-2">{{ error }}</p>{% endfor %}
+</fieldset>

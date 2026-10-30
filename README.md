@@ -140,6 +140,7 @@ Bu platform o iş akışlarının tamamını tek bir yerde topladı:
   - *Diğer etkinlikler:* tek adımlı hızlı form.
   - Her ikisinde de KVKK ve görsel kullanım onayı ayrı ayrı alınır.
 - **QR çekilişi** — Katılımcı ekrandaki QR'ı okutur, giriş yapar ve çekilişe anında dâhil olur. Aynı kullanıcı iki kez katılamaz.
+- **Yönetim kurulu alımı** — Üyelere açık başvuru formu; karargahtan açılınca ana sayfanın tepesinde duyurulur. Başvurular karargahta okunur, süzülür, durumlandırılır ve CSV olarak indirilir.
 - **Yılan oyunu** — Ana sayfada liderlik tablolu yarışma; üye olmadan oynanır, skor üyelikle tabloya girer. Yarışma penceresi ve aç/kapa anahtarı admin'den yönetilir.
 - **Anında üyelik** — Kayıt olan hemen giriş yapar; e-posta 3 gün geçerli bir linkle doğrulanır. Doğrulama hiçbir işlemi kilitlemez, her sayfadaki bir bantla hatırlatılır. Şifre sıfırlama Django'nun yerleşik token sistemiyle.
 - **İletişim formu** — Asenkron e-posta gönderimi, gönderene otomatik bilgilendirme yanıtı, rate limit korumalı.
@@ -235,6 +236,7 @@ nishdot-web/
 ├── pages/                # Ana sayfa, yasal belgeler, iletişim API, sitemap
 ├── dashboard/            # Yönetim paneli görünümleri + JSON uçları
 ├── arcade/               # Yılan oyunu: yarışma, skor API'si, liderlik tablosu
+├── recruitment/          # Yönetim kurulu alımı: başvuru formu, karargah sayfası
 ├── templates/            # 39 şablon (components/ altında navbar, footer)
 └── static/
     ├── css/input.css     # Tailwind kaynağı → output.css

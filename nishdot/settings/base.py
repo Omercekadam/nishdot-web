@@ -84,6 +84,7 @@ LOCAL_APPS = [
     "pages",
     "dashboard",
     "arcade",
+    "recruitment",
 ]
 
 # Sıralama önemli: Django built-in'ler → 3. parti → yerel uygulamalar.

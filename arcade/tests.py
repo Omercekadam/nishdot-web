@@ -398,8 +398,10 @@ class StandWeekHeaderTests(TestCase):
         istanbul = ZoneInfo("Europe/Istanbul")
         Competition.objects.create(
             name="Yılan Turnuvası",
-            starts_at=datetime(2026, 10, 12, 9, 0, tzinfo=istanbul),
-            ends_at=datetime(2026, 10, 16, 18, 0, tzinfo=istanbul),
+            # Gelecekte sabit tarih: biçim kontrolü deterministik kalsın, yarışma
+            # "bitti" durumuna düşüp hero duyurusu kalkmasın.
+            starts_at=datetime(2099, 10, 12, 9, 0, tzinfo=istanbul),
+            ends_at=datetime(2099, 10, 16, 18, 0, tzinfo=istanbul),
             is_visible=True,
         )
 
