@@ -1,10 +1,19 @@
 from django.urls import path
+from recruitment import views as recruitment_views
 from . import views
 
 app_name = "dashboard"
 
 urlpatterns = [
     path("", views.DashboardView.as_view(), name="index"),
+
+    # Yönetim kurulu alımı (görünümler recruitment uygulamasında)
+    path("yonetim-alimi/", recruitment_views.ManageView.as_view(), name="recruitment"),
+    path("yonetim-alimi/donem-olustur/", recruitment_views.create_round, name="recruitment_create"),
+    path("yonetim-alimi/ac-kapa/", recruitment_views.toggle_round, name="recruitment_toggle"),
+    path("yonetim-alimi/durum/", recruitment_views.update_status, name="recruitment_status"),
+    path("yonetim-alimi/csv/", recruitment_views.export_csv, name="recruitment_csv"),
+
     path("api/update-status/", views.update_application_status, name="api_update_status"),
     path("api/export-csv/", views.export_applications_csv, name="api_export_csv"),
     path("api/send-bulk-emails/", views.api_send_bulk_emails, name="api_send_bulk_emails"),
